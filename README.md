@@ -19,10 +19,10 @@ Sesudah rilis npm, pengguna cukup:
 
 ```sh
 npx -y my-awsm-mcp@latest setup --global
-opencode mcp list
+# buka OpenCode pada project dan periksa /mcps
 ```
 
-Installer menambahkan `mcp.servers.awsm` ke `opencode.json`, menyalin skill ke direktori `skills/`, dan menjaga config JSONC berkomentar. Skill existing tidak ditimpa; server bernama `awsm` dengan config berbeda juga tidak ditimpa. OpenCode V2 otomatis memuat ulang config. Untuk pemasangan dari GitHub setelah repo terbit:
+Installer menambahkan `mcp.servers.awsm` ke `opencode.json`, menyalin skill ke direktori `skills/`, dan menjaga config JSONC berkomentar. Skill existing tidak ditimpa; server bernama `awsm` dengan config berbeda juga tidak ditimpa. OpenCode V2 otomatis memuat ulang config. Verifikasi dari sesi OpenCode yang membuka project terpasang: `awsm` harus `connected`. Jika CLI yang tersambung ke service bersama melaporkan “No MCP servers configured”, bisa jadi CLI melihat lokasi default yang berbeda; cek lewat OpenCode di project tersebut. Untuk pemasangan dari GitHub:
 
 ```sh
 npx -y github:OWNER/my-awsm-mcp setup --global --source github:OWNER/my-awsm-mcp
@@ -93,7 +93,7 @@ Stdio memakai stdout untuk JSON-RPC; log server ke stderr. Unit smoke test tidak
 
 1. Review versi, nama paket, dan metadata repository sebelum publish.
 2. Login npm (`npm login`), cek nama masih tersedia, jalankan `npm publish`.
-3. Dari mesin bersih, coba `npx -y my-awsm-mcp@latest setup --global`, lalu `opencode mcp list` dan satu panggilan tool.
+3. Dari mesin bersih, coba `npx -y my-awsm-mcp@latest setup --global`, lalu cek `/mcps` di OpenCode dan lakukan satu panggilan tool.
 
 Lihat repository GitHub untuk source dan panduan; npm harus dipublish secara terpisah agar instalasi `npx my-awsm-mcp` bekerja.
 

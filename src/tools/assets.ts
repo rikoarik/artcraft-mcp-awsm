@@ -117,7 +117,7 @@ export async function makeAsset(input: {
   const label = input.label ?? "";
 
   const gradId = "g" + Math.abs(w * 31 + h * 7 + c1.length).toString(36);
-  const PARK = "font-family='Inter, -apple-system, Helvetica, Arial, sans-serif'";
+  const PARK = "font-family='Arial, Helvetica, sans-serif'";
 
   let svg: string;
   if (kind === "badge") {

@@ -33,6 +33,10 @@ function startServer(base: string, wantPort: number): Promise<{ server: http.Ser
     try {
       const rel = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname);
       const relative = rel.replace(/^\/+/, "");
+      if (relative.split(/[\\/]/).some((part) => part.startsWith(".") || part === "node_modules")) {
+        res.writeHead(403).end("Forbidden");
+        return;
+      }
       let file = path.resolve(base, relative);
       if (file !== base && !file.startsWith(base + path.sep)) {
         res.writeHead(403).end("Forbidden");
@@ -98,7 +102,7 @@ export async function serve(input: { root?: string; port?: number; action?: "sta
 
   const base = path.resolve(input.root ?? ".");
   if (base === path.parse(base).root || base === process.env.HOME) {
-    throw new Error("Jangan serve filesystem root atau home directory; pilih folder prototype spesifik.");
+    throw new Error("Pilih folder prototype khusus; jangan serve filesystem root atau home directory.");
   }
   if (!fs.existsSync(base) || !fs.statSync(base).isDirectory()) {
     throw new Error(`Folder tidak ditemukan: ${base}`);

@@ -136,7 +136,7 @@ if (!skipSkills) copySkills();
 
 lines.push("");
 lines.push("Selesai! Langkah berikutnya (OpenCode):");
-lines.push("  • opencode mcp list — pastikan 'awsm' connected");
+lines.push("  • Buka project ini di OpenCode, cek /mcps — pastikan 'awsm' connected");
 lines.push("  • Kalau OpenCode lagi jalan, config reload otomatis setelah file tersimpan (/reload kalau ragu)");
 lines.push("  • Coba di chat: \"cariin ikon rocket buat hero\" — skill akan aktif otomatis");
 if (!isGlobal) {

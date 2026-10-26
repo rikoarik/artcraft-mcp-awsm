@@ -96,7 +96,7 @@ server.registerTool(
   {
     title: "Download Asset",
     description:
-      "Simpan 1 gambar dari URL ke folder project (default './assets') dengan nama file bersih, agar dipakai lokal — jangan hotlink. Konten dipastikan image/*.",
+      "Simpan 1 gambar raster dari URL ke folder project (default './assets'), maksimum 10 MB, tanpa menimpa file lama. SVG eksternal ditolak; cek lisensi sumber sebelum pakai.",
     inputSchema: {
       url: z.string().url().describe("URL gambar (http/https)."),
       filename: z.string().optional().describe("Nama file tujuan; default diambil dari URL. Karakter aneh dilapangkan."),
@@ -117,7 +117,7 @@ server.registerTool(
   {
     title: "Make Asset",
     description:
-      "Generate SVG premium berlisensi bebas dari teks: 'og-card' (sharing 1200×630), 'banner' (hero strip), 'badge' (logo monogram), 'placeholder' (kotak ukuran jelas). Pakai untuk OG image, hero, logo sementara.",
+      "Generate SVG template berbasis teks: 'og-card' (1200×630), 'banner', 'badge' monogram, atau 'placeholder'. Bukan AI image generator; cek panjang teks karena tidak otomatis wrap.",
     inputSchema: {
       kind: z.enum(["og-card", "banner", "badge", "placeholder"]).describe("Jenis asset."),
       title: z.string().optional().describe("Teks utama (judul/initial)."),
@@ -166,7 +166,7 @@ server.registerTool(
   {
     title: "Serve Preview",
     description:
-      "Start/stop server statis di http://127.0.0.1:<port>/ untuk preview prototype (HTML/CSS/JS/SVG). root default direktori kerja. Hatikan: ini preview lokal, bukan deploy.",
+      "Start/stop server statis localhost untuk preview prototype (HTML/CSS/JS/SVG). Hanya file non-hidden di folder root; bukan deployment. Jangan gunakan untuk file rahasia.",
     inputSchema: {
       root: z.string().optional().describe("Folder yang diserve (default '.')."),
       port: z.number().int().min(1024).max(65535).optional().describe("Port awal; kalau dipakai, dicoba port+1 dst."),
