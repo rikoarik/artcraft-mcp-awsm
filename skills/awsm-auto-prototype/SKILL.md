@@ -1,5 +1,5 @@
 ---
-name: Auto Prototype with Motion
+name: awsm-auto-prototype
 description: Implementasikan prototipe web interaktif dari prompt atau desain: navigasi/state berfungsi, responsif, animasi CSS/GSAP/Framer Motion yang bermakna dan reduced-motion, lalu preview dan uji di browser.
 ---
 

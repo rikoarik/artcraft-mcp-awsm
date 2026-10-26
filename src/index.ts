@@ -201,7 +201,7 @@ if (process.argv[2] === "setup") {
   console.error(`Subcommand tidak dikenal: ${process.argv[2]}. Pakai 'setup' atau jalankan tanpa argumen untuk MCP stdio.`);
   process.exitCode = 1;
 } else if (process.argv[2] === "--help") {
-  console.error("my-awsm-mcp: jalankan tanpa argumen untuk MCP stdio, atau 'setup [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' untuk instalasi OpenCode.");
+  console.error("my-awsm-mcp: jalankan tanpa argumen untuk MCP stdio, atau 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' untuk instalasi OpenCode.");
 } else {
   main().catch((error) => {
     console.error("Gagal memulai awsm MCP server:", error);

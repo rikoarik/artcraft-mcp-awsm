@@ -1,5 +1,5 @@
 ---
-name: Prompt to Prototype
+name: awsm-prompt-to-prototype
 description: Mengubah brief atau prompt desain menjadi prototipe web interaktif lengkap: petakan layar dan state, cari ikon/foto relevan, buat visual bila perlu, implementasi responsive, motion aksesibel, lalu preview dan QA. Gunakan saat diminta membuat prototype end-to-end dari teks.
 ---
 

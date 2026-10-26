@@ -1,100 +1,75 @@
-# my-awsm-mcp
+# FigCraft MCP AWSM — visual asset & prototype kit
 
-MCP server untuk mencari ikon/foto, membuat SVG sederhana, memilih palet warna, dan preview prototipe web. Paket ini juga berisi **5 skill OpenCode** yang memandu agent mengubah prompt menjadi prototype responsive dengan motion dan QA.
+MCP stdio server + **13 editable agent skills** for finding relevant icons/photos, creating simple SVG assets, and building/reviewing motion prototypes. Works with MCP-capable coding agents; this package **does not control the FigCraft canvas**. To design inside FigCraft, connect its own app MCP separately and use the handoff skill.
 
-> Status: kode siap diuji lokal, **belum dipublikasi di npm**. Instruksi `npx` dari npm di bawah berlaku setelah paket dipublish. Server ini bukan image-generation AI dan belum terintegrasi langsung dengan kanvas FigCraft/Figma.
+**[Watch the installation & tools demo](demo/awsm-demo.mp4)** (short scripted walkthrough made from actual CLI/MCP test output).
 
-## Instalasi
+## Install from GitHub
 
-Prasyarat: Node.js 18+, npm, OpenCode V2 untuk pemasangan skill otomatis. Dari checkout ini:
-
-```sh
-npm install
-npm test
-node build/index.js setup                 # pasang untuk project aktif
-# atau: node build/index.js setup --global # pasang untuk semua project OpenCode
-```
-
-Sesudah rilis npm, pengguna cukup:
+Requires Node.js 18+ and `npx`. From the project where you want the skills:
 
 ```sh
-npx -y my-awsm-mcp@latest setup --global
-# buka OpenCode pada project dan periksa /mcps
+npx -y github:rikoarik/-figcraft-mcp-awsm setup --client all --source github:rikoarik/-figcraft-mcp-awsm
 ```
 
-Installer menambahkan `mcp.servers.awsm` ke `opencode.json`, menyalin skill ke direktori `skills/`, dan menjaga config JSONC berkomentar. Skill existing tidak ditimpa; server bernama `awsm` dengan config berbeda juga tidak ditimpa. OpenCode V2 otomatis memuat ulang config. Verifikasi dari sesi OpenCode yang membuka project terpasang: `awsm` harus `connected`. Jika CLI yang tersambung ke service bersama melaporkan “No MCP servers configured”, bisa jadi CLI melihat lokasi default yang berbeda; cek lewat OpenCode di project tersebut. Untuk pemasangan dari GitHub:
+`--client all` configures **OpenCode, Claude Code, Codex, Google Antigravity, and GitHub Copilot CLI** project MCP settings and copies skills to their native locations. Zed reads the shared `.agents/skills` folder but its MCP `context_servers` is user-level: run `--client zed --global` to connect it. You can instead select one client: `opencode`, `claude`, `codex`, `antigravity`, `zed`, `copilot`. Add `--global` for a user-level install (review existing global configs first). `--skip-mcp`, `--skip-skills`, and `--force-skills` are available; **existing skills are not overwritten by default**. When an existing `awsm` MCP entry conflicts, setup reports it and preserves the file.
 
-```sh
-npx -y github:OWNER/my-awsm-mcp setup --global --source github:OWNER/my-awsm-mcp
+> GitHub install uses npm's Git dependency support and compiles TypeScript via `prepare`. The package is **not yet published to npm**. Use the GitHub command above, not `npx my-awsm-mcp`, until npm publication. `--source` ensures the agent's MCP command points to the working GitHub source.
+
+| Client | MCP (project) | Skills (project) | Check connection |
+| --- | --- | --- | --- |
+| OpenCode V2 | `.opencode/opencode.json` | `.opencode/skills` | `/mcps` in the project |
+| Claude Code | `.mcp.json` | `.claude/skills` | `/mcp`; approve project server |
+| Codex CLI/IDE | `.codex/config.toml` (trusted projects) | `.agents/skills` | `codex mcp list` |
+| Antigravity | `.agents/mcp_config.json` | `.agents/skills` | MCP settings / agent |
+| Zed Agent | user settings `~/.config/zed/settings.json` (`--global`) | `.agents/skills` | Settings → AI → MCP Servers |
+| GitHub Copilot CLI | `.github/mcp.json` (trusted repositories) | `.agents/skills` | `copilot mcp list` |
+
+Client support means a *local stdio MCP configuration and discoverable skills*, not identical tool naming/UI in every client. Claude, Codex, and Copilot require project trust/approval as documented by the client; Zed external agents/terminal threads may have separate configs. `--client all --global` changes multiple personal configs; prefer project install first. Other MCP clients can connect manually with command `npx -y github:rikoarik/-figcraft-mcp-awsm` and load the skills according to their format. Browser/cloud agents that cannot launch local processes need a hosted MCP endpoint, which this package does not provide.
+
+### Example prompts
+
+```text
+Use awsm-prompt-to-prototype and awsm-taste-ui to build a responsive coffee-shop landing page. Search licensed coffee photos and a consistent icon family, implement a working menu and booking form, add reduced-motion transitions, then run awsm-prototype-qa.
 ```
 
-Tanpa `--source`, konfigurasi koneksi akan memakai paket npm `my-awsm-mcp` — belum bisa dipakai sebelum dipublish. Instalasi lokal developer dari checkout menuliskan command yang sama, bukan otomatis menghubungkan file lokal; untuk mencoba tanpa npm, gunakan konfigurasi manual di bawah.
-
-### Konfigurasi manual OpenCode V2
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "servers": {
-      "awsm": {
-        "type": "local",
-        "command": ["npx", "-y", "my-awsm-mcp@latest"],
-        "environment": {
-          "PEXELS_API_KEY": "{env:PEXELS_API_KEY}",
-          "UNSPLASH_ACCESS_KEY": "{env:UNSPLASH_ACCESS_KEY}"
-        }
-      }
-    }
-  }
-}
+```text
+Use awsm-antislop-ui to audit this dashboard. Preserve our brand tokens, remove generic repeated card sections, and show before/after screenshots at 360px and 1200px.
 ```
 
-Hapus `environment` jika tidak memakai Pexels/Unsplash. Untuk mencoba checkout lokal, ganti `command` menjadi `["node", "/path/absolut/my-awsm-mcp/build/index.js"]`. Jangan simpan API key langsung di config. OpenCode V2 default mengelompokkan MCP tools di Code Mode; nama efektifnya `awsm_find_icons`, dst.
+```text
+Find an icon for a delivery status using awsm find_icons, inspect the SVG using get_icon, then make a matching OG card with make_asset. Record attribution/license for any external photo.
+```
 
-MCP stdio portabel ke client lain yang mendukung stdio, tetapi **setup otomatis dan skill discovery saat ini khusus OpenCode**. Untuk client lain, konfigurasi command MCP dan skill menurut dokumentasi client tersebut; API provider/model bukan ditangani paket ini.
+The client decides when to load a skill; mention its ID for reliable invocation. The tools are `find_icons`, `get_icon`, `find_images`, `download_asset`, `make_asset`, `palette`, and `serve`. In OpenCode V2 Code Mode, find them under the `awsm` namespace; on some clients they appear as `awsm_find_icons`, etc. Image search uses Openverse by default; Pexels and Unsplash require optional `PEXELS_API_KEY` / `UNSPLASH_ACCESS_KEY` in the MCP process environment. Review photo and icon licenses and attribution before shipping. `make_asset` is a **text-based SVG template**, not AI image generation. `serve` is localhost preview, not deployment.
 
-## Kemampuan nyata
+### Included skills
 
-| MCP tool | Fungsi |
+| Workflow | Skills |
 | --- | --- |
-| `find_icons` | Cari ikon dari Iconify; pilih satu keluarga yang konsisten. |
-| `get_icon` | Ambil markup SVG ikon pilihan. |
-| `find_images` | Cari foto Openverse (tanpa key), Pexels/Unsplash (butuh API key), atau Picsum (foto placeholder acak, bukan hasil relevan). |
-| `download_asset` | Unduh raster image ke folder lokal, maksimum 10 MB; menolak SVG eksternal dan file dengan nama sama. |
-| `make_asset` | Buat SVG template berbasis teks: OG card, banner, monogram, placeholder. **Bukan generator gambar AI**. |
-| `palette` | Hasilkan alternatif warna dan CSS variables dari satu hex. |
-| `serve` | Preview file statis lewat localhost (`127.0.0.1`), selama server MCP aktif. Bukan deployment. |
+| Asset discovery | `awsm-assets`, `awsm-asset-lab` |
+| Prototype delivery | `awsm-prompt-to-prototype`, `awsm-auto-prototype`, `awsm-prototype-qa` |
+| Visual direction | `awsm-taste-ui`, `awsm-antislop-ui`, `awsm-design-system`, `awsm-template-adapter` |
+| UX & validation | `awsm-ui-ux-best-practices`, `awsm-motion-storyboard`, `awsm-responsive-audit` |
+| Design-app handoff | `awsm-figcraft-handoff` |
 
-Foto dari Openverse tetap perlu dicek lisensi dan kewajiban atribusinya; filter `commercial` tidak berarti bebas kredit. Iconify punya lisensi per keluarga ikon. Pencarian memerlukan koneksi internet.
+Skills are **original instructions**, not repackaged third-party `taste-ui`/`anti-ai-slop` skills. Edit `SKILL.md` in your project after install to customize; rerunning setup preserves edits unless you explicitly pass `--force-skills`. If reusing a UI template, verify its license first.
 
-### 5 skill yang terpasang
-
-- `awsm-assets` — ambil keyword dari prompt, temukan dan simpan ikon/foto relevan beserta lisensi.
-- `awsm-asset-lab` — buat grafis SVG teks dan palet ketika perlu aset sederhana orisinal.
-- `awsm-prompt-to-prototype` — orkestrasi brief → peta layar → aset → implementasi → preview.
-- `awsm-auto-prototype` — interaksi dan motion aksesibel, sesuai stack project.
-- `awsm-prototype-qa` — cek viewport, browser console, reduced motion, navigasi, lisensi.
-
-Skill adalah panduan agent, bukan proses yang menghasilkan prototype tanpa agent coding. Ubah skill per project di `.opencode/skills/<id>/SKILL.md`, atau global di `~/.config/opencode/skills/<id>/SKILL.md`. Installer men-skip skill yang sudah ada agar custom user aman; `--force-skills` menimpa skill sehingga gunakan dengan hati-hati. OpenCode memakai path sebagai ID, dan project skill bisa mengoverride global skill.
-
-## Pengembangan dan uji
+## Development
 
 ```sh
 npm ci
-npm test                    # build + setup JSON/JSONC + MCP client/tool + localhost preview
+npm test               # builds; tests installer, MCP handshake/tools and preview
 npm audit --audit-level=high
-npm pack --dry-run          # cek isi paket sebelum rilis
+npm pack --dry-run
 ```
 
-Stdio memakai stdout untuk JSON-RPC; log server ke stderr. Unit smoke test tidak memerlukan API key foto. Tes live jaringan/licensing visual perlu dilakukan terpisah sebelum rilis.
+The GitHub repo contains source, not committed build files; `prepare` builds on Git installs. To run locally, `npm run build` then `node build/index.js` for stdio, or `node build/index.js setup --client opencode --source github:rikoarik/-figcraft-mcp-awsm` for setup. Local setup still points the installed client at GitHub; it does not point to the checkout automatically.
 
-## Publikasi
+### Demo
 
-1. Review versi, nama paket, dan metadata repository sebelum publish.
-2. Login npm (`npm login`), cek nama masih tersedia, jalankan `npm publish`.
-3. Dari mesin bersih, coba `npx -y my-awsm-mcp@latest setup --global`, lalu cek `/mcps` di OpenCode dan lakukan satu panggilan tool.
+`demo/awsm-demo.mp4` shows a scripted walkthrough of a project-level multi-client install and MCP calls. It uses captured CLI/MCP results, not a live recording of six agents or FigCraft canvas. Rebuild with `npm run demo` (requires `ffmpeg`, Python 3 and Pillow). The smoke test is the executable proof of the same steps. Source and license: MIT; external assets retain their own licenses.
 
-Lihat repository GitHub untuk source dan panduan; npm harus dipublish secara terpisah agar instalasi `npx my-awsm-mcp` bekerja.
+### Documentation sources
 
-Lisensi: MIT. Sumber foto/ikon memiliki lisensi masing-masing, terpisah dari lisensi kode paket.
+[OpenCode MCP](https://opencode.ai/v2/docs/mcp-servers) · [Claude Code MCP](https://code.claude.com/docs/en/mcp) · [Codex MCP](https://developers.openai.com/codex/mcp) · [Antigravity MCP](https://antigravity.google/docs/mcp/) · [Zed MCP](https://zed.dev/docs/ai/mcp) · [Copilot CLI MCP](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers)

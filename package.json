@@ -2,9 +2,9 @@
   "name": "my-awsm-mcp",
   "version": "1.0.0",
   "description": "MCP tools and OpenCode skills for relevant icons/photos, simple SVG assets, and interactive web prototype workflows.",
-  "repository": { "type": "git", "url": "git+https://github.com/rikoarik/my-awsm-mcp.git" },
-  "homepage": "https://github.com/rikoarik/my-awsm-mcp#readme",
-  "bugs": { "url": "https://github.com/rikoarik/my-awsm-mcp/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/rikoarik/-figcraft-mcp-awsm.git" },
+  "homepage": "https://github.com/rikoarik/-figcraft-mcp-awsm#readme",
+  "bugs": { "url": "https://github.com/rikoarik/-figcraft-mcp-awsm/issues" },
   "type": "module",
   "main": "build/index.js",
   "bin": {
@@ -20,6 +20,7 @@
   "scripts": {
     "build": "tsc && chmod 755 build/index.js build/setup.js",
     "test": "npm run build && node test/smoke.mjs",
+    "demo": "npm run build && node demo/make-demo.mjs",
     "setup": "node build/setup.js",
     "prepare": "npm run build",
     "prepublishOnly": "npm run build"

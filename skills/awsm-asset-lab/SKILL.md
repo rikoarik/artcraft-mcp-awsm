@@ -1,5 +1,5 @@
 ---
-name: Generate Simple Assets
+name: awsm-asset-lab
 description: Buat grafis SVG berbasis teks (OG card, banner, badge monogram, placeholder) dan palet warna dari brief. Gunakan saat diminta asset sederhana orisinal atau pencarian gambar tidak cocok; bukan generator foto/ilustrasi AI.
 ---
 

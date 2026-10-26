@@ -1,5 +1,5 @@
 ---
-name: Prototype QA
+name: awsm-prototype-qa
 description: Memeriksa prototipe web sebelum serah: responsif, accessibility, navigasi, console error, lisensi foto/ikon, performa dasar, dan reduced motion. Dipakai setelah membuat atau mengubah UI/prototype.
 ---
 

@@ -36,6 +36,21 @@ const fromGithub = spawnSync(process.execPath, [path.join(root, 'build/index.js'
 assert.equal(fromGithub.status, 0, fromGithub.stderr);
 assert.deepEqual(JSON.parse(readFileSync(path.join(githubCwd, '.opencode/opencode.json'), 'utf8')).mcp.servers.awsm.command, ['npx', '-y', 'github:someone/my-awsm-mcp']);
 
+const multiCwd = mkdtempSync(path.join(tmpdir(), 'awsm-all-test-'));
+const allResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/-figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
+assert.equal(allResult.status, 0, allResult.stderr);
+const json = p => JSON.parse(readFileSync(path.join(multiCwd, p), 'utf8'));
+assert.equal(json('.opencode/opencode.json').mcp.servers.awsm.command[2], 'github:rikoarik/-figcraft-mcp-awsm');
+assert.equal(json('.mcp.json').mcpServers.awsm.type, 'stdio');
+assert.equal(json('.agents/mcp_config.json').mcpServers.awsm.command, 'npx');
+assert.equal(json('.github/mcp.json').mcpServers.awsm.tools[0], '*');
+assert(readFileSync(path.join(multiCwd, '.codex/config.toml'), 'utf8').includes('[mcp_servers.awsm]'));
+assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-taste-ui/SKILL.md')));
+assert(existsSync(path.join(multiCwd, '.claude/skills/awsm-antislop-ui/SKILL.md')));
+const allAgain = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/-figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
+assert.equal(allAgain.status, 0, allAgain.stderr); // idempotent
+assert.equal(readFileSync(path.join(multiCwd, '.codex/config.toml'), 'utf8').match(/\[mcp_servers\.awsm\]/g).length, 1);
+
 const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd });
 const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {

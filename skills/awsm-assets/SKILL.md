@@ -1,5 +1,5 @@
 ---
-name: Find Visual Assets
+name: awsm-assets
 description: Cari ikon SVG dan foto yang relevan dari prompt desain untuk web/prototype; cek lisensi dan atribusi, simpan file lokal, lalu gunakan satu keluarga ikon secara konsisten.
 ---
 
