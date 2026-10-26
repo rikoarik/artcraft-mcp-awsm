@@ -1,24 +1,24 @@
 ---
 name: awsm-asset-lab
-description: Membuat kartu OG, banner, badge monogram, dan placeholder SVG berbasis teks dari brief serta palet warna. Gunakan untuk aset sederhana orisinal ketika foto tidak tepat atau user meminta kartu sosial; bukan generator foto AI atau logo final.
+description: Create text-based SVG Open Graph cards, banners, monogram badges, and placeholders from a brief and color palette. Use for original, simple graphic assets when photography is inappropriate or a social card is needed; this is not AI photo generation or final logo design.
 ---
 
-# Asset lab: SVG template yang bisa diedit
+# Asset lab: editable SVG templates
 
-## Sebelum membuat
+## Before creating an asset
 
-Tentukan aset untuk apa, ukuran dan platform, judul/subjudul pendek, warna brand (hex), lokasi output, dan batasan lisensi. Jika input mencakup logo/foto/ilustrasi kompleks, jelaskan bahwa `make_asset` hanya membuat template SVG berbasis teks dan tawarkan pendekatan yang sesuai. Untuk materi sosial, tentukan safe area dan preview platform; rasio OG card bawaan 1200×630, banner 1600×500, badge 512×512, placeholder 800×600.
+Identify its purpose, platform and dimensions, short title and subtitle, brand colors in hex, output location, and licensing constraints. If the request needs a complex logo, photo, or illustration, explain that `make_asset` only produces a text-based SVG template and propose a suitable alternative. For social graphics, consider the safe area and target platform's preview. Default sizes are 1200×630 for `og-card`, 1600×500 for `banner`, 512×512 for `badge`, and 800×600 for `placeholder`.
 
 ## Workflow
 
-1. Audit warna existing terlebih dahulu. Jika tidak ada, pilih warna berdasarkan konteks; `palette({color:"#176F57",scheme:"complete"})` memberi variasi hue/tint/shade, bukan bukti aksesibilitas. Periksa kontras aktual untuk teks kecil dan besar. Jangan menerapkan semua swatch sekaligus.
-2. Tulis copy pendek: satu gagasan utama, subjudul pendukung, label hanya bila berguna. `make_asset` tidak melakukan wrapping otomatis; judul panjang dapat keluar kanvas. Hindari menaruh statistik atau kutipan tanpa sumber.
-3. Panggil `make_asset` dengan `kind`, `title`, `subtitle`, `label`, `colors` (hingga tiga hex), dan `dir`/`filename`. Gunakan `og-card` untuk berbagi tautan, `banner` untuk strip hero, `badge` untuk monogram sementara, `placeholder` untuk slot yang belum diisi. Tool menolak nama SVG yang sudah ada; ganti filename untuk revisi dan jangan hapus aset pengguna tanpa izin.
-4. Buka hasil dengan renderer SVG/browser. Cek clipping, penggantian font, keterbacaan di skala thumbnail, kontras, dan panjang teks. Bila gagal, pendekkan teks atau ubah palette/dimensi dan buat revisi baru; jangan mengaku selesai hanya karena file tersimpan.
-5. Untuk Open Graph, uji platform tujuan; konversi ke PNG jika platform memerlukan raster. Simpan sumber `.svg`, catat varian, dan sertakan contoh penggunaan (`<img src="assets/card.svg" alt="...">`). SVG kartu bukan otomatis thumbnail sosial universal.
+1. Review existing brand colors first. If none exist, choose colors appropriate to the subject. `palette({color:"#176F57",scheme:"complete"})` returns hue variants, tints, and shades; it does not certify accessibility. Check actual contrast for small and large text. Do not apply every swatch simply because it was returned.
+2. Write concise copy: one main idea, a supporting subtitle, and a label only if useful. `make_asset` does not wrap long lines; a lengthy title can overflow the SVG. Do not add unsourced statistics or quotes.
+3. Call `make_asset` with `kind`, `title`, `subtitle`, `label`, `colors` (up to three hex values), and `dir`/`filename`. Use `og-card` for link sharing, `banner` for a hero strip, `badge` for a temporary monogram, and `placeholder` for an unfinished slot. The tool refuses to overwrite an existing SVG. Give revisions new filenames; do not delete user assets without permission.
+4. Open the result in an SVG renderer or browser. Inspect clipping, font substitution, readability at thumbnail size, contrast, and line length. If it fails, shorten the copy or adjust the palette or dimensions and create a new revision. A successful file write is not visual approval.
+5. Test Open Graph output on the target platform and convert to PNG if raster is required. Keep the editable `.svg`, document the variants, and provide an integration example such as `<img src="assets/card.svg" alt="...">`. An SVG card is not a universal social thumbnail.
 
-## Batas & keluaran
+## Limits and handoff
 
-Jangan menyebut badge sebagai identitas logo final, atau grafis template sebagai “AI-generated photo”. Tidak ada model gambar di paket ini. Handoff harus berisi path, jenis, dimensi, warna, preview, dan catatan format target. Bila user meminta foto relevan, alihkan ke `awsm-assets`.
+Do not describe a badge as a finished brand identity or a template graphic as an “AI-generated photo.” This package contains no image model. Hand off the path, type, dimensions, colors, preview, and target-format notes. If the user needs relevant photography, use `awsm-assets`.
 
-**Contoh:** “Buat OG card untuk Kopi Pagi berjudul singkat dalam hijau gelap, tampilkan preview, lalu beri file SVG dan warna yang dipakai.”
+**Example:** “Create a short-title Open Graph card for Kopi Pagi in dark green, inspect the preview, and provide the SVG and colors used.”

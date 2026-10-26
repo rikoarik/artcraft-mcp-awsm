@@ -1,4 +1,4 @@
-// Util kecil yang dipakai semua tools.
+// Shared utilities used by the MCP tools.
 
 export interface RequestOptions extends RequestInit {
   /** Timeout in ms (default 15s). */
@@ -9,7 +9,7 @@ export async function request(url: string | URL, init?: RequestOptions): Promise
   const { timeoutMs = 15_000, ...rest } = init ?? {};
   const res = await fetch(url, { ...rest, signal: AbortSignal.timeout(timeoutMs) });
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status} dari ${String(url)}${res.statusText ? ` (${res.statusText})` : ""}`);
+    throw new Error(`HTTP ${res.status} from ${String(url)}${res.statusText ? ` (${res.statusText})` : ""}`);
   }
   return res;
 }
@@ -24,7 +24,7 @@ export async function fetchText(url: string | URL, init?: RequestOptions): Promi
   return await res.text();
 }
 
-/** Escape teks untuk atribut/konten SVG. */
+/** Escape text for SVG attributes and content. */
 export function esc(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -37,7 +37,7 @@ export function esc(value: string): string {
 export function normalizeHex(hex: string): string {
   const raw = hex.trim().replace(/^#/, "");
   if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(raw)) {
-    throw new Error(`Warna tidak valid: "${hex}". Pakai format hex, contoh #1b1b1f atau #abc.`);
+    throw new Error(`Invalid color: "${hex}". Use a hex value such as #1b1b1f or #abc.`);
   }
   if (raw.length === 3) return `#${raw[0]}${raw[0]}${raw[1]}${raw[1]}${raw[2]}${raw[2]}`;
   return `#${raw.toLowerCase()}`;

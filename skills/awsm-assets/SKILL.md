@@ -1,26 +1,26 @@
 ---
 name: awsm-assets
-description: Menemukan foto dan ikon relevan dari brief untuk halaman, dashboard, atau prototype; verifikasi lisensi, atribusi, konsistensi ikon, dan menyimpan aset lokal. Gunakan saat user meminta gambar, icon, visual dari prompt, atau aset untuk UI.
+description: Find relevant photos and icons for a page, dashboard, or prototype; verify licenses and attribution, maintain icon consistency, and save local assets. Use whenever the user asks for imagery, icons, visuals from a brief, or UI assets.
 ---
 
-# Asset discovery dari prompt
+# Asset discovery from a brief
 
-## Input dan keputusan awal
+## Inputs and initial decisions
 
-Dapatkan konteks halaman, audiens, subjek, peran aset (hero, thumbnail, ilustrasi pendukung, kontrol), rasio, tone, lokasi pemakaian, dan batasan brand. Jika subjek spesifik belum jelas, turunkan 2–3 query dari konten nyata; jangan berasumsi 'modern' berarti gambar abstrak. Susun tabel kecil: slot → tujuan → query → rasio → kebutuhan lisensi. Bedakan gambar dekoratif dan yang mengandung informasi.
+Identify the page context, audience, subject, each asset's role (hero, thumbnail, supporting illustration, control), aspect ratio, tone, placement, and brand constraints. If the subject is unclear, derive two or three queries from the actual content rather than assuming “modern” means abstract imagery. Make a small map: slot → purpose → query → aspect ratio → licensing requirements. Distinguish decorative images from images that convey information.
 
-## Alur pencarian
+## Search workflow
 
-1. Untuk foto, panggil `find_images` dengan `provider: "openverse"` dan query deskriptif, misalnya `"barista pouring espresso natural window light"`; default hasil hanya disaring untuk lisensi komersial. Cek `title`, `creator`, `license`, `attribution`, `page`, `width`, `height`; filter komersial **bukan** izin otomatis untuk semua penggunaan. Jika hasil tidak cocok, ubah subjek/perspektif/konteks dua kali sebelum pindah provider.
-2. `pexels` dan `unsplash` hanya jika API key memang tersedia pada proses MCP; jangan meminta key di chat atau menulisnya di repo. `picsum` hanya placeholder acak, bukan pencarian relevan. Jika network gagal, pertahankan slot placeholder berlabel dan laporkan, jangan mengarang foto atau lisensi.
-3. Untuk ikon, `find_icons` dengan kata kerja/objek yang benar (mis. `delivery truck`, `upload`), pilih satu family seperti `lucide`, kemudian `get_icon` untuk ikon yang dipakai. Cek lisensi family di halaman sumber Iconify, stroke/filled weight, viewBox, dan ukuran. Sesuaikan label aksesibilitas: ikon informatif diberi nama, ikon dekoratif disembunyikan dari assistive tech.
-4. Pilih 1–3 kandidat per slot berdasarkan akurasi semantik, crop yang aman, resolusi, dan hak pakai; jangan sekadar paling cantik. `download_asset` hanya untuk raster dari URL yang dipilih; simpan dalam direktori proyek dengan nama jelas. Tool menolak SVG eksternal, file duplikat, dan berkas >10 MB. Untuk ikon SVG gunakan hasil `get_icon` dengan review markup, bukan `download_asset`.
-5. Gunakan path lokal relatif dalam implementasi, alt bermakna untuk foto yang membawa informasi, `alt=""` untuk dekorasi. Jangan hotlink preview API di produk final.
+1. For photos, call `find_images` with `provider: "openverse"` and a descriptive query such as `"barista pouring espresso natural window light"`. Its default results are filtered for commercial use, but that **does not automatically authorize every use**. Check `title`, `creator`, `license`, `attribution`, `page`, `width`, and `height`. If the results miss the brief, revise the subject, viewpoint, or context twice before switching providers.
+2. Use `pexels` or `unsplash` only when the relevant API key is already available to the MCP process. Never request secrets in chat or commit them to the repository. `picsum` supplies random placeholders, not relevant search results. If the network fails, leave a labeled placeholder and report the limitation; do not invent a photo or license.
+3. For icons, call `find_icons` with the actual action or object (for example, `delivery truck` or `upload`), choose one family such as `lucide`, and call `get_icon` for each chosen icon. Check the family's license at the Iconify source, stroke or fill weight, viewBox, and size. Give informative icons an accessible name; hide purely decorative icons from assistive technology.
+4. Shortlist one to three candidates per slot based on semantic fit, safe cropping, resolution, and usage rights—not just appearance. Call `download_asset` only for a selected raster URL, and save it under a descriptive local filename. The tool refuses external SVGs, duplicate files, and images over 10 MB. For SVG icons, review the markup returned by `get_icon` instead of using `download_asset`.
+5. Reference relative local paths in the implementation. Write meaningful alt text for informative images and `alt=""` for decorative ones. Do not hotlink API preview URLs in the final product.
 
-## Ledger dan verifikasi
+## Asset ledger and validation
 
-Catat `file | slot | halaman sumber | kreator | lisensi | teks atribusi | tanggal cek`. Bila lisensi mengharuskan atribusi, tempatkan kredit di tempat yang relevan. Lihat hasil rendered: wajah/objek tidak terpotong di mobile, kontras overlay cukup, file dan ikon benar-benar load. Jika tidak ada kandidat aman, gunakan `awsm-asset-lab` untuk placeholder grafis berlabel, bukan menyebutnya AI image generation.
+Record `file | slot | source page | creator | license | required attribution | date checked`. Put credit where required by the license. Inspect the rendered page: subjects must not be clipped on mobile, overlays need readable contrast, and every image and icon must load. If no candidate is suitable and safe to use, create a clearly labeled simple graphic with `awsm-asset-lab` rather than claiming to generate an AI image.
 
-**Handoff:** daftar pilihan, path file, lisensi/atribusi yang diverifikasi, aset yang belum ditemukan. Contoh permintaan: “Cari foto interior kedai kecil untuk hero 16:9 dan ikon reservasi; jangan pakai foto acak dan sertakan kredit.”
+**Handoff:** selected files and paths, verified licenses and attribution, and unresolved slots. Example request: “Find a small café interior photo for a 16:9 hero and a reservation icon; avoid random images and include credits.”
 
-Jika targetnya FigCraft, impor via tools desain yang tersedia dan ikuti skill khusus FigCraft; MCP ini tidak memodifikasi kanvas.
+For FigCraft targets, import assets using the available design-app tools and follow the FigCraft-specific workflow. This MCP does not edit the canvas.

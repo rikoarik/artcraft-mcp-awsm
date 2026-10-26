@@ -1,4 +1,4 @@
-// Image search multi-provider: openverse (default, no key), pexels, unsplash, picsum.
+// Multi-provider image search: openverse (default, no key), pexels, unsplash, picsum.
 
 import { fetchJson } from "../util.js";
 
@@ -25,7 +25,7 @@ export async function findImages(input: {
         count: limit,
         images: Array.from({ length: limit }, (_, i) => ({
           url: `https://picsum.photos/seed/${seed}-${i + 1}/${w}/${h}`,
-          note: "Foto acak Pinterest-grade — MUNGKIN tidak sesuai subjek query. Cocok hanya sebagai placeholder.",
+          note: "Random photo; it may not match the search subject. Use only as a labeled placeholder.",
         })),
       };
     }
@@ -34,7 +34,7 @@ export async function findImages(input: {
       const key = process.env.PEXELS_API_KEY;
       if (!key) {
         throw new Error(
-          "Provider 'pexels' butuh PEXELS_API_KEY. Set di env shell (export PEXELS_API_KEY=...) atau lewat `opencode mcp add` dengan environment {\"PEXELS_API_KEY\":\"{env:PEXELS_API_KEY}\"}.",
+          "The pexels provider requires PEXELS_API_KEY in the MCP process environment. Do not store the key in a committed configuration file.",
         );
       }
       const data = await fetchJson<{ photos: Array<Record<string, unknown>> }>(
@@ -58,7 +58,7 @@ export async function findImages(input: {
       const key = process.env.UNSPLASH_ACCESS_KEY;
       if (!key) {
         throw new Error(
-          "Provider 'unsplash' butuh UNSPLASH_ACCESS_KEY. Set di env shell atau lewat environment MCP server.",
+          "The unsplash provider requires UNSPLASH_ACCESS_KEY in the MCP process environment.",
         );
       }
       const data = await fetchJson<{ results: Array<Record<string, unknown>> }>(
@@ -79,7 +79,7 @@ export async function findImages(input: {
     }
 
     default: {
-      // openverse: gratis, tanpa kunci, hasil difilter ke lisensi komersial (CC/PD).
+      // Openverse filters for commercial-use CC/PD results; verify individual licenses.
       const u = new URL("https://api.openverse.org/v1/images/");
       u.searchParams.set("q", input.query);
       u.searchParams.set("page_size", String(limit));
@@ -99,7 +99,7 @@ export async function findImages(input: {
           width: (r.width as number) ?? null,
           height: (r.height as number) ?? null,
         })),
-        licenseNote: "Semua hasil difilter ke lisensi komersial. Tetap cek field license/attribution, dan taruh kredit di UI kalau lisensinya butuh atribusi.",
+        licenseNote: "Results are filtered for commercial use. Verify each license and attribution requirement at the source before publishing.",
       };
     }
   }

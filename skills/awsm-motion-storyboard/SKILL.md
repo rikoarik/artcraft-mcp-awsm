@@ -1,23 +1,23 @@
 ---
 name: awsm-motion-storyboard
-description: Menyusun dan menerapkan motion prototype web untuk transisi layar, feedback kontrol, atau narasi scroll yang perlu orientasi, dengan reduced motion dan pengujian performa. Gunakan saat brief menyebut GSAP, motion, microinteraction, atau prototype animasi.
+description: Plan and implement purposeful web motion for screen transitions, control feedback, and scroll storytelling, with reduced-motion behavior and performance testing. Use when a brief mentions GSAP, animations, microinteractions, or motion prototypes.
 ---
 
-# Motion storyboard berbasis sebab-akibat
+# A cause-and-effect motion storyboard
 
-## Prioritaskan sinyal
+## Prioritize signals
 
-Daftar peristiwa interaksi, bukan daftar elemen yang bisa digerakkan. Untuk tiap animasi tulis `trigger | before → after | properti | durasi relatif | kondisi berakhir | reduced-motion`. Klasifikasikan: feedback (klik/submit), orientasi (menu/modal), atau narasi konten. Jangan membuat seluruh section muncul terlambat hanya karena ada scroll.
+List interaction events, not merely elements that could move. Describe each animation as `trigger | before → after | properties | approximate duration | end condition | reduced-motion behavior`. Classify it as feedback (click/submit), orientation (menu/modal), or content narrative. Do not delay the appearance of every section simply because the page scrolls.
 
-## Aturan implementasi
+## Implementation rules
 
-1. Mulai dari native CSS transitions jika sederhana. Animasi `transform`/`opacity` lebih aman untuk performa dibanding layout/height/left yang memaksa reflow berulang. Semua perubahan state harus tetap jelas tanpa animasi.
-2. Jika project sudah memakai GSAP/Motion, cek dokumentasi versi saat mengimplementasi. Ikat timeline ke lifecycle, bersihkan listener/ScrollTrigger saat keluar route, dan cegah trigger ganda setelah hot reload. Jangan memasang library berat hanya untuk satu fade.
-3. Entrance punya waktu cepat dan end state yang dapat dicapai meskipun JS gagal. Jangan menyembunyikan judul/CTA di opacity 0 permanen. Hindari scroll-jacking, parallax cepat, gerak konstan, dan CTA yang berpindah saat diklik.
-4. Untuk `prefers-reduced-motion: reduce`, matikan animasi non-esensial atau lakukan instant state change. Jangan menghapus konten atau feedback yang bergantung pada animasi. Pastikan keyboard focus tidak beradu dengan pergerakan elemen.
+1. Start with native CSS transitions for simple cases. Animating `transform` and `opacity` is usually less costly than repeatedly animating layout, `height`, or `left`. Every state change should remain understandable without animation.
+2. If the project uses GSAP or Motion, check documentation for its installed version while implementing. Tie timelines to component lifecycles, clean up listeners and ScrollTriggers when leaving a route, and prevent duplicate triggers after hot reload. Do not install a large library for a single fade.
+3. Entrances should be brief and have a reachable final state even if JavaScript fails. Do not leave the heading or main CTA at permanent opacity zero. Avoid scroll-jacking, fast parallax, constant movement, and controls that move under the pointer.
+4. With `prefers-reduced-motion: reduce`, remove nonessential movement or switch states instantly. Preserve content and feedback that animation would otherwise reveal. Ensure movement does not interfere with keyboard focus.
 
-## Validasi
+## Validate
 
-Rekam atau screenshot sebelum/sesudah state, tes pada mobile lambat dan reduced motion, cek clipping, layout shift, serta input latency. Jika video terlalu cepat untuk membaca konten, pendekkan atau hilangkan gerak. Serahkan storyboard dan daftar animasi yang berfungsi; jika hanya mockup statis, katakan tidak ada motion nyata.
+Capture before/after states or a recording. Test on slower mobile hardware where possible and with reduced motion. Inspect clipping, layout shifts, and input latency. Shorten or remove motion if it makes content harder to read. Hand off the storyboard and list of working animations; if the deliverable is only a static mockup, state that no actual animation exists.
 
-**Contoh:** “Buat menu slide-in dan feedback submit untuk prototype booking; animasinya jangan mengganggu form atau pengguna reduced motion.”
+**Example:** “Add a slide-in menu and submission feedback to the booking prototype without distracting form users or people who prefer reduced motion.”

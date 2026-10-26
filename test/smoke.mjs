@@ -30,6 +30,7 @@ assert(config.includes('"awsm"'));
 writeFileSync(cfgPath, '{ "mcp": { "servers": { "awsm": { "type": "remote", "url": "https://example.com" } } } }');
 result = run('setup');
 assert.equal(result.status, 1);
+assert.match(result.stderr, /different configuration; left unchanged/);
 assert(readFileSync(cfgPath, 'utf8').includes('https://example.com'));
 const githubCwd = mkdtempSync(path.join(tmpdir(), 'awsm-github-test-'));
 const fromGithub = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--source', 'github:someone/my-awsm-mcp'], { cwd: githubCwd, encoding: 'utf8' });
@@ -53,6 +54,7 @@ for (const name of skillNames) {
   const text = readFileSync(path.join(root, 'skills', name, 'SKILL.md'), 'utf8');
   assert(text.startsWith('---\n') && text.includes(`\nname: ${name}\n`) && /\ndescription: .+\n/.test(text), `${name}: invalid frontmatter`);
   assert(text.split(/\s+/).length > 200, `${name}: workflow too short`);
+  assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|setelah|ketika|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(text), `${name}: untranslated skill content`);
   assert(existsSync(path.join(multiCwd, '.agents/skills', name, 'SKILL.md')));
 }
 const allAgain = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
@@ -72,8 +74,12 @@ try {
   await client.connect(transport);
   const tools = await client.listTools();
   assert.equal(tools.tools.length, 7);
+  for (const tool of tools.tools) {
+    assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
+  }
   const palette = await client.callTool({ name: 'palette', arguments: { color: '#1b7f5a' } });
   assert.equal(JSON.parse(palette.content[0].text).base, '#1b7f5a');
+  assert.match(JSON.parse(palette.content[0].text).note, /contrast/);
   const asset = await client.callTool({ name: 'make_asset', arguments: { kind: 'badge', title: 'Test', dir: cwd, filename: 'badge.svg' } });
   assert(existsSync(JSON.parse(asset.content[0].text).path));
   const duplicate = await client.callTool({ name: 'make_asset', arguments: { kind: 'badge', dir: cwd, filename: 'badge.svg' } });

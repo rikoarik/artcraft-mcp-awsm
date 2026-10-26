@@ -1,31 +1,31 @@
 ---
 name: awsm-taste-ui
-description: Menentukan arah visual dan membangun UI web yang khas sebelum memilih layout, warna, tipografi, dan imagery. Gunakan untuk landing page, dashboard, komponen, redesign, atau permintaan agar tampilan lebih berkarakter dan tidak templated.
+description: Define a distinctive visual direction before choosing layout, color, typography, and imagery for a web UI. Use for landing pages, dashboards, components, redesigns, or requests for a more characterful, less templated interface.
 ---
 
-# Taste UI: keputusan visual yang bisa dibela
+# Taste UI: visual decisions you can defend
 
-## Baca konteks, bukan moodboard generik
+## Read the context, not a generic moodboard
 
-Identifikasi produk, audiens, tugas utama, bahasa brand, konten nyata, platform, dan constraint aksesibilitas. Jika ini redesign, screenshot UI sekarang dan tandai pola yang perlu dipertahankan (brand, alur, komponen yang sudah dikenali). Jangan mencabut identitas existing hanya agar tampak baru. Jika brief kabur, tawarkan satu interpretasi spesifik dan tandai asumsi.
+Identify the product, audience, primary task, brand language, real content, platform, and accessibility constraints. For a redesign, capture the current UI and mark what should be preserved: brand elements, flows, and familiar components. Do not discard a recognizable identity merely to make it look new. If the brief is vague, propose one specific interpretation and name your assumptions.
 
-## Buat konsep sebelum markup
+## Form a concept before writing markup
 
-Tuliskan 3 opsi singkat yang benar-benar berbeda **bila** user meminta eksplorasi; jika tidak, pilih satu arah dan jelaskan: perasaan yang dibutuhkan, elemen dominan, material visual, serta kenapa cocok dengan subjek. Tetapkan token awal: 4–6 warna bernama (bukan hanya accent), keluarga huruf dengan peran display/body dan fallback, scale spacing, radius, dan aturan gambar. Jangan otomatis memilih Inter/sistem atau combo serif-cream-terracotta; font dan warna boleh sederhana jika alasannya kuat.
+When exploration is requested, sketch three genuinely different directions; otherwise choose one and explain the intended feeling, dominant element, visual materials, and connection to the subject. Define initial tokens: four to six named color roles, display and body font families with fallbacks, a spacing scale, radius policy, and image rules. Do not reflexively choose Inter/system fonts or a serif-on-cream palette; simplicity is fine when intentional.
 
-Gambar ASCII wireframe untuk layar penting: apa yang dilihat pertama, urutan baca, lokasi aksi, dan kontras antara section. Pilih **satu** gestur visual yang memorable—typography, imagery, rhythm, data view, atau interaksi—dan tenangkan sekitarnya. Tidak semua informasi perlu kartu; gunakan border/nomor/kicker hanya bila mengkodekan informasi.
+Create an ASCII wireframe for key screens: first impression, reading sequence, action location, and differences between sections. Choose **one** memorable visual gesture—typography, imagery, rhythm, data display, or interaction—and keep the rest restrained. Not every piece of information needs a card; borders, numbering, and section labels should encode useful structure.
 
-## Implementasi & kritik
+## Implement and critique
 
-1. Tulis copy nyata dan spesifik; CTA menyebut hasil tindakan. Jangan fabrikasi metrik/testimoni. Bila memerlukan foto/ikon, ikuti `awsm-assets` dan simpan lisensinya.
-2. Terapkan hirarki tipografi (judul, pendukung, body, metadata), panjang baris yang nyaman, kontras dan whitespace fungsional. Atur mobile berdasarkan prioritas konten, bukan mengecilkan seluruh desktop.
-3. Motion hanya untuk feedback atau orientasi; `awsm-motion-storyboard` menangani rincian. Reduced motion, fokus terlihat, dan state error/empty tetap bagian dari desain.
-4. Render dan screenshot 360px serta desktop; lihat apa yang benar-benar terlihat, terutama fold, crop, wrap dan alignment. Kritik desain terhadap brief: sebut 2 keputusan yang membantu dan 1 yang perlu dikurangi. Revisi sebelum handoff.
+1. Write specific, truthful copy and name the outcome of each CTA. Never fabricate metrics or testimonials. For photography or icons, follow `awsm-assets` and keep licensing records.
+2. Establish typography hierarchy (heading, support, body, metadata), comfortable line lengths, contrast, and functional whitespace. Reprioritize content for mobile instead of shrinking the whole desktop layout.
+3. Use motion to provide feedback or orientation; `awsm-motion-storyboard` handles details. Visible focus, reduced-motion support, and empty/error states belong in the design.
+4. Render and inspect screenshots at 360px and desktop widths. Check the first viewport, cropping, wrapping, and alignment. Evaluate the work against the brief: identify two decisions that help and one thing to simplify. Revise before handoff.
 
-## Format hasil
+## Deliverable
 
-Berikan konsep satu paragraf, token inti, wireframe ringkas bila diminta, screenshot/path hasil, serta alasan tiap keputusan yang tidak generik. Jangan mengklaim 'premium' tanpa bukti tampilan atau fungsi.
+Provide a concept paragraph, core tokens, a compact wireframe when useful, screenshot or output paths, and rationale for non-generic choices. Do not call a design “premium” without visual and functional evidence.
 
-**Contoh:** “Rancang katalog toko alat tulis kecil yang terasa seperti rak arsip nyata, bukan template SaaS; pertahankan logo existing, jelaskan sistem tipe dan mobile layout.”
+**Example:** “Design a small stationery catalog that feels like a physical archive instead of a SaaS template; keep our existing logo and explain the type system and mobile layout.”
 
-Prinsip skill ini ditulis orisinal; jika belajar dari template/repo lain, dokumentasikan sumber dan jangan menyalin kode/asset tanpa memenuhi lisensi.
+These instructions are original. If learning from another repository or template, cite it and respect its license rather than copying code or assets unchecked.

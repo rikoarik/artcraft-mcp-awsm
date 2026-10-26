@@ -1,28 +1,28 @@
 ---
 name: awsm-prototype-qa
-description: Menguji prototype web yang baru dibuat atau diubah: interaksi, responsive, accessibility dasar, console/network, lisensi aset, dan reduced motion. Gunakan sebelum handoff UI/prototype, bukan hanya setelah build berhasil.
+description: Test a new or updated web prototype for interactions, responsiveness, basic accessibility, console and network errors, asset licenses, and reduced motion. Use before handing off a UI or prototype; a passing build is not enough.
 ---
 
-# QA prototype berbasis bukti
+# Evidence-based prototype QA
 
-## Siapkan matriks
+## Prepare the test matrix
 
-Dapatkan URL/local command dan daftar journey utama dari developer. Catat ukuran 360px, 768px, 1200px (tambahkan lebar lain saat layout patah), browser yang tersedia, serta state yang mungkin: default, loading, empty, error, success. Jangan menyatakan tes dilakukan jika browser/screenshot tidak tersedia.
+Get the URL or local run command and the developer's primary journeys. Record 360px, 768px, and 1200px viewports, adding widths where a layout breaks; note the available browser and relevant `default / loading / empty / error / success` states. Do not claim browser or screenshot testing if those tools were unavailable.
 
-## Eksekusi
+## Execute
 
-1. Jalankan lint/build/test proyek bila ada. Build sukses hanya bukti kompilasi; tetap buka UI dengan browser automation. Untuk halaman statis, `serve` dapat memberi URL lokal, jangan serve folder yang mengandung rahasia.
-2. Screenshot di setiap viewport dan periksa overflow, clipping, teks terlalu rapat/panjang, image crop, CTA tidak terlihat, sticky header, dan keyboard mobile jika memungkinkan. Baca gambar, bukan hanya status HTTP 200.
-3. Jalankan setiap journey: menu buka/tutup, anchor, CTA, form kosong/valid/error, status submit, navigasi balik. Cek keyboard: Tab berurutan, focus terlihat, Enter/Space, Escape pada dialog/menu, dan label input. Jangan menganggap hover mewakili touch.
-4. Periksa console dan network untuk exception JS, 404, gambar/font gagal load, mixed content. Jika ada pihak ketiga offline, pastikan fallback membuat fungsi inti tetap bisa dipahami.
-5. Uji reduced motion dengan emulasi `prefers-reduced-motion: reduce`, zoom 200%, kontras teks/status, alt yang tepat, target klik yang nyaman, dan layout ketika teks panjang. Periksa sumber/lisensi/atribusi gambar ikon dari `awsm-assets`.
-6. Perbaiki masalah kritis, ulangi tes pada viewport dan journey terdampak. Catat apa yang tidak bisa diverifikasi (mis. backend/real device).
+1. Run the project's existing lint, build, and tests where available. A passing build only proves compilation. Open the UI with browser automation. `serve` can provide a local URL for static pages, but never serve a directory containing secrets.
+2. Take screenshots at each viewport and inspect overflow, clipping, cramped or long text, image crops, hidden calls to action, sticky headers, and mobile keyboard effects where possible. Read the images; HTTP 200 alone is not visual QA.
+3. Run every journey: opening and closing menus, anchors, calls to action, empty and valid form submissions, submit status, and back navigation. Check keyboard order, visible focus, Enter/Space, Escape for overlays, and input labels. Hover behavior does not prove touch support.
+4. Inspect the console and network for JS exceptions, 404s, and failed images or fonts. If a third-party provider is unavailable, the fallback should leave the main flow understandable.
+5. Emulate `prefers-reduced-motion: reduce`, test 200% zoom, inspect text and status contrast, meaningful alt text, comfortable touch targets, and layouts with long copy. Verify the source, license, and attribution of images and icons selected through `awsm-assets`.
+6. Fix critical issues and rerun affected viewports and journeys. Record anything you could not verify, such as a real backend or physical device.
 
-## Format laporan
+## Report format
 
-| Severity | Lokasi / viewport | Langkah reproduksi | Expected vs actual | Bukti | Perbaikan / status |
+| Severity | Location / viewport | Reproduction steps | Expected vs actual | Evidence | Fix / status |
 | --- | --- | --- | --- | --- | --- |
 
-Tutup dengan ringkasan lulus/gagal per journey, command build/test, path screenshot, dan hal yang sengaja simulated. Blok handoff bila layar blank, CTA inti mati, data palsu diklaim tersimpan, atau aset melanggar lisensi.
+Conclude with pass/fail status per journey, build and test commands, screenshot paths, and explicitly simulated behavior. Block handoff for blank screens, dead primary CTAs, fake persistence claims, or unlicensed assets.
 
-**Contoh:** “QA halaman checkout 360–1200 px, form kosong dan valid, keyboard, console, serta reduced motion; berikan temuan yang bisa direproduksi.”
+**Example:** “QA checkout from 360–1200px, including empty and valid form states, keyboard, console, and reduced motion; report reproducible findings.”

@@ -14,7 +14,7 @@ for i, scene in enumerate(scenes):
     image = Image.new('RGB', (1280, 720), '#101c1b')
     d = ImageDraw.Draw(image)
     d.rectangle((0, 0, 17, 720), fill='#58e0ae')
-    d.text((60, 52), 'AWSM  /  PENGGUNAAN & HASIL', font=mono, fill='#58e0ae')
+    d.text((60, 52), 'AWSM  /  USAGE & RESULTS', font=mono, fill='#58e0ae')
     d.text((60, 132), scene['title'], font=large, fill='#f2eee2')
     has_image = bool(scene.get('image'))
     for n, line in enumerate(scene['command'].splitlines()):
@@ -39,5 +39,5 @@ for i, scene in enumerate(scenes):
             card = card.crop(artwork)
         card.thumbnail((560, 430))
         image.paste(card, (685, 188))
-    d.text((60, 665), 'Demo berskrip dari panggilan MCP nyata • tanpa rekaman kanvas FigCraft', font=small, fill='#9caca8')
+    d.text((60, 665), 'Scripted demo of real MCP calls  /  no FigCraft canvas recording', font=small, fill='#9caca8')
     image.save(out / f'frame-{i:02}.png')

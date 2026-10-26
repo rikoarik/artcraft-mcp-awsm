@@ -1,26 +1,26 @@
 ---
 name: awsm-ui-ux-best-practices
-description: Menerapkan dan meninjau usability serta aksesibilitas UI web: alur utama, navigasi, form, state error/loading/empty, keyboard, mobile, dan feedback. Gunakan saat merancang atau mereview pengalaman pengguna.
+description: Apply and review web UI usability and accessibility across primary journeys, navigation, forms, error/loading/empty states, keyboard interaction, mobile layouts, and feedback. Use when designing or evaluating user experiences.
 ---
 
-# UI/UX yang bisa dipakai orang nyata
+# UI/UX for real tasks
 
-## Mulai dari pekerjaan user
+## Start with the user's job
 
-Tuliskan persona secara praktis (apa yang mereka coba lakukan, bukan stereotip demografis), entry point, aksi utama, hambatan, dan tanda keberhasilan. Buat jalur terpendek untuk tugas utama dan jalur pemulihan untuk gagal/kehabisan data. Prioritaskan arsitektur informasi sebelum menghias interface.
+Describe the user in practical terms—what they are trying to accomplish, not demographic stereotypes—their entry point, primary action, obstacles, and success signal. Map the shortest route to the main task and a recovery path for failures or missing data. Prioritize information architecture before surface decoration.
 
-## Heuristik per area
+## Heuristics by area
 
-- **Navigasi:** label sesuai kosakata user; status lokasi aktif jelas; back/close dapat diprediksi. Jangan menyembunyikan fitur penting hanya di hover.
-- **Form:** label eksplisit, field order logis, contoh format bila perlu, validasi spesifik yang menunjuk field, pemulihan nilai setelah error. Tombol `Save` harus menghasilkan feedback `Saved`; tanpa backend nyata jangan klaim persisted.
-- **State:** empty state menjelaskan mengapa kosong dan langkah berikutnya; loading punya indikator dan tidak melompat liar; success mengonfirmasi hasil; error memuat langkah perbaikan. Aksi destruktif butuh konfirmasi atau undo yang benar-benar bekerja.
-- **Semantik:** heading berjenjang, landmark, link untuk navigasi dan button untuk aksi, alt untuk gambar bermakna. Uji keyboard dari awal sampai akhir, focus-visible dan escape untuk overlay.
-- **Visual:** kontras teks/status, jangan sampaikan status hanya lewat warna, target sentuh nyaman, ukuran teks tetap terbaca pada zoom 200%, panjang baris wajar. Ikuti standar WCAG yang berlaku bila proyek punya target kepatuhan; jangan mengaku compliant tanpa audit formal.
-- **Responsif:** uji 360px, 768px, 1200px, teks panjang, keyboard virtual dan landscape bila relevan. Prioritaskan konten untuk mobile daripada sekadar menumpuk grid.
-- **Motion:** gunakan gerak untuk feedback/perubahan posisi; sediakan reduced motion dan jeda jika ada autoplay.
+- **Navigation:** use the user's vocabulary for labels; show the current location; make back and close behavior predictable. Do not hide essential actions behind hover alone.
+- **Forms:** give inputs explicit labels and logical ordering, examples when formats are unfamiliar, field-specific validation, and preserved values after an error. A `Save` action must provide feedback. Without a backend, do not claim persistence.
+- **States:** an empty state explains why nothing appears and what to do next; loading is clear and avoids jarring shifts; success confirms the result; an error offers a recovery step. Destructive actions need a working confirmation or undo path.
+- **Semantics:** use a sensible heading hierarchy, landmarks, links for navigation, buttons for actions, and alt text for meaningful images. Test keyboard navigation end to end, visible focus, and Escape on overlays.
+- **Visuals:** ensure readable text and status contrast; never convey status only through color. Make touch targets comfortable, text legible at 200% zoom, and line lengths manageable. Follow the project's WCAG target, but do not claim formal compliance without an audit.
+- **Responsiveness:** test at 360px, 768px, and 1200px with long copy and a virtual keyboard where relevant. Prioritize mobile content rather than just stacking a desktop grid.
+- **Motion:** animate feedback and spatial changes with purpose; respect reduced motion and offer control over autoplay when present.
 
-## Output audit
+## Audit output
 
-Tuliskan `journey | friksi | evidence | severity | rekomendasi | cara validasi`. Lakukan tes browser dan screenshot sebelum menyatakan masalah teratasi. Untuk implementasi lengkap rujuk `awsm-auto-prototype`; untuk QA akhir rujuk `awsm-prototype-qa`.
+Report `journey | friction | evidence | severity | recommendation | validation method`. Use browser tests and screenshots before declaring a problem solved. For implementation, see `awsm-auto-prototype`; for final QA, see `awsm-prototype-qa`.
 
-**Contoh:** “Review form checkout: pengguna sering bingung soal ongkir. Tunjukkan perbaikan urutan field, error, mobile keyboard, dan cara mengujinya.”
+**Example:** “Review this checkout form: users struggle with shipping costs. Improve field order, error handling, and the mobile keyboard flow, then explain how to test each change.”

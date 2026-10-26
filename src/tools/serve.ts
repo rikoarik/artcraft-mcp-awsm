@@ -1,4 +1,4 @@
-// Server statis lokal untuk preview prototype: http://127.0.0.1:<port>/
+// Local static server for prototype previews: http://127.0.0.1:<port>/
 
 import fs from "node:fs";
 import http from "node:http";
@@ -42,7 +42,7 @@ function startServer(base: string, wantPort: number): Promise<{ server: http.Ser
         res.writeHead(403).end("Forbidden");
         return;
       }
-      // Cegah symlink di folder project mengakses file di luar root.
+      // Prevent project-directory symlinks from exposing files outside the root.
       const real = fs.existsSync(file) ? fs.realpathSync(file) : file;
       const realBase = fs.realpathSync(base);
       if (real !== realBase && !real.startsWith(realBase + path.sep)) {
@@ -77,13 +77,13 @@ function startServer(base: string, wantPort: number): Promise<{ server: http.Ser
     const server = http.createServer(handler);
     const onError = (err: NodeJS.ErrnoException) => {
       server.close();
-      if (err.code === "EADDRINUSE") reject(Object.assign(new Error("port dipakai"), { code: "EADDRINUSE" }));
+      if (err.code === "EADDRINUSE") reject(Object.assign(new Error("port is in use"), { code: "EADDRINUSE" }));
       else reject(err);
     };
     server.once("error", onError);
     server.listen(wantPort, "127.0.0.1", () => {
       server.off("error", onError);
-      // unref: jangan bikin proses MCP nyangkut setelah transport stdin/stdout tutup.
+      // Let the MCP process exit when the stdin/stdout transport closes.
       server.unref();
       resolve({ server, port: wantPort });
     });
@@ -92,7 +92,7 @@ function startServer(base: string, wantPort: number): Promise<{ server: http.Ser
 
 export async function serve(input: { root?: string; port?: number; action?: "start" | "stop" }) {
   if (input.action === "stop") {
-    if (!active) return { note: "Tidak ada server statis yang aktif." };
+    if (!active) return { note: "No static preview server is running." };
     const url = `http://127.0.0.1:${active.port}/`;
     active.server.close();
     active.server.closeIdleConnections?.();
@@ -102,13 +102,13 @@ export async function serve(input: { root?: string; port?: number; action?: "sta
 
   const base = path.resolve(input.root ?? ".");
   if (base === path.parse(base).root || base === process.env.HOME) {
-    throw new Error("Pilih folder prototype khusus; jangan serve filesystem root atau home directory.");
+    throw new Error("Choose a dedicated prototype folder; do not serve the filesystem root or home directory.");
   }
   if (!fs.existsSync(base) || !fs.statSync(base).isDirectory()) {
-    throw new Error(`Folder tidak ditemukan: ${base}`);
+    throw new Error(`Folder not found: ${base}`);
   }
   if (active && active.base === base) {
-    return { url: `http://127.0.0.1:${active.port}/`, root: base, note: "Server untuk folder ini sudah jalan." };
+    return { url: `http://127.0.0.1:${active.port}/`, root: base, note: "A preview server for this folder is already running." };
   }
   if (active) {
     active.server.close();
@@ -126,13 +126,13 @@ export async function serve(input: { root?: string; port?: number; action?: "sta
     }
   }
   if (!started) {
-    throw new Error(`Tidak ada port kosong mulai dari ${input.port ?? 4321}: ${String(lastError)}`);
+    throw new Error(`No available port starting at ${input.port ?? 4321}: ${String(lastError)}`);
   }
 
   active = { base, port: started.port, server: started.server };
   return {
     url: `http://127.0.0.1:${started.port}/`,
     root: base,
-    note: "Slot khusus localhost (127.0.0.1 saja). Ini untuk preview — halaman entry diharapkan index.html.",
+    note: "Bound to localhost only (127.0.0.1). This is a preview; the entry page should be index.html.",
   };
 }

@@ -2,7 +2,7 @@
   <defs><linearGradient id="gw41" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#122923"/><stop offset="1" stop-color="#27614b"/></linearGradient></defs>
   <rect width="1200" height="630" fill="url(#gw41)"/>
   <rect x="0" y="0" width="10" height="630" fill="#ddad65"/>
-  <text x="72" y="176" font-size="27" font-weight="700" letter-spacing="6" fill="#ddad65" font-family='Arial, Helvetica, sans-serif'>STUDIO KOPI</text>
+  <text x="72" y="176" font-size="27" font-weight="700" letter-spacing="6" fill="#ddad65" font-family='Arial, Helvetica, sans-serif'>KOPI PAGI STUDIO</text>
   <text x="72" y="365" font-size="90" font-weight="800" fill="#ffffff" font-family='Arial, Helvetica, sans-serif'>Kopi Pagi</text>
-  <text x="72" y="442" font-size="34" fill="#c9ced7" font-family='Arial, Helvetica, sans-serif'>Ritual setiap hari</text>
+  <text x="72" y="442" font-size="34" fill="#c9ced7" font-family='Arial, Helvetica, sans-serif'>A daily ritual</text>
 </svg>

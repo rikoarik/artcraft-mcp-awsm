@@ -1,25 +1,25 @@
 ---
 name: awsm-antislop-ui
-description: Mengaudit dan memperbaiki UI generik/AI-looking tanpa merusak brand atau perilaku; gunakan saat redesign, review tampilan, atau user meminta halaman “less AI”, lebih spesifik, dan tidak templated.
+description: Audit and improve generic or AI-looking interfaces without breaking their brand or behavior. Use for visual redesigns, UI reviews, or requests for a more specific, less templated page.
 ---
 
-# Anti-slop: diagnosis → revisi → pembuktian
+# Anti-slop: diagnose, revise, demonstrate
 
-## Audit dengan bukti
+## Audit with evidence
 
-Buka UI existing di browser dan ambil screenshot desktop/mobile, periksa copy dan interaksi. Catat temuan menurut dampaknya, bukan daftar larangan otomatis: repetisi kartu sama ukuran, hero gradient/warna tanpa alasan, ikon emoji, eyebrow di setiap section, tipografi tanpa hirarki, CTA umum, faux social proof, animasi fade massal, atau copy benefit-speak. Pola tersebut valid bila memang bagian identitas/tujuan; jangan ubah yang bekerja hanya karena mirip tren.
+Open the existing UI in a browser, capture desktop and mobile screenshots, and inspect copy and interactions. Rank findings by their effect on the user rather than applying a blanket ban: repetitive equal-sized cards, unexplained gradients, emoji icons, labels above every section, weak typography hierarchy, vague CTAs, invented social proof, mass fade animations, or generic benefit copy. Any of these patterns can be valid when they serve the brand and task; do not change working elements simply because they are popular.
 
-Buat ringkasan `masalah → dampak ke tugas user → solusi spesifik → risiko perubahan`. Prioritaskan satu area dominan (mis. hero tidak menjelaskan produk), kemudian pola sekunder. Jangan mereskin seluruh aplikasi jika request terbatas pada satu komponen.
+Write a compact `problem → impact on user task → specific remedy → change risk` summary. Address the most consequential area first (for example, a hero that never explains the product), then secondary patterns. Do not reskin an entire application if the request concerns one component.
 
-## Rancang arah yang spesifik
+## Choose a specific direction
 
-1. Ambil subject matter dan bahasa user sebagai bahan visual; pilih tipe, ruang, warna, gambar, dan struktur yang terasa milik brand itu. Jangan mengganti satu template dengan template populer lain (mis. serif + cream + terracotta + label monospace).
-2. Ganti copy abstrak dengan apa yang produk lakukan, untuk siapa, dan bukti yang benar-benar ada. Tombol menyatakan akibat klik. Hapus statistik/testimoni yang tidak bersumber.
-3. Variasikan hierarchy berdasarkan kepentingan, bukan pola 'semua kartu'; beri ruang pada konten penting dan sederhanakan ornamen. Tetapkan radius/border/shadow hanya ketika memperjelas kelompok atau affordance.
-4. Evaluasi aksesibilitas selama revisi: kontras, focus, semantik, responsive, dan reduced motion. Jangan membuat UI lebih unik tetapi kurang dapat digunakan.
+1. Use the subject matter and the user's language as visual source material. Choose type, space, color, imagery, and structure that feel native to the brand. Avoid swapping one fashionable template for another, such as serif type, cream backgrounds, terracotta accents, and monospace labels by default.
+2. Replace abstract copy with what the product actually does, for whom, and what evidence exists. Buttons should communicate the result of clicking. Remove unsourced statistics and testimonials.
+3. Vary hierarchy according to importance rather than using a grid of identical cards. Give priority content room and reduce decoration. Apply radii, borders, and shadows only when they clarify grouping or affordances.
+4. Protect accessibility while revising: contrast, focus, semantics, responsiveness, and reduced motion. A distinctive UI is not better if it is harder to use.
 
-## Bukti selesai
+## Evidence of completion
 
-Bandingkan screenshot sebelum/sesudah pada ukuran yang sama. Uji navigasi dan fungsi semula untuk mencegah regresi; cek console. Serahkan daftar perubahan dan alasan, bagian brand yang dipertahankan, serta isu yang belum selesai. Jika tidak dapat render UI, katakan audit visual masih provisional.
+Compare before and after screenshots at the same sizes. Re-test existing navigation and functionality to catch regressions and inspect the console. Hand off changes and reasons, preserved brand features, and unresolved issues. If you cannot render the UI, label the visual audit provisional.
 
-**Contoh:** “Audit landing page SaaS ini; hilangkan kartu dan gradient generik, pertahankan warna dan flow checkout, tunjukkan before/after 360px dan 1200px.”
+**Example:** “Audit this SaaS landing page, remove generic card and gradient patterns, retain our brand colors and checkout flow, and show before/after screenshots at 360px and 1200px.”

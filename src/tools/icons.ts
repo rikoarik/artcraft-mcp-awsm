@@ -1,4 +1,4 @@
-// Icon search via Iconify (gratis, tanpa API key).
+// Search Iconify for SVG icons without an API key.
 
 import { fetchJson, fetchText } from "../util.js";
 
@@ -7,7 +7,7 @@ const ICONIFY = "https://api.iconify.design";
 export async function findIcons(input: {
   query: string;
   limit?: number;
-  /** Bisa beberapa family dipisah koma, contoh "lucide,tabler". */
+  /** Accepts comma-separated families, for example "lucide,tabler". */
   prefix?: string;
 }) {
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 50);
@@ -25,21 +25,21 @@ export async function findIcons(input: {
     icons: names.map((name) => {
       const [family, icon] = name.split(":");
       return {
-        /** Nama ikon untuk awsm_get_icon. */
+        /** Icon name to pass to get_icon. */
         name,
-        /** Keluarga ikon — pakai SATU family yang sama dalam 1 UI biar konsisten. */
+        /** Keep one family consistent throughout the UI. */
         family,
-        /** URL preview SVG. */
+        /** SVG preview URL. */
         svg: `${ICONIFY}/${family}/${icon}.svg?height=64`,
       };
     }),
-    tip: "Pilih keluarga ikon yang sama untuk semua ikon dalam satu UI. Ambil markup-nya lewat awsm_get_icon.",
+    tip: "Use one icon family for a consistent UI. Retrieve the SVG markup with get_icon.",
   };
 }
 
 export async function getIcon(input: { name: string; height?: number }) {
   if (!/^[a-z0-9_.-]+:[a-z0-9_.-]+$/i.test(input.name)) {
-    throw new Error(`Nama ikon tidak valid: "${input.name}". Format: "family:name", contoh "lucide:rocket".`);
+    throw new Error(`Invalid icon name: "${input.name}". Use family:name format, such as "lucide:rocket".`);
   }
   const [family, name] = input.name.split(":");
   const height = input.height ?? 64;
@@ -48,6 +48,6 @@ export async function getIcon(input: { name: string; height?: number }) {
     name: input.name,
     height,
     svg,
-    note: "SVG sudah normalisasi ke height yang diminta. Untuk styling, override .svg path via CSS — banyak ikon ikut currentColor.",
+    note: "SVG normalized to the requested height. Many icons use currentColor and can be styled with CSS.",
   };
 }

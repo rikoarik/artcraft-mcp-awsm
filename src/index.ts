@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// MCP server "awsm" — stdio transport.
+// AWSM MCP server using stdio transport.
 // Tools: find_icons, get_icon, find_images, download_asset, make_asset, palette, serve
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -21,18 +21,17 @@ const fail = (error: unknown) => ({
   content: [{ type: "text" as const, text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
 });
 
-// --- Ikon ---------------------------------------------------------------
-
+// Icons
 server.registerTool(
   "find_icons",
   {
     title: "Find Icons",
     description:
-      "Cari ikon SVG gratis via Iconify (TANPA API key). Balas daftar ikon dengan format 'family:name' + URL preview. Tip: pertahankan satu 'family' (mis. lucide saja) untuk konsistensi UI.",
+      "Search for free SVG icons through Iconify (no API key). Returns family:name identifiers and preview URLs. Choose one family (such as lucide) for a consistent UI.",
     inputSchema: {
-      query: z.string().min(1).describe("Kata kunci ikon, contoh 'rocket', 'shopping cart', 'cloud upload'."),
-      limit: z.number().int().min(1).max(50).optional().describe("Jumlah hasil (1-50, default 20)."),
-      prefix: z.string().optional().describe("Saring keluarga ikon, contoh 'lucide' atau 'lucide,tabler'."),
+      query: z.string().min(1).describe("Icon search term, such as 'rocket', 'shopping cart', or 'cloud upload'."),
+      limit: z.number().int().min(1).max(50).optional().describe("Number of results (1–50; default 20)."),
+      prefix: z.string().optional().describe("Limit icon families, such as 'lucide' or 'lucide,tabler'."),
     },
   },
   async (args) => {
@@ -49,10 +48,10 @@ server.registerTool(
   {
     title: "Get Icon SVG",
     description:
-      "Ambil MARKUP SVG dari satu ikon Iconify ('family:name', contoh 'lucide:rocket') untuk langsung di-inline ke HTML/JSX.",
+      "Retrieve SVG markup for one Iconify icon identified by family:name (such as 'lucide:rocket') for use in HTML or JSX.",
     inputSchema: {
-      name: z.string().min(1).describe("Nama ikon 'family:name'."),
-      height: z.number().int().min(16).max(512).optional().describe("Height normalisasi (default 64)."),
+      name: z.string().min(1).describe("Icon identifier in family:name format."),
+      height: z.number().int().min(16).max(512).optional().describe("Normalized icon height (default 64)."),
     },
   },
   async (args) => {
@@ -64,20 +63,19 @@ server.registerTool(
   },
 );
 
-// --- Gambar -------------------------------------------------------------
-
+// Photos
 server.registerTool(
   "find_images",
   {
     title: "Find Images",
     description:
-      "Cari foto gratis per query. provider 'openverse' (default, tanpa key, hasil lisensi komersial CC/PD), 'pexels' (butuh env PEXELS_API_KEY), 'unsplash' (butuh env UNSPLASH_ACCESS_KEY), 'picsum' (placeholder acak tanpa jaminan relevan).",
+      "Search for images by query. Providers: openverse (default, no key, commercially usable CC/PD results), pexels (PEXELS_API_KEY), unsplash (UNSPLASH_ACCESS_KEY), or picsum (random placeholders, not subject-matched). Verify source licenses before use.",
     inputSchema: {
-      query: z.string().min(1).describe("Kata kunci foto, contoh 'coffee shop interior warm light'."),
-      provider: z.enum(["openverse", "pexels", "unsplash", "picsum"]).optional().describe("Default 'openverse'."),
-      limit: z.number().int().min(1).max(20).optional().describe("Jumlah hasil (1-20, default 8)."),
-      width: z.number().int().min(100).max(4000).optional().describe("Khusus picsum: lebar gambar."),
-      height: z.number().int().min(100).max(4000).optional().describe("Khusus picsum: tinggi gambar."),
+      query: z.string().min(1).describe("Photo search phrase, such as 'coffee shop interior warm light'."),
+      provider: z.enum(["openverse", "pexels", "unsplash", "picsum"]).optional().describe("Default: openverse."),
+      limit: z.number().int().min(1).max(20).optional().describe("Number of results (1–20; default 8)."),
+      width: z.number().int().min(100).max(4000).optional().describe("Image width for picsum only."),
+      height: z.number().int().min(100).max(4000).optional().describe("Image height for picsum only."),
     },
   },
   async (args) => {
@@ -89,18 +87,17 @@ server.registerTool(
   },
 );
 
-// --- Asset lokal --------------------------------------------------------
-
+// Local assets
 server.registerTool(
   "download_asset",
   {
     title: "Download Asset",
     description:
-      "Simpan 1 gambar raster dari URL ke folder project (default './assets'), maksimum 10 MB, tanpa menimpa file lama. SVG eksternal ditolak; cek lisensi sumber sebelum pakai.",
+      "Save one raster image from a URL to a project folder (default './assets'); maximum 10 MB, never overwrites an existing file. External SVG downloads are disabled. Check the source license first.",
     inputSchema: {
-      url: z.string().url().describe("URL gambar (http/https)."),
-      filename: z.string().optional().describe("Nama file tujuan; default diambil dari URL. Karakter aneh dilapangkan."),
-      dir: z.string().optional().describe("Folder tujuan (default './assets')."),
+      url: z.string().url().describe("Image URL (HTTP or HTTPS)."),
+      filename: z.string().optional().describe("Destination filename; defaults to the URL filename. Unsupported characters are sanitized."),
+      dir: z.string().optional().describe("Destination folder (default './assets')."),
     },
   },
   async (args) => {
@@ -117,17 +114,17 @@ server.registerTool(
   {
     title: "Make Asset",
     description:
-      "Generate SVG template berbasis teks: 'og-card' (1200×630), 'banner', 'badge' monogram, atau 'placeholder'. Bukan AI image generator; cek panjang teks karena tidak otomatis wrap.",
+      "Create a text-based SVG template: an Open Graph card (1200×630), banner, monogram badge, or placeholder. Not an AI image generator; long text does not wrap automatically.",
     inputSchema: {
-      kind: z.enum(["og-card", "banner", "badge", "placeholder"]).describe("Jenis asset."),
-      title: z.string().optional().describe("Teks utama (judul/initial)."),
-      subtitle: z.string().optional().describe("Teks teman satu baris."),
-      label: z.string().optional().describe("Kicker kecil di atas judul (og-card/banner)."),
-      colors: z.array(z.string()).max(3).optional().describe("[warna dasar, warna gelap-ke-terang, aksen] format hex."),
-      width: z.number().int().optional().describe("Lebar px (default per jenis)."),
-      height: z.number().int().optional().describe("Tinggi px (default per jenis)."),
-      dir: z.string().optional().describe("Folder simpan (default './assets')."),
-      filename: z.string().optional().describe("Nama file tanpa ekstensi akan tetap disimpan .svg."),
+      kind: z.enum(["og-card", "banner", "badge", "placeholder"]).describe("Asset type."),
+      title: z.string().optional().describe("Main text (title or initials)."),
+      subtitle: z.string().optional().describe("Supporting text on a single line."),
+      label: z.string().optional().describe("Small label above the title on cards and banners."),
+      colors: z.array(z.string()).max(3).optional().describe("Up to three hex colors: [background, secondary, accent]."),
+      width: z.number().int().optional().describe("Width in pixels (defaults vary by type)."),
+      height: z.number().int().optional().describe("Height in pixels (defaults vary by type)."),
+      dir: z.string().optional().describe("Output folder (default './assets')."),
+      filename: z.string().optional().describe("Filename; .svg is appended when no image extension is supplied."),
     },
   },
   async (args) => {
@@ -144,10 +141,10 @@ server.registerTool(
   {
     title: "Palette",
     description:
-      "Derive palet warna dari 1 warna hex: scheme 'analogous', 'complementary', 'triadic', atau 'complete' (semua + tint/shade). Balasan punya CSS variables siap pakai.",
+      "Derive colors from a hex value using an analogous, complementary, triadic, or complete scheme (all three plus tint/shade). Returns CSS custom properties; check contrast before use.",
     inputSchema: {
-      color: z.string().min(1).describe("Hex, contoh '#1b7f5a'."),
-      scheme: z.enum(["analogous", "complementary", "triadic", "complete"]).optional().describe("Default 'complete'."),
+      color: z.string().min(1).describe("Hex color, such as '#1b7f5a'."),
+      scheme: z.enum(["analogous", "complementary", "triadic", "complete"]).optional().describe("Default: complete."),
     },
   },
   async (args) => {
@@ -159,18 +156,17 @@ server.registerTool(
   },
 );
 
-// --- Preview ------------------------------------------------------------
-
+// Preview
 server.registerTool(
   "serve",
   {
     title: "Serve Preview",
     description:
-      "Start/stop server statis localhost untuk preview prototype (HTML/CSS/JS/SVG). Hanya file non-hidden di folder root; bukan deployment. Jangan gunakan untuk file rahasia.",
+      "Start or stop a localhost-only static preview for HTML, CSS, JS, and SVG. Hidden files are blocked. Not a deployment service; do not serve files containing secrets.",
     inputSchema: {
-      root: z.string().optional().describe("Folder yang diserve (default '.')."),
-      port: z.number().int().min(1024).max(65535).optional().describe("Port awal; kalau dipakai, dicoba port+1 dst."),
-      action: z.enum(["start", "stop"]).optional().describe("Default 'start'."),
+      root: z.string().optional().describe("Folder to serve (default '.')."),
+      port: z.number().int().min(1024).max(65535).optional().describe("Starting port; tries subsequent ports if occupied."),
+      action: z.enum(["start", "stop"]).optional().describe("Default: start."),
     },
   },
   async (args) => {
@@ -182,29 +178,27 @@ server.registerTool(
   },
 );
 
-// --- main ---------------------------------------------------------------
-
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // Log ke stderr SAJA — stdout dipakai protokol MCP.
-  console.error("awsm MCP server aktif (stdio)");
+  // Keep logs on stderr; stdout is reserved for MCP messages.
+  console.error("AWSM MCP server active (stdio)");
 }
 
 if (process.argv[2] === "setup") {
-  // `npx my-awsm-mcp setup` harus masuk installer, bukan membuka transport MCP.
+  // Route `npx my-awsm-mcp setup` to the installer rather than stdio transport.
   void import("./setup.js").catch((error) => {
-    console.error("Gagal menjalankan setup:", error);
+    console.error("Failed to run setup:", error);
     process.exitCode = 1;
   });
 } else if (process.argv.length > 2 && process.argv[2] !== "--help") {
-  console.error(`Subcommand tidak dikenal: ${process.argv[2]}. Pakai 'setup' atau jalankan tanpa argumen untuk MCP stdio.`);
+  console.error(`Unknown subcommand: ${process.argv[2]}. Use 'setup' or run without arguments for MCP stdio.`);
   process.exitCode = 1;
 } else if (process.argv[2] === "--help") {
-  console.error("my-awsm-mcp: jalankan tanpa argumen untuk MCP stdio, atau 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' untuk instalasi OpenCode.");
+  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' to install client configurations and skills.");
 } else {
   main().catch((error) => {
-    console.error("Gagal memulai awsm MCP server:", error);
+    console.error("Failed to start AWSM MCP server:", error);
     process.exitCode = 1;
   });
 }

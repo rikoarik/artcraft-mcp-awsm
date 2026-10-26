@@ -1,87 +1,88 @@
 # FigCraft MCP AWSM
 
-Toolkit **MCP stdio + 13 skill yang dapat diedit** untuk mencari foto/ikon relevan, membuat SVG sederhana, lalu merancang, membangun, dan menguji prototype web bersama coding agent. Mendukung OpenCode V2, Claude Code, Codex, Google Antigravity CLI, Zed Agent, dan GitHub Copilot CLI. **Paket ini tidak mengendalikan kanvas FigCraft**; untuk desain di aplikasi FigCraft, sambungkan MCP FigCraft tersendiri.
+A **local stdio MCP server and 13 editable agent skills** for finding relevant photos and icons, creating simple SVG assets, and designing, building, and reviewing web prototypes with a coding agent. Supports OpenCode V2, Claude Code, Codex, Google Antigravity CLI, Zed Agent, and GitHub Copilot CLI. **This package does not control the FigCraft canvas**; connect FigCraft's own MCP separately to design inside the application.
 
-## Lihat penggunaan dan hasilnya
+## See the tools in use—and the result
 
-[![Cuplikan walkthrough penggunaan MCP AWSM](demo/awsm-demo.gif)](demo/awsm-demo.mp4)
+[![AWSM MCP usage walkthrough](demo/awsm-demo.gif)](demo/awsm-demo.mp4)
 
-**[Putar video MP4 lengkap](demo/awsm-demo.mp4)** · [Lihat poster](demo/poster.png) · [Buka SVG yang dihasilkan](demo/example/coffee-card.svg) · [Buka halaman contoh](demo/example/index.html)
+**[Watch the complete MP4](demo/awsm-demo.mp4)** · [View the poster](demo/poster.png) · [Open the generated SVG](demo/example/coffee-card.svg) · [See the example HTML page](demo/example/index.html)
 
-Demo menunjukkan panggilan MCP **nyata**: `palette` menghasilkan warna dari `#176F57`, `make_asset` menghasilkan [kartu Kopi Pagi 1200 × 630](demo/example/coffee-card.svg), dan `serve` membuka [halaman HTML contoh](demo/example/index.html) di localhost lalu memverifikasi respons 200. Video adalah walkthrough **berskrip dari hasil panggilan MCP**, bukan rekaman enam agent, bukan generasi website otomatis, dan bukan rekaman kanvas FigCraft. HTML contoh dibuat sebagai integrasi SVG, bukan output `make_asset`.
+The demo makes **real MCP calls**: `palette` derives colors from `#176F57`, `make_asset` creates a [1200 × 630 Kopi Pagi card](demo/example/coffee-card.svg), and `serve` opens an [example HTML page](demo/example/index.html) on localhost and verifies the HTTP responses. It is a **scripted walkthrough of MCP call results**, not a recording of six agents, an automatically generated website, or the FigCraft canvas. The example HTML integrates the SVG; it is not an output of `make_asset`.
 
-## Prasyarat dan instalasi
+## Requirements and installation
 
-Butuh Node.js **18+**, `npx`, koneksi internet untuk instalasi dari GitHub (dan untuk pencarian foto/ikon), serta coding agent yang bisa menjalankan MCP **stdio lokal**. Jalankan perintah berikut **di direktori proyek tujuan**:
+You need Node.js **18+**, `npx`, internet access for installation from GitHub (and for photo/icon search), and a coding agent capable of launching a **local stdio MCP server**. Run this **from the project directory**:
 
 ```sh
 npx -y github:rikoarik/figcraft-mcp-awsm setup --client all --source github:rikoarik/figcraft-mcp-awsm
 ```
 
-Paket ini **belum dipublikasikan ke npm**. Argumen `--source` membuat konfigurasi MCP yang dihasilkan memakai `npx -y github:rikoarik/figcraft-mcp-awsm` alih-alih nama paket npm yang belum tersedia. Instalasi GitHub menjalankan `prepare` untuk mengompilasi TypeScript. Tinjau perubahan file konfigurasi dan persetujuan/trust yang diminta masing-masing client. `--client all` menulis konfigurasi proyek untuk lima client; untuk **Zed**, MCP ada di pengaturan user-level sehingga perlu langkah `--global` tersendiri (skill proyek tetap dipasang).
+This package is **not published to npm yet**. `--source` configures each agent to launch `npx -y github:rikoarik/figcraft-mcp-awsm` instead of the unpublished npm package name. GitHub installation runs `prepare` to compile TypeScript. Review the configuration changes and any trust or approval prompts in your client. `--client all` installs project-level configurations for five clients; **Zed** needs a separate `--global` step for its user-level MCP setting (its project skills are still installed).
 
-### Pilih client dan verifikasi
+### Choose and verify a client
 
-Ganti `NAMA` dengan nama di tabel; jalankan di root proyek yang akan dipakai agent:
+Replace `CLIENT` with an ID from the table and run the command at the root of the project your agent will use:
 
 ```sh
-npx -y github:rikoarik/figcraft-mcp-awsm setup --client NAMA --source github:rikoarik/figcraft-mcp-awsm
+npx -y github:rikoarik/figcraft-mcp-awsm setup --client CLIENT --source github:rikoarik/figcraft-mcp-awsm
 ```
 
-| Client | Konfigurasi MCP proyek | Lokasi skill proyek | Cara mengecek |
+| Client | Project MCP configuration | Project skill location | How to verify |
 | --- | --- | --- | --- |
-| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Buka ulang project, `/mcps`, pastikan `awsm` terhubung dan 7 tool tampil. |
-| **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Buka Claude di project, setujui server proyek, jalankan `/mcp`. |
-| **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Percayai project, cek `codex mcp list`, lalu coba panggil `palette`. |
-| **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Buka workspace dan periksa daftar MCP/tool agent; coba prompt di bawah. |
-| **Zed Agent** (`zed`) | User settings, **hanya** saat `--global` | `.agents/skills/awsm-*/SKILL.md` | Settings → AI → MCP Servers, lalu cek tool pada Agent Zed (bukan external agent). |
-| **GitHub Copilot CLI** (`copilot`) | `.github/mcp.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Buka repo tepercaya, cek `copilot mcp list` atau `/mcp`, lalu coba `palette`. |
+| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with seven tools. |
+| **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Open Claude in the project, approve the project server, and use `/mcp`. |
+| **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Trust the project, run `codex mcp list`, then try `palette`. |
+| **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open the workspace, inspect the agent's MCP tools, and try the prompt below. |
+| **Zed Agent** (`zed`) | User settings, **only** with `--global` | `.agents/skills/awsm-*/SKILL.md` | Check Settings → AI → MCP Servers and the tools in Zed Agent (not an external agent). |
+| **GitHub Copilot CLI** (`copilot`) | `.github/mcp.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open a trusted repository, use `copilot mcp list` or `/mcp`, and try `palette`. |
 
-Untuk Zed, jalankan **dua perintah** bila ingin skill hanya di project tetapi MCP tersedia di settings pribadi:
+For Zed, run **both** commands to keep the skills in the project while registering the MCP server in personal settings:
 
 ```sh
 npx -y github:rikoarik/figcraft-mcp-awsm setup --client zed --source github:rikoarik/figcraft-mcp-awsm
 npx -y github:rikoarik/figcraft-mcp-awsm setup --client zed --global --skip-skills --source github:rikoarik/figcraft-mcp-awsm
 ```
 
-Pada macOS settings Zed ada di `~/.zed/settings.json`, pada platform lain di `~/.config/zed/settings.json`. Mode Zed external agent/terminal bisa punya konfigurasi berbeda dari Zed Agent. Periksa dengan UI client, bukan hanya keberadaan file.
+On macOS, Zed's settings are at `~/.zed/settings.json`; on other supported platforms, they are at `~/.config/zed/settings.json`. Zed external agents and terminal sessions can have separate configurations. Verify the connection in the actual client, not just by checking that files exist.
 
-### Opsi installer dan kustomisasi skill
+### Installer options and skill customization
 
-- `--client opencode|claude|codex|antigravity|zed|copilot|all` (default `opencode`).
-- `--global` memasang MCP dan skill pada lokasi user-level: OpenCode `~/.config/opencode`, Claude `~/.claude.json` + `~/.claude/skills`, Codex `~/.codex/config.toml`, Antigravity `~/.gemini/config/mcp_config.json` + `~/.gemini/antigravity-cli/skills`, Zed settings seperti di atas, Copilot `~/.copilot/mcp-config.json`; skill bersama Codex/Copilot/Zed ada di `~/.agents/skills`. Tinjau konfigurasi global terlebih dahulu, khususnya sebelum `--client all --global`.
-- `--skip-mcp` hanya menyalin skill; `--skip-skills` hanya mengatur MCP. `--force-skills` **menimpa folder skill bernama sama**; tanpa flag ini edit lokal di `SKILL.md` dipertahankan.
-- `--source github:OWNER/REPO` atau nama paket jika kelak terbit di npm. Jangan pakai `npx my-awsm-mcp` saat ini.
+- `--client opencode|claude|codex|antigravity|zed|copilot|all` (default: `opencode`).
+- `--global` installs MCP configuration and skills at user level: OpenCode `~/.config/opencode`, Claude `~/.claude.json` and `~/.claude/skills`, Codex `~/.codex/config.toml`, Antigravity `~/.gemini/config/mcp_config.json` and `~/.gemini/antigravity-cli/skills`, Zed settings as above, Copilot `~/.copilot/mcp-config.json`; Codex/Copilot/Zed shared skills live at `~/.agents/skills`. Review global configurations first, especially before `--client all --global`.
+- `--skip-mcp` copies only skills; `--skip-skills` configures only MCP. `--force-skills` **overwrites existing skill folders with the same names**. Without it, local `SKILL.md` edits are preserved.
+- `--source github:OWNER/REPO` selects a GitHub source; the package name will be an option once published to npm. Do not use `npx my-awsm-mcp` yet.
 
-Contoh mengubah workflow: buka `.agents/skills/awsm-taste-ui/SKILL.md` (atau `.opencode/skills/...`, `.claude/skills/...`), lalu tambah token brand, daftar larangan, checklist responsif, serta contoh output sesuai tim. Skill adalah Markdown dengan YAML frontmatter `name`/`description`; simpan ID folder dan nama skill agar mudah dipanggil. Saat upgrade, bandingkan versi upstream secara manual; jangan pakai `--force-skills` jika ingin mempertahankan modifikasi.
+To customize a workflow, edit `.agents/skills/awsm-taste-ui/SKILL.md` (or the corresponding `.opencode/skills/...` or `.claude/skills/...` path). Add your brand tokens, design constraints, responsive checklist, and preferred handoff format. Each skill is Markdown with YAML `name` and `description` frontmatter; keep its folder and skill ID aligned. On upgrades, compare the upstream version manually. Avoid `--force-skills` if you want to retain local changes.
 
-Installer menjaga konfigurasi lain dan melaporkan konflik bila entry `awsm` sudah ada dengan command berbeda; konflik **tidak** ditimpa. Ia tidak memigrasikan config lama secara otomatis. Setelah instalasi, restart/reload sesi agent bila skill atau tool belum muncul.
+The installer preserves unrelated configuration and reports a conflict if an `awsm` MCP entry already exists with a different command; it **does not overwrite** that entry or migrate old configurations automatically. Restart or reload your agent session if new tools or skills do not appear.
 
-## Tutorial end-to-end: dari brief ke aset dan preview
+## End-to-end tutorial: brief → asset → preview
 
-Berikut alur yang bisa diulang di client mana pun setelah MCP terhubung. Nama tool bisa terlihat sebagai `palette` / `make_asset` atau berawalan `awsm_` sesuai UI client; yang penting adalah server **awsm**. Tool bukan prompt ke model gambar: `make_asset` membuat **template SVG tipografis**, bukan foto atau UI lengkap.
+The following workflow works in any supported client once MCP is connected. Tool names may appear as `palette` / `make_asset` or with an `awsm_` prefix depending on the client UI; the server name is **awsm**. `make_asset` creates a **typographic SVG template**, not a photo or complete interface.
 
-**1. Beri brief yang konkret kepada agent.** Misalnya:
+**1. Give the agent a specific brief.** For example:
 
 ```text
-Gunakan awsm-taste-ui dan awsm-assets untuk halaman kedai kopi kecil bernama Kopi Pagi.
-Tentukan hierarki visual dan satu palet dari #176F57. Cari foto interior yang relevan
-beserta lisensinya, bukan foto acak. Buat kartu sosial judul "Kopi Pagi" dengan
-subtitle "Ritual setiap hari". Simpan SVG lokal, buat halaman HTML sederhana yang
-memakainya, preview, lalu periksa mobile dan reduced motion lewat awsm-prototype-qa.
-Jika foto tidak bisa diverifikasi, gunakan placeholder berlabel; jangan mengarang lisensi.
+Use awsm-taste-ui and awsm-assets to make a page for a small coffee shop called Kopi Pagi.
+Define the visual hierarchy and a palette based on #176F57. Find a relevant interior
+photo with a verifiable license, not a random stock image. Create a social card titled
+“Kopi Pagi” with the subtitle “A daily ritual.” Save the SVG locally, build a simple
+HTML page using it, preview it, and check mobile and reduced motion with
+awsm-prototype-qa. If the photo cannot be verified, use a labeled placeholder;
+do not invent its license.
 ```
 
-**2. Minta warna dan hasilkan aset.** Agent dapat memanggil tool dengan argumen seperti berikut (objek JSON adalah *argumen tool*, bukan perintah terminal):
+**2. Derive colors and create an asset.** The agent can call these tools with arguments like the following (these are *tool calls*, not terminal commands):
 
 ```js
 palette({ "color": "#176F57", "scheme": "complete" })
-make_asset({ "kind": "og-card", "title": "Kopi Pagi", "subtitle": "Ritual setiap hari", "label": "STUDIO KOPI", "colors": ["#122923", "#27614b", "#ddad65"], "dir": "./assets", "filename": "coffee-card.svg" })
+make_asset({ "kind": "og-card", "title": "Kopi Pagi", "subtitle": "A daily ritual", "label": "KOPI PAGI STUDIO", "colors": ["#122923", "#27614b", "#ddad65"], "dir": "./assets", "filename": "coffee-card.svg" })
 ```
 
-`palette` memberi `base`, daftar swatch, dan `cssVars`; pilih peran warna berdasarkan kontras nyata, jangan pakai semua swatch. `make_asset` menulis file SVG dan **menolak menimpa file dengan nama sama**. Demo memakai folder sementara dan menyalin hasilnya ke [`demo/example/coffee-card.svg`](demo/example/coffee-card.svg) agar `npm run demo` dapat diulang.
+`palette` returns `base`, a swatch list, and `cssVars`. Choose color roles based on actual contrast; there is no need to use every swatch. `make_asset` writes an SVG and **will not overwrite an existing filename**. The demo writes to a temporary directory and copies its output to [`demo/example/coffee-card.svg`](demo/example/coffee-card.svg), so `npm run demo` is repeatable.
 
-**3. Jika butuh foto/ikon, lakukan pencarian terpisah.** Contoh argumen:
+**3. Search separately for photos or icons when needed.** Example arguments:
 
 ```js
 find_images({ "query": "small coffee shop interior natural light", "provider": "openverse", "limit": 5 })
@@ -89,64 +90,64 @@ find_icons({ "query": "calendar", "prefix": "lucide", "limit": 5 })
 get_icon({ "name": "lucide:calendar-days", "height": 24 })
 ```
 
-Lihat halaman sumber, lisensi, kreator, atribusi, dan kecocokan crop sebelum memilih. Hasil Openverse difilter untuk penggunaan komersial tetapi **tetap wajib diverifikasi**. `download_asset({ "url": "https://.../photo.jpg", "dir": "./assets", "filename": "interior.jpg" })` menyimpan gambar raster yang dipilih, maksimal 10 MB dan tanpa overwrite; SVG eksternal tidak diterima. Pexels/Unsplash memerlukan `PEXELS_API_KEY`/`UNSPLASH_ACCESS_KEY` pada environment **proses MCP**; `picsum` hanyalah placeholder acak. Jangan tulis API key dalam repo atau percakapan.
+Check each candidate's source page, license, creator, attribution, and cropping suitability. Openverse results are filtered for commercial use, but **you must still verify the rights**. `download_asset({ "url": "https://.../photo.jpg", "dir": "./assets", "filename": "interior.jpg" })` saves a selected raster image, with a 10 MB limit and no overwrite; external SVGs are rejected. Pexels and Unsplash require `PEXELS_API_KEY` or `UNSPLASH_ACCESS_KEY` in the **MCP process environment**. `picsum` supplies random placeholders only. Never commit API keys or paste them into a conversation.
 
-**4. Implementasi dan preview.** Agent coding menyusun HTML/CSS/JS sesuai stack proyek, menggunakan aset lokal dan membuat interaksi yang benar-benar bekerja. Untuk folder **statis** dengan `index.html`:
+**4. Implement and preview.** The coding agent writes HTML/CSS/JS using the project's stack and local assets, and makes the interactions work. For a **static** folder containing `index.html`:
 
 ```js
 serve({ "root": "./demo/example" })
 ```
 
-Buka `url` localhost yang dikembalikan. `serve({ "action": "stop" })` menghentikan preview. Server hanya hidup selama proses MCP berjalan dan bukan hosting/deployment; jangan sajikan folder berisi rahasia. Untuk Vite/Next/stack lain, pakai dev server project, bukan `serve` sebagai pengganti bundler. Cek mobile, desktop, keyboard, focus, status loading/error, console, dan `prefers-reduced-motion` sebelum handoff.
+Open the returned localhost `url`. `serve({ "action": "stop" })` stops the preview. It runs only while the MCP process is active and is not deployment; do not serve a directory containing secrets. For Vite, Next.js, or another framework, use the project's own development server instead of `serve` as a bundler substitute. Before handoff, test mobile and desktop layouts, keyboard and focus behavior, loading and error states, the console, and `prefers-reduced-motion`.
 
-**5. Uji hasil yang sudah ada tanpa agent.** Unduh/clone repo, lalu dari root:
+**5. Inspect the included result without an agent.** Clone or download this repository and run from its root:
 
 ```sh
 python3 -m http.server 8080 --directory demo/example
 ```
 
-Buka `http://localhost:8080/`; berhentikan dengan Ctrl-C. Ini contoh halaman yang menampilkan SVG hasil MCP, **bukan** website yang dibuat otomatis oleh server. Untuk demo animasi/hasil panggilan yang sama, putar [MP4](demo/awsm-demo.mp4).
+Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page displays an SVG actually returned by MCP; **the server did not automatically generate the website**. Watch the [MP4 walkthrough](demo/awsm-demo.mp4) for the tool calls and their results.
 
-### Peta 13 skill
+### All 13 skills
 
-| Skill | Saat dipakai | Keluaran yang harus diperiksa |
+| Skill | When to use it | What to inspect |
 | --- | --- | --- |
-| [`awsm-taste-ui`](skills/awsm-taste-ui/SKILL.md) | Arah visual yang spesifik sebelum markup/redesign | Konsep, token, hirarki dan render mobile/desktop. |
-| [`awsm-antislop-ui`](skills/awsm-antislop-ui/SKILL.md) | Audit UI yang terasa generik | Masalah → dampak → revisi, perbandingan sebelum/sesudah. |
-| [`awsm-ui-ux-best-practices`](skills/awsm-ui-ux-best-practices/SKILL.md) | Alur, form, aksesibilitas, navigasi | Journey, friksi, rekomendasi dan cara verifikasi. |
-| [`awsm-design-system`](skills/awsm-design-system/SKILL.md) | Token/komponen lintas banyak layar | Primitive → semantic → component, state dan contoh. |
-| [`awsm-assets`](skills/awsm-assets/SKILL.md) | Foto dan ikon relevan | File, slot, sumber, kreator, lisensi/atribusi. |
-| [`awsm-asset-lab`](skills/awsm-asset-lab/SKILL.md) | Kartu OG/banner/badge/placeholder | SVG, ukuran, warna, preview dan format target. |
-| [`awsm-template-adapter`](skills/awsm-template-adapter/SKILL.md) | Menyesuaikan template berlisensi | Mapping keep/adapt/remove, asal dan QA. |
-| [`awsm-prompt-to-prototype`](skills/awsm-prompt-to-prototype/SKILL.md) | Brief → prototype end-to-end | Blueprint journey, implementasi, aset dan hasil QA. |
-| [`awsm-auto-prototype`](skills/awsm-auto-prototype/SKILL.md) | Membuat interaksi dan state yang hidup | Kontrol → aksi → feedback, bekerja/simulasi/terblokir. |
-| [`awsm-motion-storyboard`](skills/awsm-motion-storyboard/SKILL.md) | Transisi atau microinteraction | Trigger, end state, reduced motion dan bukti. |
-| [`awsm-responsive-audit`](skills/awsm-responsive-audit/SKILL.md) | Layout mobile/tablet/desktop bermasalah | Screenshot tiap viewport dan status tes ulang. |
-| [`awsm-prototype-qa`](skills/awsm-prototype-qa/SKILL.md) | Sebelum menyerahkan prototype | Matriks journey, temuan terulang dan batas pengujian. |
-| [`awsm-figcraft-handoff`](skills/awsm-figcraft-handoff/SKILL.md) | Handoff ke aplikasi FigCraft | Spesifikasi frame, tokens, aset dan gap interaksi. |
+| [`awsm-taste-ui`](skills/awsm-taste-ui/SKILL.md) | Establish a specific visual direction before markup or redesign | Concept, tokens, hierarchy, and mobile/desktop renders. |
+| [`awsm-antislop-ui`](skills/awsm-antislop-ui/SKILL.md) | Audit a generic-looking interface | Problem → impact → revision and before/after comparison. |
+| [`awsm-ui-ux-best-practices`](skills/awsm-ui-ux-best-practices/SKILL.md) | Journeys, forms, accessibility, navigation | Friction, evidence, recommendation, validation. |
+| [`awsm-design-system`](skills/awsm-design-system/SKILL.md) | Tokens and components across several screens | Primitive → semantic → component, states, examples. |
+| [`awsm-assets`](skills/awsm-assets/SKILL.md) | Relevant photos and icons | Files, slots, sources, creators, licenses, attribution. |
+| [`awsm-asset-lab`](skills/awsm-asset-lab/SKILL.md) | Open Graph cards, banners, badges, placeholders | SVG, dimensions, colors, preview, target format. |
+| [`awsm-template-adapter`](skills/awsm-template-adapter/SKILL.md) | Adapt a licensed template | Keep/adapt/remove mapping, provenance, and QA. |
+| [`awsm-prompt-to-prototype`](skills/awsm-prompt-to-prototype/SKILL.md) | Turn a brief into an end-to-end prototype | Journeys, implementation, assets, QA. |
+| [`awsm-auto-prototype`](skills/awsm-auto-prototype/SKILL.md) | Implement live interactions and states | Control → action → feedback; working/simulated/blocked. |
+| [`awsm-motion-storyboard`](skills/awsm-motion-storyboard/SKILL.md) | Transitions and microinteractions | Triggers, final states, reduced motion, evidence. |
+| [`awsm-responsive-audit`](skills/awsm-responsive-audit/SKILL.md) | Fix mobile/tablet/desktop layout issues | Viewport screenshots and retest status. |
+| [`awsm-prototype-qa`](skills/awsm-prototype-qa/SKILL.md) | Validate before handoff | Journey matrix, reproducible findings, limits. |
+| [`awsm-figcraft-handoff`](skills/awsm-figcraft-handoff/SKILL.md) | Handoff to the FigCraft app | Frame specifications, tokens, assets, interaction gaps. |
 
-Sebut ID skill dalam prompt agar lebih mungkin dimuat oleh agent. Skill adalah **instruksi workflow**, bukan komponen yang otomatis membuat UI tanpa implementasi agent. Semua 13 file dapat disunting, memiliki langkah keputusan, validasi, contoh tugas, dan kriteria handoff; sesuaikan dengan produk serta kebijakan lisensi tim.
+Mention a skill ID in your prompt to make agent loading more reliable. Skills are **workflow instructions**, not components that build a UI without the agent implementing one. Each file is editable and contains decisions, validation, example tasks, and handoff criteria. Tailor them to your product and asset licensing policy.
 
-## Troubleshooting dan batasan
+## Troubleshooting and limitations
 
-- **MCP tak terlihat:** pastikan project/konfigurasi yang benar, restart sesi, setujui project/server (Claude/Codex/Copilot), dan uji `npx -y github:rikoarik/figcraft-mcp-awsm` di shell. Perintah ini menjalankan server stdio, bukan halaman web; hentikan dengan Ctrl-C. Baca log stderr client jika gagal start. Di Zed, instal MCP `--global`.
-- **Skill tak dimuat:** pastikan `SKILL.md` berada dalam subfolder lokasi client di tabel, valid frontmatter, lalu sebut ID di prompt. `--skip-skills` sengaja tidak menyalin skill.
-- **Konflik `awsm` saat setup:** installer menjaga entry existing. Bandingkan konfigurasi manual, backup, lalu perbaiki entry yang salah dengan persetujuan; `--force-skills` hanya memengaruhi skill, **bukan MCP**.
-- **Gambar/ikon kosong:** API publik dan jaringan bisa gagal; ubah query, cek key provider dan lisensi. Jangan mengganti pencarian relevan dengan `picsum` tanpa memberi label placeholder.
-- **SVG tidak tampak di preview:** cek path relatif terhadap `index.html`, nama file, clipping teks panjang, serta konten folder yang diserve. OG card perlu konversi ke PNG jika platform sosial tidak menerima SVG.
-- **Kode prototype atau FigCraft:** tujuh tool AWSM tidak mengedit project, membuat website, menghasilkan foto AI, mengendalikan kanvas FigCraft, atau melakukan deployment. Agent coding mengimplementasikan web; MCP FigCraft terpisah menangani dokumen desain. `serve` hanya server lokal statis.
-- **Keamanan:** hanya hubungkan server lokal dari source yang dipercaya; jangan menaruh kredensial di konfigurasi yang di-commit. Tinjau berkas yang dibuat dan lisensi pihak ketiga sebelum publikasi.
+- **MCP not listed:** check the active project and configuration, restart the agent session, approve the project or server where required (Claude/Codex/Copilot), and try `npx -y github:rikoarik/figcraft-mcp-awsm` in a terminal. That launches the stdio server, not a web page; stop it with Ctrl-C. Check client stderr logs for startup errors. Zed requires `--global` for MCP.
+- **Skill not loaded:** check the client's skill directory in the table, confirm each `SKILL.md` has valid frontmatter, and mention its ID in the prompt. `--skip-skills` intentionally omits skill installation.
+- **`awsm` setup conflict:** the installer preserves existing entries. Compare and back up the configuration, then edit a wrong entry deliberately; `--force-skills` affects skills **only**, not MCP settings.
+- **Missing images or icons:** public APIs and networks can fail. Revise the query, check provider keys and licensing, and label `picsum` results as placeholders rather than relevant search results.
+- **SVG missing from preview:** check the path relative to `index.html`, the filename, long-text clipping, and the directory served. Convert an Open Graph card to PNG if the target social platform requires raster.
+- **Prototype code or FigCraft:** AWSM's seven tools do not edit a project, generate an entire site or AI photos, control the FigCraft canvas, or deploy a website. The coding agent implements the web prototype; FigCraft's separate MCP handles design documents. `serve` is a local static preview only.
+- **Security:** run local servers only from sources you trust. Do not commit credentials in configuration. Review created files and third-party licenses before publishing.
 
-## Pengembangan, tes, dan sumber
+## Development, tests, and sources
 
 ```sh
 npm ci
-npm test                     # build + smoke installer, 7 tool MCP, dan preview HTTP
+npm test                     # build and smoke-test the installer, seven MCP tools, and HTTP preview
 npm audit --audit-level=high
-npm pack --dry-run           # pastikan build, README, dan skills terkemas
-npm run demo                 # regenerasi MP4, GIF, poster dan contoh SVG/HTML
+npm pack --dry-run           # check that build output, README, and skills are packaged
+npm run demo                 # regenerate MP4, GIF, poster, and SVG/HTML examples
 ```
 
-`npm run demo` butuh **macOS Quick Look (`qlmanage`)**, `ffmpeg`, Python 3 + Pillow. Script melakukan panggilan MCP nyata di direktori sementara, merender SVG melalui Quick Look, lalu membuat frame/video; bukan rekaman layar agent. Source repo disertakan, build dihasilkan oleh `prepare` pada Git install. Untuk development lokal, `npm run build` lalu `node build/index.js` memulai server stdio; `node build/index.js setup --client opencode --source github:rikoarik/figcraft-mcp-awsm` tetap memasang *source GitHub* pada konfigurasi client.
+`npm run demo` requires **macOS Quick Look (`qlmanage`)**, `ffmpeg`, Python 3, and Pillow. The script makes real MCP calls in a temporary directory, renders the SVG with Quick Look, then creates the video frames. It does not record an agent's screen. The repository includes source; Git installations generate build files through `prepare`. For local development, run `npm run build` and then `node build/index.js` for stdio. Running `node build/index.js setup --client opencode --source github:rikoarik/figcraft-mcp-awsm` still points the installed client at the *GitHub source*, not automatically at this checkout.
 
-Rujukan dokumentasi client: [OpenCode MCP](https://opencode.ai/v2/docs/mcp-servers) dan [skills](https://opencode.ai/v2/docs/skills) · [Claude Code MCP](https://code.claude.com/docs/en/mcp) · [Codex MCP](https://developers.openai.com/codex/mcp) · [Antigravity CLI migrasi MCP/skills](https://antigravity.google/docs/cli/gcli-migration.md) · [Zed MCP](https://zed.dev/docs/ai/mcp) · [Copilot CLI MCP](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers). Format skill mengikuti [Agent Skills Specification](https://agentskills.io/specification); [Anthropic frontend-design](https://github.com/anthropics/skills/tree/main/skills/frontend-design) digunakan sebagai **referensi struktur saja**. Instruksi skill di paket ini ditulis orisinal; MIT untuk kode repo, sedangkan foto/ikon eksternal tunduk pada lisensi sumber masing-masing.
+Client documentation: [OpenCode MCP](https://opencode.ai/v2/docs/mcp-servers) and [skills](https://opencode.ai/v2/docs/skills) · [Claude Code MCP](https://code.claude.com/docs/en/mcp) · [Codex MCP](https://developers.openai.com/codex/mcp) · [Antigravity CLI MCP/skill migration](https://antigravity.google/docs/cli/gcli-migration.md) · [Zed MCP](https://zed.dev/docs/ai/mcp) · [Copilot CLI MCP](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers). Skill format follows the [Agent Skills Specification](https://agentskills.io/specification). [Anthropic's frontend-design skill](https://github.com/anthropics/skills/tree/main/skills/frontend-design) was consulted for **structural inspiration only**. This package's skill instructions are original. Repository code is MIT-licensed; external photos and icons retain their own source licenses.

@@ -1,27 +1,27 @@
 ---
 name: awsm-template-adapter
-description: Mengadaptasi template UI yang tersedia secara legal menjadi prototype sesuai brief dan brand, bukan menyalin desain acak. Gunakan ketika user menunjuk template/repo existing atau meminta mulai dari template.
+description: Adapt a legally usable UI template to a product brief and brand instead of copying an arbitrary design. Use when the user provides a template or repository, or asks to start from one.
 ---
 
-# Dari template ke produk yang benar-benar cocok
+# From a template to a product-specific interface
 
-## Seleksi sumber
+## Select the source
 
-Inspeksi template yang diberikan user lebih dulu: struktur, framework/version, dependencies, dokumentasi, lisensi, assets, komponen, dan feature flags. Bila user meminta mencari template online, pilih kandidat dengan lisensi jelas serta kesesuaian stack; jangan menyalin repo atau mengunduh konten berhak cipta tanpa izin. Catat sumber, lisensi, dan atribusi yang dibutuhkan. Jika tidak ada kandidat aman, susun layout baru dari prinsip umum, bukan clone pixel.
+Inspect any template supplied by the user first: structure, framework version, dependencies, documentation, license, assets, components, and feature flags. If asked to find one online, shortlist candidates with clear licensing and compatible stacks. Do not copy a repository or download copyrighted content without permission. Record sources, licenses, and attribution obligations. If there is no safe candidate, design a new layout from general principles rather than cloning pixels.
 
-## Mapping
+## Map the work
 
-Buat tabel `slot template → kebutuhan brief → keep/adapt/remove → risiko`. Tentukan apa yang tetap: navigasi, komponen aksesibel, typography tokens, routes; apa yang dibuang: dummy CTA, fake testimonials, lorem ipsum, gambar stok tidak relevan. Tentukan state yang hilang (loading/empty/error), lalu set acceptance untuk fungsi tiap section.
+Build a table: `template slot → brief requirement → keep/adapt/remove → risk`. Decide what remains, such as navigation, accessible components, typography tokens, and routes. Identify what must go: dummy CTAs, fake testimonials, lorem ipsum, and irrelevant stock imagery. List missing loading, empty, and error states, then define acceptance criteria for each section's function.
 
-## Adaptasi bertahap
+## Adapt in stages
 
-1. Jalankan template as-is dan screenshot desktop/mobile; catat broken build, dependensi, dan konten placeholder sebelum mengubahnya.
-2. Terapkan brand existing melalui token warna/type/spacing; jangan sekadar mengganti warna gradient. Ubah copy berdasarkan produk dan tambahkan foto/ikon lewat `awsm-assets` dengan ledger lisensi.
-3. Sambungkan navigasi dan CTA ke tujuan nyata. Untuk data palsu/simulasi, labelkan jelas. Pertahankan arsitektur proyek bila masuk akal; jangan membuang state atau test yang masih dipakai.
-4. Uji layout dan fungsi setelah tiap batch perubahan. Periksa konflik CSS, keyboard, responsive, dan reduced motion. Ikuti `awsm-prototype-qa` sebelum handoff.
+1. Run the template unchanged and screenshot desktop and mobile. Document broken builds, dependencies, and placeholder content before editing.
+2. Apply the existing brand through color, type, and spacing tokens—not only a gradient swap. Rewrite copy for the actual product and obtain photos or icons through `awsm-assets` with a license ledger.
+3. Connect navigation and CTAs to real destinations. Clearly label fake or simulated data. Keep the project's architecture where sensible; do not discard useful state management or tests.
+4. Test layout and behavior after each batch of changes. Check CSS conflicts, keyboard access, responsiveness, and reduced motion. Complete `awsm-prototype-qa` before handoff.
 
 ## Handoff
 
-Berikan link/versi sumber, atribusi/lisensi, bagian yang dipakai, perubahan visual/fungsi, hasil QA, dan area yang masih warisan template. Jangan mengklaim 100% desain orisinal bila basisnya karya pihak lain.
+Provide the source link and version, licenses and attribution, reused sections, visual and functional changes, QA results, and any remaining template artifacts. Do not claim a design is wholly original if it builds on someone else's work.
 
-**Contoh:** “Pakai template landing page yang sudah ada di repo ini, sesuaikan untuk klinik gigi tanpa menghilangkan form booking, lalu cek lisensi foto.”
+**Example:** “Use the landing-page template already in this repository for a dental clinic without breaking the booking form, and check the photo licenses.”

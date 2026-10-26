@@ -1,4 +1,4 @@
-// Asset lokal: unduh gambar, generate SVG dari teks, dan palet warna.
+// Local assets: download raster images, generate text-based SVGs, and derive color palettes.
 
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -24,20 +24,20 @@ export async function downloadAsset(input: { url: string; filename?: string; dir
   try {
     parsed = new URL(input.url);
   } catch {
-    throw new Error(`URL tidak valid: ${input.url}`);
+    throw new Error(`Invalid URL: ${input.url}`);
   }
   if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    throw new Error("Hanya http/https yang didukung.");
+    throw new Error("Only HTTP and HTTPS URLs are supported.");
   }
 
   const res = await request(parsed);
   const contentType = res.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().startsWith("image/")) {
-    throw new Error(`URL bukan gambar (content-type: ${contentType || "tidak diketahui"}).`);
+    throw new Error(`URL does not return an image (content-type: ${contentType || "unknown"}).`);
   }
   const maxBytes = 10 * 1024 * 1024;
   if (Number(res.headers.get("content-length") ?? 0) > maxBytes) {
-    throw new Error("Gambar terlalu besar (maksimal 10 MB).");
+    throw new Error("Image exceeds the 10 MB limit.");
   }
 
   const extFromType = contentType.includes("svg") ? ".svg" :
@@ -50,10 +50,10 @@ export async function downloadAsset(input: { url: string; filename?: string; dir
   const name = sanitizeName(input.filename ?? parsed.pathname.split("/").pop() ?? "asset", extFromType || ".img");
   const file = path.join(base, name);
   if (contentType.includes("svg") || name.toLowerCase().endsWith(".svg")) {
-    throw new Error("Download SVG eksternal dinonaktifkan; pakai awsm_get_icon untuk markup tepercaya atau simpan manual setelah review.");
+    throw new Error("External SVG downloads are disabled. Use get_icon for icon markup or save a reviewed SVG manually.");
   }
   const reader = res.body?.getReader();
-  if (!reader) throw new Error("Respons gambar kosong.");
+  if (!reader) throw new Error("Image response is empty.");
   const chunks: Uint8Array[] = [];
   let size = 0;
   try {
@@ -61,7 +61,7 @@ export async function downloadAsset(input: { url: string; filename?: string; dir
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > maxBytes) throw new Error("Gambar terlalu besar (maksimal 10 MB).");
+      if (size > maxBytes) throw new Error("Image exceeds the 10 MB limit.");
       chunks.push(value);
     }
   } finally {
@@ -73,7 +73,7 @@ export async function downloadAsset(input: { url: string; filename?: string; dir
     path: file,
     bytes: buf.length,
     contentType: contentType || "unknown",
-    note: "Asset tersimpan lokal — referensikan via path relatif dari project (mis. assets/<file>) supaya reliabel.",
+    note: "Asset saved locally. Reference it with a project-relative path, such as assets/<file>.",
   };
 }
 
@@ -138,7 +138,7 @@ export async function makeAsset(input: {
   <text x="50%" y="60%" text-anchor="middle" font-size="${Math.round(w * 0.028) + 10}" fill="${accent}" ${PARK}>${esc(`${w} × ${h}`)}</text>
 </svg>`;
   } else {
-    // og-card & banner: bar anggun berbasis tipe
+    // Open Graph cards and banners use a simple type-led composition.
     const titleSize = kind === "og-card" ? Math.round(w * 0.075) : Math.round(h * 0.24);
     const subSize = Math.round(titleSize * 0.38);
     const xPad = Math.round(w * 0.06);
@@ -154,7 +154,7 @@ export async function makeAsset(input: {
 
   const base = await ensureDir(input.dir);
   const name = sanitizeName(input.filename ?? `${kind}-${Date.now()}`, ".svg");
-  if (!name.toLowerCase().endsWith(".svg")) throw new Error("Asset hasil generate harus berekstensi .svg.");
+  if (!name.toLowerCase().endsWith(".svg")) throw new Error("Generated assets must have an .svg extension.");
   const file = path.join(base, name);
   await fs.writeFile(file, Buffer.from(svg, "utf8"), { flag: "wx" });
   return {
@@ -162,7 +162,7 @@ export async function makeAsset(input: {
     kind,
     size: `${w}×${h}`,
     bytes: Buffer.byteLength(svg),
-    note: "SVG vector, bebas lisensi, bisa di-edit langsung. Untuk OG image platform sosial yang butuh raster, convert ke PNG dulu.",
+    note: "Editable, original vector SVG. Convert to PNG if the target social platform requires a raster Open Graph image.",
   };
 }
 
@@ -193,7 +193,7 @@ export async function makePalette(input: { color: string; scheme?: PaletteScheme
   }
 
   const cssVars = family
-    // biar stabil di bulatkan
+    // Keep numbering stable and padded.
     .map(
       ({ name, hex }, i) => `--awsm-${String(i + 1).padStart(2, "0")}-${name.replace(/[^\w-]/g, "")}: ${hex};`,
     )
@@ -204,6 +204,6 @@ export async function makePalette(input: { color: string; scheme?: PaletteScheme
     scheme,
     palette: family,
     cssVars,
-    note: "Ganti hue dari base — sat dan lightness dipertahankan, jadi paletnya konsisten. Padukan base+tint untuk surface dan shade untuk teks.",
+    note: "Hue varies from the base color while saturation and lightness stay consistent. Consider a base and tint for surfaces and a shade for text; check contrast before use.",
   };
 }

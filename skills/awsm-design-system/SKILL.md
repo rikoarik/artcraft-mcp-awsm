@@ -1,26 +1,26 @@
 ---
 name: awsm-design-system
-description: Membangun atau merapikan sistem token dan komponen UI reusable untuk banyak layar: color roles, type/spacing, state, dark mode, dan dokumentasi. Gunakan ketika proyek membutuhkan konsistensi lintas layar, bukan untuk sekadar satu kartu.
+description: Build or refine reusable design tokens and components across multiple screens, including color roles, type, spacing, component states, dark mode, and documentation. Use when a project needs cross-screen consistency, not merely a single card.
 ---
 
-# Design system pragmatis
+# A pragmatic design system
 
-## Scope
+## Define the scope
 
-Audit produk: jumlah layar, komponen berulang, brand tokens existing, CSS conventions, dan kebutuhan tema. Untuk satu halaman kecil, dokumentasikan tokens sederhana tanpa membuat library komponen besar. Jika sistem sudah ada, perluas secara kompatibel; jangan mengubah nama semantic token tanpa migrasi.
+Audit the product's screens, repeating components, existing brand tokens, CSS conventions, and theme needs. For one small page, document a few tokens rather than introducing a large component library. If a system already exists, extend it compatibly and plan migrations before renaming semantic tokens.
 
-## Tiga lapis token
+## Three layers of tokens
 
-1. **Primitive:** nilai mentah seperti `green-700`, type sizes, spacing scale, radius. Ini bukan API komponen; namanya boleh deskriptif nilai.
-2. **Semantic:** peran `surface`, `text-primary`, `border-subtle`, `action-primary`, `danger`, `focus-ring`. Petakan ke primitive per light/dark mode; jangan pakai merah untuk satu-satunya indikator error.
-3. **Component:** hanya bila komponen butuh override stabil, mis. `button-primary-bg`, `input-error-border`. Hindari token per satu detail yang tak punya reuse.
+1. **Primitive:** raw values such as `green-700`, font sizes, spacing scale, and radii. These are not component APIs; value-based names are appropriate.
+2. **Semantic:** roles such as `surface`, `text-primary`, `border-subtle`, `action-primary`, `danger`, and `focus-ring`. Map these to primitives for light and dark modes. Never rely on red as the sole error signal.
+3. **Component:** introduce stable overrides only when a component needs them, such as `button-primary-bg` or `input-error-border`. Avoid tokens for one-off details with no reuse.
 
-Buat spesifikasi type roles (display/title/body/label), density/spacing dan breakpoint berdasarkan isi. Untuk setiap komponen, jelaskan anatomy, variant, default/hover/focus/disabled/loading/error, keyboard behavior, responsive, dan peraturan copy. Periksa contrast semua state termasuk disabled yang tetap harus bisa dikenali.
+Specify type roles (display/title/body/label), density and spacing, and breakpoints based on content. For each component, describe anatomy, variants, default/hover/focus/disabled/loading/error states, keyboard behavior, responsive rules, and copy conventions. Check contrast across states; disabled controls should still be recognizable.
 
-## Implementasi & validasi
+## Implementation and validation
 
-- Sesuaikan dengan stack/style project; buat contoh penggunaan yang berjalan, jangan sekadar tabel token. Jika ada generator/theme library, baca versi dokumentasi sebelum mengubah API.
-- Uji minimal satu form, navigasi, dan alert pada mobile/desktop, teks panjang, zoom 200%, serta mode gelap bila didukung. Screenshot bagian penting; pastikan tokens semantic benar-benar dipakai, bukan nilai hardcode paralel.
-- Handoff sebagai file tokens + tabel mapping lama→baru + contoh komponen + keputusan aksesibilitas dan item yang belum dicakup.
+- Follow the project's existing stack and styling conventions. Include a working usage example, not just a table of tokens. If a theme library or generator is involved, consult documentation for the installed version before changing its API.
+- Test at least one form, navigation element, and alert on mobile and desktop with long text and 200% zoom, plus dark mode if supported. Capture key screenshots. Ensure components use semantic tokens instead of a parallel set of hard-coded colors.
+- Hand off token files, an old-to-new mapping, component examples, accessibility decisions, and uncovered items.
 
-**Contoh:** “Satukan 4 layar admin yang sekarang punya tiga shade hijau dan enam bentuk button menjadi token reusable, tanpa mengubah brand.”
+**Example:** “Unify four admin screens with three competing greens and six button shapes into reusable tokens without changing the brand.”

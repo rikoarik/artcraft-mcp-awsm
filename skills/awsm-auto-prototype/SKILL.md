@@ -1,28 +1,28 @@
 ---
 name: awsm-auto-prototype
-description: Mengimplementasikan prototype web interaktif dan motion sesuai stack proyek dari layar/brief yang sudah dipetakan. Gunakan untuk navigasi klik, menu, form, transisi state, serta preview prototype dengan reduced motion.
+description: Implement interactive web prototypes and motion using the project's existing stack, based on mapped screens or a brief. Use for clickable navigation, menus, forms, state transitions, and previews with reduced-motion support.
 ---
 
-# Prototype hidup, bukan screenshot klik-palsu
+# A working prototype, not a clickable-looking screenshot
 
-## Kontrak interaksi
+## Interaction contract
 
-Sebelum coding, tulis tabel `kontrol | tindakan | perubahan state | umpan balik | keyboard | fallback`. Untuk contoh form reservasi: input wajib → validasi → loading → konfirmasi; tanpa backend, data tidak boleh diklaim tersimpan. Tautan harus punya target yang ada; CTA eksternal boleh membuka URL yang benar atau diberi label belum tersedia, jangan dead button.
+Before coding, make a table: `control | action | state change | feedback | keyboard behavior | fallback`. For a reservation form, cover required fields → validation → loading → confirmation. Without a backend, never imply that data has been saved remotely. Links must point to real destinations. An external CTA may lead to a working URL or be clearly labeled unavailable; do not ship dead buttons.
 
-## Implementasi sesuai konteks
+## Implement in context
 
-- Inspeksi dependencies dan pola project; gunakan komponen/router/state yang sudah ada. Greenfield kecil bisa HTML/CSS/JS progresif. Jangan menambahkan React/GSAP hanya untuk satu tombol.
-- Pertahankan konten dasar tanpa JS sebisa mungkin. Pakai elemen native (`button`, `a`, `form`) dan event yang mendukung click/touch/keyboard; gunakan ARIA hanya jika semantik native belum cukup.
-- Rancang empty/error/loading, input tidak valid, teks panjang, dan ukuran layar kecil. Untuk aset ikuti `awsm-assets`; jangan blokir alur karena API foto tidak tersedia.
+- Inspect the project's dependencies and conventions. Reuse its component, router, and state patterns. For small greenfield projects, progressive HTML/CSS/JS can suffice. Do not add React or GSAP just to animate one button.
+- Preserve useful core content when JavaScript is unavailable where feasible. Use native `button`, `a`, and `form` semantics and interactions that work with mouse, touch, and keyboard. Add ARIA only when native semantics are insufficient.
+- Design empty, error, and loading states, invalid input, long text, and narrow screens. Source imagery through `awsm-assets`; a missing photo API should not block the main flow.
 
-## Motion yang mempunyai sebab
+## Motion with a purpose
 
-1. Pilih transisi yang menunjukkan apa yang berubah: menu terbuka, item masuk, submit diproses. Definisikan trigger, durasi relatif, easing, end state. Animasi CSS transform/opacity sering cukup.
-2. Bila memilih GSAP atau Motion, periksa dokumentasi library dan versinya sebelum memakai API spesifik. Bersihkan listener/timeline saat unmount; hindari layout thrash dan animasi pada setiap elemen hanya untuk dekorasi.
-3. Dukung `prefers-reduced-motion: reduce`: matikan gerak non-esensial; status tetap terlihat. Konten utama tidak boleh invisible permanen jika JS gagal. Focus-visible tidak diganti sekadar hover.
+1. Choose transitions that communicate change: a menu opens, an item enters, or a submission processes. Define the trigger, approximate duration, easing, and final state. CSS transforms and opacity are often sufficient.
+2. If using GSAP or Motion, check documentation for the installed version before calling library-specific APIs. Clean up listeners and timelines on unmount. Avoid layout thrashing and animating every element for decoration.
+3. Respect `prefers-reduced-motion: reduce`: remove nonessential movement while keeping the state legible. Main content must not remain hidden when JavaScript fails. Keep visible focus indicators, not just hover styles.
 
-## Preview dan acceptance
+## Preview and acceptance
 
-Gunakan `serve` hanya untuk folder HTML statis yang aman; server ini bukan deployment. Untuk app framework jalankan dev server. Buka browser pada mobile dan desktop, jalankan alur utama, cek error JS/network, uji tab/enter/escape dan reduced motion; rujuk `awsm-prototype-qa`. Serahkan daftar interaksi dengan status `working / simulated / blocked` dan bukti screenshot, bukan klaim umum.
+Use `serve` only for a safe static HTML directory; it is not deployment. For framework applications, use the project's development server. In a browser, test the primary journey on mobile and desktop, check JS and network errors, exercise Tab/Enter/Escape, and test reduced motion. Follow `awsm-prototype-qa`. Hand off an interaction list marked `working / simulated / blocked` with screenshot evidence, not a vague completion claim.
 
-**Contoh:** “Dari tiga wireframe ini, buat navigasi dan booking form yang benar-benar berubah state, animasi menu singkat, dan screenshot 360px.”
+**Example:** “Turn these three wireframes into real navigation and a booking form with state changes, a short menu animation, and a 360px screenshot.”
