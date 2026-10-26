@@ -1,14 +1,28 @@
 ---
 name: awsm-prototype-qa
-description: Memeriksa prototipe web sebelum serah: responsif, accessibility, navigasi, console error, lisensi foto/ikon, performa dasar, dan reduced motion. Dipakai setelah membuat atau mengubah UI/prototype.
+description: Menguji prototype web yang baru dibuat atau diubah: interaksi, responsive, accessibility dasar, console/network, lisensi aset, dan reduced motion. Gunakan sebelum handoff UI/prototype, bukan hanya setelah build berhasil.
 ---
 
-# Prototype QA
+# QA prototype berbasis bukti
 
-1. Jalankan build/lint/test project bila tersedia. Jangan menganggap build sukses berarti UI ter-render.
-2. Buka aplikasi dengan browser automation yang tersedia (mis. skill `agent-browser`), bukan hanya membaca HTML. Cek 360px, 768px, dan 1200px; screenshot setiap viewport, cek overflow, hierarki visual, clipping, dan teks panjang.
-3. Jalankan interaksi utama: semua link, CTA, navigasi keyboard, form (kosong/valid/error). Pastikan tidak ada tombol mati.
-4. Cek console dan network: error JS, gambar gagal load, font gagal load, CDN mati. Jika network tak tersedia, fallback harus mempertahankan konten penting.
-5. Uji `prefers-reduced-motion: reduce`, focus-visible, kontras teks, label input, alt untuk gambar bermakna, dan target klik di mobile.
-6. Pastikan atribusi dan lisensi untuk image/ikon yang dipilih dari pencarian. Jangan mengartikan filter 'commercial' sebagai izin tanpa atribusi.
-7. Perbaiki masalah yang ditemukan dan ulangi tes yang relevan. Laporkan yang belum bisa diverifikasi secara eksplisit, jangan tulis 'tested' tanpa bukti.
+## Siapkan matriks
+
+Dapatkan URL/local command dan daftar journey utama dari developer. Catat ukuran 360px, 768px, 1200px (tambahkan lebar lain saat layout patah), browser yang tersedia, serta state yang mungkin: default, loading, empty, error, success. Jangan menyatakan tes dilakukan jika browser/screenshot tidak tersedia.
+
+## Eksekusi
+
+1. Jalankan lint/build/test proyek bila ada. Build sukses hanya bukti kompilasi; tetap buka UI dengan browser automation. Untuk halaman statis, `serve` dapat memberi URL lokal, jangan serve folder yang mengandung rahasia.
+2. Screenshot di setiap viewport dan periksa overflow, clipping, teks terlalu rapat/panjang, image crop, CTA tidak terlihat, sticky header, dan keyboard mobile jika memungkinkan. Baca gambar, bukan hanya status HTTP 200.
+3. Jalankan setiap journey: menu buka/tutup, anchor, CTA, form kosong/valid/error, status submit, navigasi balik. Cek keyboard: Tab berurutan, focus terlihat, Enter/Space, Escape pada dialog/menu, dan label input. Jangan menganggap hover mewakili touch.
+4. Periksa console dan network untuk exception JS, 404, gambar/font gagal load, mixed content. Jika ada pihak ketiga offline, pastikan fallback membuat fungsi inti tetap bisa dipahami.
+5. Uji reduced motion dengan emulasi `prefers-reduced-motion: reduce`, zoom 200%, kontras teks/status, alt yang tepat, target klik yang nyaman, dan layout ketika teks panjang. Periksa sumber/lisensi/atribusi gambar ikon dari `awsm-assets`.
+6. Perbaiki masalah kritis, ulangi tes pada viewport dan journey terdampak. Catat apa yang tidak bisa diverifikasi (mis. backend/real device).
+
+## Format laporan
+
+| Severity | Lokasi / viewport | Langkah reproduksi | Expected vs actual | Bukti | Perbaikan / status |
+| --- | --- | --- | --- | --- | --- |
+
+Tutup dengan ringkasan lulus/gagal per journey, command build/test, path screenshot, dan hal yang sengaja simulated. Blok handoff bila layar blank, CTA inti mati, data palsu diklaim tersimpan, atau aset melanggar lisensi.
+
+**Contoh:** “QA halaman checkout 360–1200 px, form kosong dan valid, keyboard, console, serta reduced motion; berikan temuan yang bisa direproduksi.”

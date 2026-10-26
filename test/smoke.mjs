@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,9 +47,24 @@ assert.equal(json('.github/mcp.json').mcpServers.awsm.tools[0], '*');
 assert(readFileSync(path.join(multiCwd, '.codex/config.toml'), 'utf8').includes('[mcp_servers.awsm]'));
 assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-taste-ui/SKILL.md')));
 assert(existsSync(path.join(multiCwd, '.claude/skills/awsm-antislop-ui/SKILL.md')));
+const skillNames = readdirSync(path.join(root, 'skills'));
+assert.equal(skillNames.length, 13);
+for (const name of skillNames) {
+  const text = readFileSync(path.join(root, 'skills', name, 'SKILL.md'), 'utf8');
+  assert(text.startsWith('---\n') && text.includes(`\nname: ${name}\n`) && /\ndescription: .+\n/.test(text), `${name}: invalid frontmatter`);
+  assert(text.split(/\s+/).length > 200, `${name}: workflow too short`);
+  assert(existsSync(path.join(multiCwd, '.agents/skills', name, 'SKILL.md')));
+}
 const allAgain = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
 assert.equal(allAgain.status, 0, allAgain.stderr); // idempotent
 assert.equal(readFileSync(path.join(multiCwd, '.codex/config.toml'), 'utf8').match(/\[mcp_servers\.awsm\]/g).length, 1);
+const fakeHome = mkdtempSync(path.join(tmpdir(), 'awsm-home-test-'));
+const globalResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--global', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, env: { ...process.env, HOME: fakeHome }, encoding: 'utf8' });
+assert.equal(globalResult.status, 0, globalResult.stderr);
+assert.equal(JSON.parse(readFileSync(path.join(fakeHome, '.gemini/config/mcp_config.json'), 'utf8')).mcpServers.awsm.command, 'npx');
+assert(existsSync(path.join(fakeHome, '.gemini/antigravity-cli/skills/awsm-taste-ui/SKILL.md')));
+const zedConfig = path.join(fakeHome, process.platform === 'darwin' ? '.zed/settings.json' : '.config/zed/settings.json');
+assert.equal(JSON.parse(readFileSync(zedConfig, 'utf8')).context_servers.awsm.command, 'npx');
 
 const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd });
 const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });

@@ -1,12 +1,23 @@
 ---
 name: awsm-motion-storyboard
-description: Rancang motion prototype web yang komunikatif untuk transisi, feedback, dan narasi scroll, termasuk reduced motion dan performa.
+description: Menyusun dan menerapkan motion prototype web untuk transisi layar, feedback kontrol, atau narasi scroll yang perlu orientasi, dengan reduced motion dan pengujian performa. Gunakan saat brief menyebut GSAP, motion, microinteraction, atau prototype animasi.
 ---
 
-# Motion storyboard
+# Motion storyboard berbasis sebab-akibat
 
-1. Buat daftar interaksi dan state yang butuh gerak; tiap animasi harus menjelaskan sebab-akibat, perubahan lokasi, atau feedback.
-2. Tulis trigger, elemen, durasi, easing, serta end state. Hanya animasikan opacity/transform jika memungkinkan; hindari animasi layout yang berat.
-3. Entrance jangan menghalangi konten. Hindari scroll-jacking, autoplay berlebihan, atau gerak yang tidak bisa dihentikan.
-4. Tambahkan jalur `prefers-reduced-motion: reduce` dengan konten tetap terbaca dan status tetap jelas.
-5. Implementasi sesuai stack yang ada; kalau membutuhkan library (GSAP/Motion), cek docs versi dan bundle. Uji di mobile nyata/browser.
+## Prioritaskan sinyal
+
+Daftar peristiwa interaksi, bukan daftar elemen yang bisa digerakkan. Untuk tiap animasi tulis `trigger | before → after | properti | durasi relatif | kondisi berakhir | reduced-motion`. Klasifikasikan: feedback (klik/submit), orientasi (menu/modal), atau narasi konten. Jangan membuat seluruh section muncul terlambat hanya karena ada scroll.
+
+## Aturan implementasi
+
+1. Mulai dari native CSS transitions jika sederhana. Animasi `transform`/`opacity` lebih aman untuk performa dibanding layout/height/left yang memaksa reflow berulang. Semua perubahan state harus tetap jelas tanpa animasi.
+2. Jika project sudah memakai GSAP/Motion, cek dokumentasi versi saat mengimplementasi. Ikat timeline ke lifecycle, bersihkan listener/ScrollTrigger saat keluar route, dan cegah trigger ganda setelah hot reload. Jangan memasang library berat hanya untuk satu fade.
+3. Entrance punya waktu cepat dan end state yang dapat dicapai meskipun JS gagal. Jangan menyembunyikan judul/CTA di opacity 0 permanen. Hindari scroll-jacking, parallax cepat, gerak konstan, dan CTA yang berpindah saat diklik.
+4. Untuk `prefers-reduced-motion: reduce`, matikan animasi non-esensial atau lakukan instant state change. Jangan menghapus konten atau feedback yang bergantung pada animasi. Pastikan keyboard focus tidak beradu dengan pergerakan elemen.
+
+## Validasi
+
+Rekam atau screenshot sebelum/sesudah state, tes pada mobile lambat dan reduced motion, cek clipping, layout shift, serta input latency. Jika video terlalu cepat untuk membaca konten, pendekkan atau hilangkan gerak. Serahkan storyboard dan daftar animasi yang berfungsi; jika hanya mockup statis, katakan tidak ada motion nyata.
+
+**Contoh:** “Buat menu slide-in dan feedback submit untuk prototype booking; animasinya jangan mengganggu form atau pengguna reduced motion.”

@@ -1,13 +1,28 @@
 ---
 name: awsm-auto-prototype
-description: Implementasikan prototipe web interaktif dari prompt atau desain: navigasi/state berfungsi, responsif, animasi CSS/GSAP/Framer Motion yang bermakna dan reduced-motion, lalu preview dan uji di browser.
+description: Mengimplementasikan prototype web interaktif dan motion sesuai stack proyek dari layar/brief yang sudah dipetakan. Gunakan untuk navigasi klik, menu, form, transisi state, serta preview prototype dengan reduced motion.
 ---
 
-# Prototype hidup dengan motion
+# Prototype hidup, bukan screenshot klik-palsu
 
-1. Pilih stack yang sudah dipakai project. Untuk greenfield kecil, HTML/CSS/JS tanpa build step cukup; jangan memaksa React. Jika memasang GSAP atau Motion, cek dokumentasi versi dan dependensi project sebelum menulis API spesifik. Motion tidak wajib menambah library.
-2. Definisikan state dan interaksi yang akan diuji: perpindahan layar, menu, hover/focus, validasi form, empty/error. Hindari CTA yang tidak melakukan apa-apa.
-3. Temukan aset relevan lewat `awsm-assets`; gunakan placeholder hanya selama draft. Bentuk visual harus mengikuti brief, bukan otomatis gradient, kartu seragam, font default, dan animasi fade massal.
-4. Animasi untuk orientasi dan feedback: entrance satu kali, respons hover/press singkat, transisi state. Prioritaskan transform dan opacity, hindari layout thrashing. Jangan sembunyikan konten penting sebelum JS berjalan; gunakan progressive enhancement.
-5. Hormati `prefers-reduced-motion: reduce`: kurangi atau hilangkan animasi non-esensial. Sertakan focus-visible dan dukungan keyboard. Jika memakai GSAP, gunakan matchMedia atau guard media query yang setara; jika memakai CSS, sediakan aturan media reduce.
-6. Preview HTML statis dengan `awsm_serve`; aplikasi framework memakai dev server masing-masing. Browser QA wajib dengan `awsm-prototype-qa`. URL localhost hanya hidup selama server MCP tersebut aktif; jangan klaim deployed.
+## Kontrak interaksi
+
+Sebelum coding, tulis tabel `kontrol | tindakan | perubahan state | umpan balik | keyboard | fallback`. Untuk contoh form reservasi: input wajib → validasi → loading → konfirmasi; tanpa backend, data tidak boleh diklaim tersimpan. Tautan harus punya target yang ada; CTA eksternal boleh membuka URL yang benar atau diberi label belum tersedia, jangan dead button.
+
+## Implementasi sesuai konteks
+
+- Inspeksi dependencies dan pola project; gunakan komponen/router/state yang sudah ada. Greenfield kecil bisa HTML/CSS/JS progresif. Jangan menambahkan React/GSAP hanya untuk satu tombol.
+- Pertahankan konten dasar tanpa JS sebisa mungkin. Pakai elemen native (`button`, `a`, `form`) dan event yang mendukung click/touch/keyboard; gunakan ARIA hanya jika semantik native belum cukup.
+- Rancang empty/error/loading, input tidak valid, teks panjang, dan ukuran layar kecil. Untuk aset ikuti `awsm-assets`; jangan blokir alur karena API foto tidak tersedia.
+
+## Motion yang mempunyai sebab
+
+1. Pilih transisi yang menunjukkan apa yang berubah: menu terbuka, item masuk, submit diproses. Definisikan trigger, durasi relatif, easing, end state. Animasi CSS transform/opacity sering cukup.
+2. Bila memilih GSAP atau Motion, periksa dokumentasi library dan versinya sebelum memakai API spesifik. Bersihkan listener/timeline saat unmount; hindari layout thrash dan animasi pada setiap elemen hanya untuk dekorasi.
+3. Dukung `prefers-reduced-motion: reduce`: matikan gerak non-esensial; status tetap terlihat. Konten utama tidak boleh invisible permanen jika JS gagal. Focus-visible tidak diganti sekadar hover.
+
+## Preview dan acceptance
+
+Gunakan `serve` hanya untuk folder HTML statis yang aman; server ini bukan deployment. Untuk app framework jalankan dev server. Buka browser pada mobile dan desktop, jalankan alur utama, cek error JS/network, uji tab/enter/escape dan reduced motion; rujuk `awsm-prototype-qa`. Serahkan daftar interaksi dengan status `working / simulated / blocked` dan bukti screenshot, bukan klaim umum.
+
+**Contoh:** “Dari tiga wireframe ini, buat navigasi dan booking form yang benar-benar berubah state, animasi menu singkat, dan screenshot 360px.”

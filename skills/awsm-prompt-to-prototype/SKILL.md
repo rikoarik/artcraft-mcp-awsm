@@ -1,17 +1,29 @@
 ---
 name: awsm-prompt-to-prototype
-description: Mengubah brief atau prompt desain menjadi prototipe web interaktif lengkap: petakan layar dan state, cari ikon/foto relevan, buat visual bila perlu, implementasi responsive, motion aksesibel, lalu preview dan QA. Gunakan saat diminta membuat prototype end-to-end dari teks.
+description: Mengubah brief teks menjadi prototype web end-to-end: rencana layar dan state, aset relevan, implementasi interaktif, motion, preview, dan QA. Gunakan untuk permintaan “bikin prototype dari prompt”, UI lengkap, atau landing page interaktif.
 ---
 
-# Prompt → prototype
+# Prompt → prototype web
 
-Skill ini mengorkestrasi `awsm-assets`, `awsm-asset-lab`, `awsm-auto-prototype`, dan `awsm-prototype-qa`. Ini **instruksi untuk agent**, bukan generator gambar AI atau controller aplikasi desain. Jangan mengklaim preview otomatis bila belum dijalankan.
+Skill ini mengorkestrasi pekerjaan agent coding; **bukan** generator UI otomatis dan **bukan** controller FigCraft. Utamakan stack dan brand proyek yang sudah ada; jangan melakukan scaffolding ulang yang merusak fitur existing.
 
-1. **Brief:** tulis satu kalimat untuk audiens, tugas utama, tone, platform, dan batasan. Jika brief menyebut desain brand, pertahankan aset/tokens yang sudah ada. Pilih satu konsep visual spesifik, bukan template generik.
-2. **Blueprint:** tentukan halaman/layar, navigasi, state penting (empty, loading, error), interaksi (click, toggle, menu, form), viewport target. Tanyakan hanya keputusan yang sungguh memblokir.
-3. **Asset map:** untuk tiap section tentukan gambar yang dibutuhkan dan kata kunci pencarian dari prompt; cari `awsm_find_images` dan `awsm_find_icons`, cek lisensi, download dengan `awsm_download_asset`. Jangan tempatkan foto acak bila subjeknya substantif. Jika tidak ada foto yang pas, gunakan SVG teks eksplisit dari `awsm_make_asset` dan label sebagai placeholder, bukan pura-pura image generation AI.
-4. **Build:** pakai stack project yang sudah ada; untuk greenfield cepat, HTML/CSS/JS sederhana. Ikuti skill `awsm-auto-prototype` untuk gerak yang relevan dan reduced motion. Buat navigasi/form punya fungsi nyata, bukan dead buttons. Pisahkan style dari content agar mudah diganti.
-5. **Preview:** jalankan `awsm_serve` jika hasilnya statis; untuk framework gunakan dev server project. Buka di browser dan jalankan `awsm-prototype-qa` sebelum selesai.
-6. **Handoff:** beri path project, URL preview bila server masih berjalan, catatan lisensi aset, dan fitur yang sengaja belum dibuat.
+## Brief → blueprint
 
-Jika target adalah FigCraft/Figma, bukan kode web, **jangan** gunakan `awsm_serve` sebagai pengganti integrasi. Pakai tools resmi desain yang tersedia, skill desain khusus aplikasi itu, dan verifikasi di kanvasnya.
+1. Rangkum audiens, pekerjaan inti user, konten/brand, tujuan konversi, platform, teknologi yang sudah ada, dan deadline/lingkup. Ajukan pertanyaan hanya untuk keputusan yang mengubah arsitektur atau identitas; untuk celah kecil buat asumsi dan sebutkan.
+2. Petakan 1–3 journey penting: entry → aksi → hasil. Buat daftar halaman/section, navigasi, data yang diperlukan, dan state `default / loading / empty / error / success`. Setiap CTA punya tujuan yang dapat diuji; jika backend tidak ada, jelaskan simulasi lokal, jangan mengarang penyimpanan data.
+3. Tulis satu paragraf arah visual dari brief dan cek dengan `awsm-taste-ui` atau `awsm-antislop-ui`. Jangan memulai dengan hero-template, tiga kartu fitur, dan gradient hanya karena mudah.
+4. Buat asset map: slot, query, rasio, lisensi. Pakai `awsm-assets` untuk foto/ikon dan `awsm-asset-lab` hanya untuk SVG sederhana. Jika tidak ada hasil yang relevan, gunakan placeholder yang jujur.
+
+## Build → motion → verify
+
+5. Implementasikan dalam framework proyek. Untuk greenfield kecil, HTML/CSS/JS bisa cukup; React hanya bila diminta atau proyek memang sudah memakainya. Pisahkan data copy, komponen, dan style; buat responsive berdasarkan kebutuhan konten.
+6. Beri affordance, feedback form, keyboard/focus, alt, error yang jelas, dan reduced motion. Gunakan `awsm-motion-storyboard` untuk animasi fungsional. Tidak ada tombol mati atau konten tersembunyi jika JS gagal.
+7. Jalankan build/test yang tersedia. Jika statis, panggil `serve({root:"folder-prototype"})` dan buka URL lokal; untuk framework gunakan dev server proyek. Ikuti `awsm-prototype-qa` dan `awsm-responsive-audit`: interaksi, console, mobile/tablet/desktop, serta revisi dari screenshot. `serve` hidup hanya saat proses MCP aktif.
+
+## Handoff wajib
+
+Berikan path, cara menjalankan, halaman/interaksi yang bekerja, URL preview hanya jika masih aktif, sumber & lisensi aset, hasil QA, batas backend/demo, dan daftar perbaikan bila masih ada. Jangan tulis “production-ready” tanpa verifikasi nyata.
+
+**Contoh permintaan:** “Buat prototype booking studio dari brief ini, navigasi dan form bekerja, pakai foto berlisensi, motion minimal, lalu tunjukkan screenshot mobile.”
+
+Jika output harus di kanvas FigCraft/Figma, hentikan asumsi web: pakai integrasi desain asli, inspeksi dokumen, dan verifikasi render di sana. `awsm-figcraft-handoff` membantu spesifikasi, bukan menggantikan tool kanvas.

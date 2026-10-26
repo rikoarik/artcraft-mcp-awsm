@@ -101,8 +101,8 @@ for (const client of selected) {
       case "opencode": jsonConfig(globalInstall ? path.join(home, ".config/opencode/opencode.json") : path.join(cwd, ".opencode/opencode.json"), ["mcp", "servers", "awsm"], { type: "local", command }, true); break;
       case "claude": jsonConfig(globalInstall ? path.join(home, ".claude.json") : path.join(cwd, ".mcp.json"), ["mcpServers", "awsm"], { type: "stdio", command: command[0], args: command.slice(1) }); break;
       case "codex": tomlConfig(globalInstall ? path.join(home, ".codex/config.toml") : path.join(cwd, ".codex/config.toml")); break;
-      case "antigravity": jsonConfig(globalInstall ? path.join(home, ".gemini/antigravity/mcp_config.json") : path.join(cwd, ".agents/mcp_config.json"), ["mcpServers", "awsm"], { command: command[0], args: command.slice(1) }); break;
-      case "zed": if (globalInstall) jsonConfig(path.join(home, ".config/zed/settings.json"), ["context_servers", "awsm"], { command: command[0], args: command.slice(1), env: {} });
+      case "antigravity": jsonConfig(globalInstall ? path.join(home, ".gemini/config/mcp_config.json") : path.join(cwd, ".agents/mcp_config.json"), ["mcpServers", "awsm"], { command: command[0], args: command.slice(1) }); break;
+      case "zed": if (globalInstall) jsonConfig(path.join(home, process.platform === "darwin" ? ".zed/settings.json" : ".config/zed/settings.json"), ["context_servers", "awsm"], { command: command[0], args: command.slice(1), env: {} });
         else messages.push("= Zed MCP: pengaturan context_servers bersifat user-level; jalankan --global untuk MCP (skill project tetap dipasang)"); break;
       case "copilot": jsonConfig(globalInstall ? path.join(home, ".copilot/mcp-config.json") : path.join(cwd, ".github/mcp.json"), ["mcpServers", "awsm"], { type: "local", command: command[0], args: command.slice(1), tools: ["*"] }); break;
     }
@@ -110,6 +110,7 @@ for (const client of selected) {
   if (args.includes("--skip-skills")) continue;
   const skillsDir = client === "opencode" ? (globalInstall ? path.join(home, ".config/opencode/skills") : path.join(cwd, ".opencode/skills"))
     : client === "claude" ? (globalInstall ? path.join(home, ".claude/skills") : path.join(cwd, ".claude/skills"))
+    : client === "antigravity" && globalInstall ? path.join(home, ".gemini/antigravity-cli/skills")
     : globalInstall ? path.join(home, ".agents/skills") : path.join(cwd, ".agents/skills");
   if (!sharedSkills.has(skillsDir)) { copySkills(skillsDir); sharedSkills.add(skillsDir); }
 }
