@@ -1,0 +1,51 @@
+{
+  "name": "my-awsm-mcp",
+  "version": "1.0.0",
+  "description": "MCP tools and OpenCode skills for relevant icons/photos, simple SVG assets, and interactive web prototype workflows.",
+  "repository": { "type": "git", "url": "git+https://github.com/rikoarik/my-awsm-mcp.git" },
+  "homepage": "https://github.com/rikoarik/my-awsm-mcp#readme",
+  "bugs": { "url": "https://github.com/rikoarik/my-awsm-mcp/issues" },
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "my-awsm-mcp": "build/index.js",
+    "my-awsm-setup": "build/setup.js"
+  },
+  "files": [
+    "build",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc && chmod 755 build/index.js build/setup.js",
+    "test": "npm run build && node test/smoke.mjs",
+    "setup": "node build/setup.js",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "opencode",
+    "skills",
+    "icons",
+    "images",
+    "prototype",
+    "motion",
+    "web-prototype",
+    "animation"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "jsonc-parser": "^3.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  }
+}
