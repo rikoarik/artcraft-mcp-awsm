@@ -9,7 +9,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 const repo = fileURLToPath(new URL('..', import.meta.url));
 const scratch = mkdtempSync(path.join(tmpdir(), 'awsm-demo-'));
 const output = path.join(repo, 'demo/awsm-demo.mp4');
-const install = spawnSync(process.execPath, [path.join(repo, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/-figcraft-mcp-awsm'], { cwd: scratch, encoding: 'utf8' });
+const install = spawnSync(process.execPath, [path.join(repo, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: scratch, encoding: 'utf8' });
 if (install.status !== 0) throw Error(install.stderr);
 const client = new Client({ name: 'awsm-video-demo', version: '1.0.0' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(repo, 'build/index.js')], cwd: scratch }));
@@ -23,7 +23,7 @@ const installed = install.stderr.match(/\+ \d+ skill/g)?.join(' | ') ?? 'skills 
 const paletteValue = JSON.parse(palette.content[0].text);
 const assetPath = JSON.parse(svg.content[0].text).path;
 const scenes = [
-  ['01 / INSTALL', `npx -y github:rikoarik/-figcraft-mcp-awsm\\n  setup --client all --source github:rikoarik/-figcraft-mcp-awsm`, `Project config: OpenCode, Claude, Codex, Antigravity, Copilot\\nZed skills: shared .agents/skills; MCP requires --global\\n${installed}`],
+  ['01 / INSTALL', `npx -y github:rikoarik/figcraft-mcp-awsm\\n  setup --client all --source github:rikoarik/figcraft-mcp-awsm`, `Project config: OpenCode, Claude, Codex, Antigravity, Copilot\\nZed skills: shared .agents/skills; MCP requires --global\\n${installed}`],
   ['02 / CONNECT', `MCP stdio handshake: connected`, `listTools(): ${tools.tools.length} tools\\n${tools.tools.map(t => t.name).join('  /  ')}`],
   ['03 / CREATE', `palette({ color: '#176F57' })`, `Base color: ${paletteValue.base}\\nmake_asset({ kind: 'badge', title: 'AW' })\\nSVG created: ${path.basename(assetPath)}`],
   ['04 / NEXT', `Ask your agent to use awsm-taste-ui`, `Find licensed images & icons, build a responsive prototype,\\nthen verify with awsm-prototype-qa.\\nNo FigCraft canvas control or AI image generation claimed.`]

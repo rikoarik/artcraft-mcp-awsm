@@ -9,7 +9,7 @@ MCP stdio server + **13 editable agent skills** for finding relevant icons/photo
 Requires Node.js 18+ and `npx`. From the project where you want the skills:
 
 ```sh
-npx -y github:rikoarik/-figcraft-mcp-awsm setup --client all --source github:rikoarik/-figcraft-mcp-awsm
+npx -y github:rikoarik/figcraft-mcp-awsm setup --client all --source github:rikoarik/figcraft-mcp-awsm
 ```
 
 `--client all` configures **OpenCode, Claude Code, Codex, Google Antigravity, and GitHub Copilot CLI** project MCP settings and copies skills to their native locations. Zed reads the shared `.agents/skills` folder but its MCP `context_servers` is user-level: run `--client zed --global` to connect it. You can instead select one client: `opencode`, `claude`, `codex`, `antigravity`, `zed`, `copilot`. Add `--global` for a user-level install (review existing global configs first). `--skip-mcp`, `--skip-skills`, and `--force-skills` are available; **existing skills are not overwritten by default**. When an existing `awsm` MCP entry conflicts, setup reports it and preserves the file.
@@ -25,7 +25,7 @@ npx -y github:rikoarik/-figcraft-mcp-awsm setup --client all --source github:rik
 | Zed Agent | user settings `~/.config/zed/settings.json` (`--global`) | `.agents/skills` | Settings → AI → MCP Servers |
 | GitHub Copilot CLI | `.github/mcp.json` (trusted repositories) | `.agents/skills` | `copilot mcp list` |
 
-Client support means a *local stdio MCP configuration and discoverable skills*, not identical tool naming/UI in every client. Claude, Codex, and Copilot require project trust/approval as documented by the client; Zed external agents/terminal threads may have separate configs. `--client all --global` changes multiple personal configs; prefer project install first. Other MCP clients can connect manually with command `npx -y github:rikoarik/-figcraft-mcp-awsm` and load the skills according to their format. Browser/cloud agents that cannot launch local processes need a hosted MCP endpoint, which this package does not provide.
+Client support means a *local stdio MCP configuration and discoverable skills*, not identical tool naming/UI in every client. Claude, Codex, and Copilot require project trust/approval as documented by the client; Zed external agents/terminal threads may have separate configs. `--client all --global` changes multiple personal configs; prefer project install first. Other MCP clients can connect manually with command `npx -y github:rikoarik/figcraft-mcp-awsm` and load the skills according to their format. Browser/cloud agents that cannot launch local processes need a hosted MCP endpoint, which this package does not provide.
 
 ### Example prompts
 
@@ -64,7 +64,7 @@ npm audit --audit-level=high
 npm pack --dry-run
 ```
 
-The GitHub repo contains source, not committed build files; `prepare` builds on Git installs. To run locally, `npm run build` then `node build/index.js` for stdio, or `node build/index.js setup --client opencode --source github:rikoarik/-figcraft-mcp-awsm` for setup. Local setup still points the installed client at GitHub; it does not point to the checkout automatically.
+The GitHub repo contains source, not committed build files; `prepare` builds on Git installs. To run locally, `npm run build` then `node build/index.js` for stdio, or `node build/index.js setup --client opencode --source github:rikoarik/figcraft-mcp-awsm` for setup. Local setup still points the installed client at GitHub; it does not point to the checkout automatically.
 
 ### Demo
 
