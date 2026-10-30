@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 type RemoteTool = { name: string; description?: string; inputSchema?: unknown; annotations?: { readOnlyHint?: boolean } };
 type ServerConfig = {
@@ -164,9 +165,11 @@ export class McpGateway {
     const connection=await this.connect(input.server,server);
     if(!connection.tools.has(input.tool))throw new Error("Tool is unavailable on "+input.server+": "+input.tool);
     // The original MCP result is returned unchanged, including text or image blocks.
-    return await timeout(connection.client.callTool({
+    const result=await timeout(connection.client.callTool({
       name:input.tool,arguments:input.arguments??{},
     }),60000,"Bridge call "+input.server+"/"+input.tool);
+    if("content" in result && Array.isArray(result.content))return result as CallToolResult;
+    return {content:[{type:"text" as const,text:JSON.stringify(result)}]};
   }
   async close(){
     const active=[...this.connections.values()];
