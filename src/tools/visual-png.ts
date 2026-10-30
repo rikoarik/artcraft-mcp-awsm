@@ -124,18 +124,50 @@ export async function compareUiScreenshots(input:{
     ". Capture matching physical pixel sizes before comparing.");
   let changed=0,totalAbsolute=0,minX=ref.width,minY=ref.height,maxX=-1,maxY=-1;
   const heat=input.diffPath?new Uint8Array(ref.pixels.length):undefined;
+  // Coarse connected regions group nearby pixel differences into actionable UI areas.
+  const tileSize=24,cols=Math.ceil(ref.width/tileSize),rows=Math.ceil(ref.height/tileSize);
+  const tileChanged=new Uint32Array(cols*rows);
   for(let y=0;y<ref.height;y++)for(let x=0;x<ref.width;x++) {
     const i=(y*ref.width+x)*4;
     const ra=ref.pixels[i+3]/255,aa=act.pixels[i+3]/255;
     const d=[0,1,2].map(k=>Math.abs(composite(ref.pixels[i+k],ra)-composite(act.pixels[i+k],aa)));
     totalAbsolute+=d[0]+d[1]+d[2];
     const changedPixel=Math.max(...d)>threshold;
-    if(changedPixel){changed++;minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);}
+    if(changedPixel){
+      changed++;minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);
+      tileChanged[Math.floor(y/tileSize)*cols+Math.floor(x/tileSize)]++;
+    }
     if(heat) {
       if(changedPixel){heat[i]=255;heat[i+1]=40;heat[i+2]=65;heat[i+3]=255;}
       else {const avg=Math.round((ref.pixels[i]+ref.pixels[i+1]+ref.pixels[i+2])/3);heat[i]=heat[i+1]=heat[i+2]=avg;heat[i+3]=255;}
     }
   }
+
+  const visited=new Uint8Array(tileChanged.length);
+  const regions:Array<{x:number;y:number;width:number;height:number;changedPixels:number;shareOfChanges:number}>=[];
+  for(let start=0;start<tileChanged.length;start++){
+    if(visited[start]||!tileChanged[start])continue;
+    visited[start]=1;
+    const stack=[start];
+    let count=0,left=cols,top=rows,right=0,bottom=0;
+    while(stack.length){
+      const current=stack.pop()!;
+      const cx=current%cols,cy=Math.floor(current/cols);
+      count+=tileChanged[current];
+      left=Math.min(left,cx);right=Math.max(right,cx);
+      top=Math.min(top,cy);bottom=Math.max(bottom,cy);
+      // 4-connected tile regions: keeps unrelated visual changes separate.
+      const neighbors=[cy>0?current-cols:-1,cx>0?current-1:-1,cx+1<cols?current+1:-1,cy+1<rows?current+cols:-1];
+      for(const neighbor of neighbors)if(neighbor>=0&&!visited[neighbor]&&tileChanged[neighbor]){
+        visited[neighbor]=1;stack.push(neighbor);
+      }
+    }
+    const x=left*tileSize,y=top*tileSize;
+    regions.push({x,y,width:Math.min(ref.width,(right+1)*tileSize)-x,
+      height:Math.min(ref.height,(bottom+1)*tileSize)-y,
+      changedPixels:count,shareOfChanges:changed?Math.round(count/changed*10000)/100:0});
+  }
+  regions.sort((a,b)=>b.changedPixels-a.changedPixels);
   const pixels=ref.width*ref.height,percent=Math.round(changed/pixels*10000)/100;
   const meanAbsoluteError=Math.round(totalAbsolute/(pixels*3)*100)/100;
   let savedDiff:string|undefined;
@@ -148,8 +180,9 @@ export async function compareUiScreenshots(input:{
     changedPixels:changed,totalPixels:pixels,changedPercent:percent,meanAbsoluteError,
     threshold,maxChangedPercent:allowed,passed:percent<=allowed,
     changedBoundingBox:changed?{x:minX,y:minY,width:maxX-minX+1,height:maxY-minY+1}:null,
+    regions:regions.slice(0,12), regionMethod:"24px tile, 4-connected components; boxes approximate",
     diffPath:savedDiff,
     sha256:{reference:crypto.createHash("sha256").update(refBytes).digest("hex"),actual:crypto.createHash("sha256").update(actBytes).digest("hex")},
-    caveats:["Pixel changes include browser/font rendering differences; a pass does not prove functional quality.","Images must be aligned at identical physical pixel dimensions.","No semantic understanding of layouts or components is performed."],
+    caveats:["Pixel changes include browser/font rendering differences; a pass does not prove functional quality.","Images must be aligned at identical physical pixel dimensions.","Regions group nearby pixel changes but do not identify components or causes."],
   };
 }
