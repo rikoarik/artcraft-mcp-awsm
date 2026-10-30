@@ -20,6 +20,8 @@ import { extractDesignTokens, checkContrast } from "./tools/design-tokens.js";
 import { inspectUiProject } from "./tools/project-scan.js";
 import { designQuickstart } from "./tools/design-quickstart.js";
 import { findDesignAssets } from "./tools/batch-assets.js";
+import { compareUiScreenshots } from "./tools/visual-png.js";
+import { captureUiScreenshots } from "./tools/browser-capture.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
 
@@ -364,6 +366,44 @@ server.registerTool(
     },
   },
   async args => { try { return json(await googleFont(args)); } catch(e) { return fail(e); } },
+);
+
+
+server.registerTool(
+  "capture_ui_screenshots",
+  {
+    title: "Capture Real UI Screenshots",
+    description: "Use Playwright installed in the target project to capture mobile and desktop localhost screenshots with stable reduced motion, isolated contexts, blocked outbound network, and console error inventory. Does not install browsers automatically.",
+    inputSchema: {
+      url: z.string().url().describe("HTTP localhost URL with dev-server port 1024 or higher."),
+      projectRoot: z.string().optional().describe("Project root containing its own Playwright install."),
+      outDir: z.string().optional().describe("Screenshot folder, default <projectRoot>/.awsm/visual."),
+      viewports: z.array(z.object({
+        name:z.string().min(1).max(32),width:z.number().int().min(240).max(2560),height:z.number().int().min(320).max(1800),
+      })).min(1).max(5).optional().describe("Defaults: 375x812 mobile, 1440x900 desktop."),
+      fullPage: z.boolean().optional().describe("Full-scroll page capture; disabled by default for deterministic screenshot sizes."),
+      overwrite: z.boolean().optional().describe("Replace existing screenshots; default false."),
+      timeoutMs: z.number().int().min(1000).max(30000).optional(),
+    },
+  },
+  async args => {try{return json(await captureUiScreenshots(args));}catch(e){return fail(e);}},
+);
+
+server.registerTool(
+  "compare_ui_screenshots",
+  {
+    title: "Compare FigCraft Design and Web UI",
+    description: "Compare two same-size PNG screenshots and optionally write a visible red difference heatmap. Reports percentage of differing pixels, mean absolute error, changed bounding box and threshold pass/fail; not semantic UX analysis.",
+    inputSchema: {
+      reference:z.string().describe("Path to FigCraft PNG frame export or source screenshot."),
+      actual:z.string().describe("Path to actual browser PNG capture."),
+      threshold:z.number().int().min(0).max(255).optional().describe("Per-channel max pixel difference to consider changed; default 20."),
+      maxChangedPercent:z.number().min(0).max(100).optional().describe("Acceptable changed pixel percentage, default 2%."),
+      diffPath:z.string().optional().describe("Optional output path for a difference heatmap PNG."),
+      overwrite:z.boolean().optional().describe("Replace existing diffPath only when explicitly true."),
+    },
+  },
+  async args => {try{return json(await compareUiScreenshots(args));}catch(e){return fail(e);}},
 );
 
 async function main(): Promise<void> {
