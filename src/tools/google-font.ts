@@ -7,7 +7,7 @@ type Face={ style:string; weight:string; subset:string; url:string };
 const familyPattern=/^[a-z][a-z0-9 .'-]{1,78}$/i;
 const stylePattern=/^(normal|italic)$/;
 const validFace=(u:URL)=>u.protocol==="https:" && u.hostname==="fonts.gstatic.com" && !u.username && !u.password && u.port==="";
-function extract(css:string):Face[] {
+export function parseGoogleFontFaces(css:string):Face[] {
   if(css.length>500_000)throw new Error("Google Fonts CSS response exceeds 500 KB");
   const out:Face[]=[];
   // Google Fonts labels subsets in comments immediately preceding @font-face.
@@ -42,7 +42,7 @@ export async function googleFont(input: {
   const cssUrl="https://fonts.googleapis.com/css2?family="+encodeURIComponent(familyParam)+"&display=swap";
   const res=await request(cssUrl,{headers:{"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36","Accept":"text/css"},timeoutMs:15000});
   const css=await res.text();
-  const faces=extract(css);
+  const faces=parseGoogleFontFaces(css);
   if(!faces.length)throw new Error("No WOFF2 faces found for requested family/styles; check Google Fonts availability.");
   const chosen=weights.map(w=>{
     const candidate=faces.filter(f=>f.style===style && (f.weight===String(w) || f.weight.split(/\s+/).map(Number).some(Number.isNaN)===false && (()=>{const v=f.weight.split(/\s+/).map(Number);return v.length===2 && w>=v[0] && w<=v[1];})()));
@@ -86,6 +86,8 @@ export async function googleFont(input: {
     const digest=crypto.createHash("sha256").update(bytes).digest("hex");
     let status:"created"|"unchanged"|"conflict"|"updated"="created";
     try {
+      const stat=await fs.lstat(target);
+      if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Refusing to overwrite non-regular font file: "+target);
       const prev=await fs.readFile(target);
       if(prev.equals(bytes))status="unchanged";
       else status=input.overwrite?"updated":"conflict";
