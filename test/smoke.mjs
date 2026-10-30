@@ -106,7 +106,7 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 20);
+  assert.equal(tools.tools.length, 21);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
@@ -222,6 +222,24 @@ try {
     arguments:{url:'http://127.0.0.1:51000',projectRoot:cwd,viewports:[{name:'mobile',width:375,height:812}]}});
   assert.equal(auditMissingBrowser.isError,true);
   assert.match(auditMissingBrowser.content[0].text,/Playwright not found/);
+
+  const {summarizeReview}=await import('../build/tools/review-ui.js');
+  const reviewSummary=summarizeReview({
+    issues:[
+      {code:'MISSING_MAIN',severity:'info',viewport:'desktop',message:'Missing main',suggestedFix:'Add main'},
+      {code:'BROKEN_IMAGE',severity:'high',viewport:'mobile',message:'Broken',suggestedFix:'Fix asset'},
+    ],
+    comparisons:[{viewport:'mobile',reference:'frame.png',passed:false,changedPercent:25,
+      regions:[{x:0,y:0,width:24,height:24,changedPixels:20,shareOfChanges:80}]}],
+    blockedRequests:1,viewports:2,
+  });
+  assert.equal(reviewSummary.issues.high,1);
+  assert.equal(reviewSummary.failedComparisons,1);
+  assert.equal(reviewSummary.priorityFindings[0].code,'BROKEN_IMAGE');
+  assert.equal(reviewSummary.priorityVisualRegions[0].changedPixels,20);
+  assert.equal(reviewSummary.passed,false);
+  const reviewInvalid=await client.callTool({name:'review_ui',arguments:{url:'https://example.com'}});
+  assert.equal(reviewInvalid.isError,true);
   const palette = await client.callTool({ name: 'palette', arguments: { color: '#1b7f5a' } });
   assert.equal(JSON.parse(palette.content[0].text).base, '#1b7f5a');
   assert.match(JSON.parse(palette.content[0].text).note, /contrast/);
@@ -241,7 +259,7 @@ try {
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
-try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,20); }
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,21); }
 finally { await secondClient.close(); }
 assert(existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
 console.log('Smoke tests passed');
