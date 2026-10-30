@@ -35,7 +35,7 @@ assert(readFileSync(cfgPath, 'utf8').includes('https://example.com'));
 const githubCwd = mkdtempSync(path.join(tmpdir(), 'awsm-github-test-'));
 const fromGithub = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--source', 'github:someone/my-awsm-mcp'], { cwd: githubCwd, encoding: 'utf8' });
 assert.equal(fromGithub.status, 0, fromGithub.stderr);
-assert.deepEqual(JSON.parse(readFileSync(path.join(githubCwd, '.opencode/opencode.json'), 'utf8')).mcp.servers.awsm.command, ['npx', '-y', 'github:someone/my-awsm-mcp']);
+assert.deepEqual(JSON.parse(readFileSync(path.join(githubCwd, '.opencode/opencode.json'), 'utf8')).mcp.servers.awsm.command, ['npx', '-y', '--prefer-online', 'github:someone/my-awsm-mcp', '--managed-skills', path.join(githubCwd, '.opencode/skills')]);
 
 const multiCwd = mkdtempSync(path.join(tmpdir(), 'awsm-all-test-'));
 const allResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
