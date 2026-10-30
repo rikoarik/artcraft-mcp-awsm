@@ -66,7 +66,7 @@ for (const name of skillNames) {
   assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|setelah|ketika|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(text), `${name}: untranslated skill content`);
   assert(existsSync(path.join(multiCwd, '.agents/skills', name, 'SKILL.md')));
 }
-const allAgain = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
+const allAgain = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--all-skills', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
 assert.equal(allAgain.status, 0, allAgain.stderr); // idempotent
 assert.equal(readFileSync(path.join(multiCwd, '.codex/config.toml'), 'utf8').match(/\[mcp_servers\.awsm\]/g).length, 1);
 const fakeHome = mkdtempSync(path.join(tmpdir(), 'awsm-home-test-'));
