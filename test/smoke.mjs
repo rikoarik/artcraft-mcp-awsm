@@ -106,7 +106,7 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 17);
+  assert.equal(tools.tools.length, 19);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
@@ -170,6 +170,27 @@ try {
   const scan = await client.callTool({name:'inspect_ui_project',arguments:{root:projectFolder}});
   assert.equal(scan.isError,undefined,scan.content[0].text);
   assert.equal(JSON.parse(scan.content[0].text).framework,'nextjs');
+
+  const { encodeRgbaPng, decodePng } = await import('../build/tools/visual-png.js');
+  const reference = path.join(cwd,'reference.png'), actual = path.join(cwd,'actual.png'), heatmap=path.join(cwd,'heatmap.png');
+  const solid = (r,g,b)=>new Uint8Array([r,g,b,255,r,g,b,255,r,g,b,255,r,g,b,255]);
+  const refPng=encodeRgbaPng({width:2,height:2,pixels:solid(255,255,255)});
+  assert.deepEqual([...decodePng(refPng).pixels],[...solid(255,255,255)]);
+  writeFileSync(reference,refPng);
+  writeFileSync(actual,encodeRgbaPng({width:2,height:2,pixels:new Uint8Array([0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255])}));
+  const diffResult = await client.callTool({name:'compare_ui_screenshots',arguments:{reference,actual,diffPath:heatmap,threshold:5}});
+  assert.equal(diffResult.isError,undefined,diffResult.content[0].text);
+  const diff=JSON.parse(diffResult.content[0].text);
+  assert.equal(diff.changedPixels,1);
+  assert.equal(diff.changedPercent,25);
+  assert.equal(diff.passed,false);
+  assert.deepEqual(diff.changedBoundingBox,{x:0,y:0,width:1,height:1});
+  assert(existsSync(heatmap));
+  assert.equal(decodePng(readFileSync(heatmap)).width,2);
+  const identical=await client.callTool({name:'compare_ui_screenshots',arguments:{reference,actual:reference}});
+  assert.equal(JSON.parse(identical.content[0].text).passed,true);
+  const captureValidation=await client.callTool({name:'capture_ui_screenshots',arguments:{url:'https://example.com'}});
+  assert.equal(captureValidation.isError,true);
   const palette = await client.callTool({ name: 'palette', arguments: { color: '#1b7f5a' } });
   assert.equal(JSON.parse(palette.content[0].text).base, '#1b7f5a');
   assert.match(JSON.parse(palette.content[0].text).note, /contrast/);
@@ -189,7 +210,7 @@ try {
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
-try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,17); }
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,19); }
 finally { await secondClient.close(); }
 assert(existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
 console.log('Smoke tests passed');
