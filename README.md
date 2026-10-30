@@ -30,7 +30,7 @@ npx -y github:rikoarik/figcraft-mcp-awsm setup --client CLIENT --source github:r
 
 | Client | Project MCP configuration | Project skill location | How to verify |
 | --- | --- | --- | --- |
-| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with seven tools. |
+| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with nine tools. |
 | **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Open Claude in the project, approve the project server, and use `/mcp`. |
 | **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Trust the project, run `codex mcp list`, then try `palette`. |
 | **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open the workspace, inspect the agent's MCP tools, and try the prompt below. |
@@ -108,7 +108,7 @@ python3 -m http.server 8080 --directory demo/example
 
 Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page displays an SVG actually returned by MCP; **the server did not automatically generate the website**. Watch the [MP4 walkthrough](demo/awsm-demo.mp4) for the tool calls and their results.
 
-### All 13 skills
+### All 14 skills
 
 | Skill | When to use it | What to inspect |
 | --- | --- | --- |
@@ -124,9 +124,23 @@ Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page
 | [`awsm-motion-storyboard`](skills/awsm-motion-storyboard/SKILL.md) | Transitions and microinteractions | Triggers, final states, reduced motion, evidence. |
 | [`awsm-responsive-audit`](skills/awsm-responsive-audit/SKILL.md) | Fix mobile/tablet/desktop layout issues | Viewport screenshots and retest status. |
 | [`awsm-prototype-qa`](skills/awsm-prototype-qa/SKILL.md) | Validate before handoff | Journey matrix, reproducible findings, limits. |
+| [`awsm-figcraft-to-web`](skills/awsm-figcraft-to-web/SKILL.md) | Translate FigCraft layers into semantic DOM, components and exportable assets | Layer inventory, deterministic export plan, synced assets, browser QA. |
 | [`awsm-figcraft-handoff`](skills/awsm-figcraft-handoff/SKILL.md) | Handoff to the FigCraft app | Frame specifications, tokens, assets, interaction gaps. |
 
 Mention a skill ID in your prompt to make agent loading more reliable. Skills are **workflow instructions**, not components that build a UI without the agent implementing one. Each file is editable and contains decisions, validation, example tasks, and handoff criteria. Tailor them to your product and asset licensing policy.
+
+## FigCraft → Web handoff (new)
+
+AWSM now provides **prepare_web_handoff** and **sync_figcraft_assets** MCP tools plus the `awsm-figcraft-to-web` skill. The new workflow is designed for converting a FigCraft design with unstructured layer names, mixed groups and image fills into a **real web implementation**, rather than exporting a whole page as a screenshot.
+
+1. Use the **native FigCraft MCP** to inspect the complete document layer tree and, when available, its asset inventory. Copy the JSON returned by document inspection (or save it locally).
+2. Run `prepare_web_handoff({ document: <FigCraft inspect_document JSON>, inspectAssets: <optional asset inventory>, outputPath: "./design-handoff/figcraft-handoff.json", exportDir: "./figcraft-exports" })`.
+3. Review the manifest's `layers`, `assets`, `issues`, and `workflow`. Semantic types resolve to DOM components/text/layout, obvious raster and standalone icon layers resolve to assets, and ambiguous nodes stay **manual-review**. A generic group with children is never automatically flattened to one raster export.
+4. Use the actual FigCraft MCP export operation to export **only** the listed image and icon layers into `./figcraft-exports`, preserving the proposed filenames. The `figcraftExport` entry is a **suggested export plan**; adapt it to your installed FigCraft MCP schema.
+5. Run `sync_figcraft_assets({ handoffPath: "./design-handoff/figcraft-handoff.json", exportDir: "./figcraft-exports", publicDir: "./public" })`. This copies exported assets to `public/figcraft` and writes `asset-manifest.json` with SHA-256 checksums, unresolved files and conflicts. It does not overwrite changed files unless explicitly requested.
+6. Implement HTML/React/Next.js from the DOM layer plan, FigCraft's native inspect.code and component mapping (if available). Compare real browser screenshots to the source design and verify responsive layout and interactions.
+
+Layer classification is intentionally **conservative**. Use `pluginData["awsm.kind"]` to explicitly mark `image`, `photo`, `icon`, `illustration`, `asset`, `layout`, `component`, `text` or `decoration` when FigCraft exposes this metadata. The tool recognizes common node types, fills, and hints from asset inventories, but it is **not** a substitute for a FigCraft-specific schema adapter, visual analysis or an actual export. No automatic canvas edits or AI image generation occur.
 
 ## Troubleshooting and limitations
 
@@ -135,7 +149,7 @@ Mention a skill ID in your prompt to make agent loading more reliable. Skills ar
 - **`awsm` setup conflict:** the installer preserves existing entries. Compare and back up the configuration, then edit a wrong entry deliberately; `--force-skills` affects skills **only**, not MCP settings.
 - **Missing images or icons:** public APIs and networks can fail. Revise the query, check provider keys and licensing, and label `picsum` results as placeholders rather than relevant search results.
 - **SVG missing from preview:** check the path relative to `index.html`, the filename, long-text clipping, and the directory served. Convert an Open Graph card to PNG if the target social platform requires raster.
-- **Prototype code or FigCraft:** AWSM's seven tools do not edit a project, generate an entire site or AI photos, control the FigCraft canvas, or deploy a website. The coding agent implements the web prototype; FigCraft's separate MCP handles design documents. `serve` is a local static preview only.
+- **Prototype code or FigCraft:** AWSM's tools do not edit a project, generate an entire site or AI photos, control the FigCraft canvas, or deploy a website. The coding agent implements the web prototype; FigCraft's separate MCP handles design documents. `serve` is a local static preview only.
 - **Security:** run local servers only from sources you trust. Do not commit credentials in configuration. Review created files and third-party licenses before publishing.
 
 ## Development, tests, and sources
