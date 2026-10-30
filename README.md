@@ -1,6 +1,6 @@
 # FigCraft MCP AWSM
 
-A **local stdio MCP server and 13 editable agent skills** for finding relevant photos and icons, creating simple SVG assets, and designing, building, and reviewing web prototypes with a coding agent. Supports OpenCode V2, Claude Code, Codex, Google Antigravity CLI, Zed Agent, and GitHub Copilot CLI. **This package does not control the FigCraft canvas**; connect FigCraft's own MCP separately to design inside the application.
+A **local stdio MCP server and 21 editable agent skills** for finding relevant photos and icons, creating simple SVG assets, and designing, building, and reviewing web prototypes with a coding agent. Supports OpenCode V2, Claude Code, Codex, Google Antigravity CLI, Zed Agent, and GitHub Copilot CLI. **This package does not control the FigCraft canvas**; connect FigCraft's own MCP separately to design inside the application.
 
 ## See the tools in use—and the result
 
@@ -18,7 +18,23 @@ You need Node.js **18+**, `npx`, internet access for installation from GitHub (a
 npx -y github:rikoarik/figcraft-mcp-awsm setup --client all --source github:rikoarik/figcraft-mcp-awsm
 ```
 
-This package is **not published to npm yet**. `--source` configures each agent to launch `npx -y github:rikoarik/figcraft-mcp-awsm` instead of the unpublished npm package name. GitHub installation runs `prepare` to compile TypeScript. Review the configuration changes and any trust or approval prompts in your client. `--client all` installs project-level configurations for five clients; **Zed** needs a separate `--global` step for its user-level MCP setting (its project skills are still installed).
+This package is **not published to npm yet**. `--source` configures each agent to launch the GitHub package using npx. For GitHub sources, the installer now enables startup revalidation (`npx -y --prefer-online`) and safe skill syncing by default. No hosted MCP backend is required. GitHub installation runs `prepare` to compile TypeScript. Review the configuration changes and any trust or approval prompts in your client. `--client all` installs project-level configurations for six clients; **Zed** needs a separate `--global` step for its user-level MCP setting (its project skills are still installed).
+
+### Updates after installation
+
+**GitHub installs enable startup update checks by default.** Each time a compatible coding agent starts AWSM, its npx command asks npm to prefer online metadata and runs the fetched package. The MCP startup then syncs the skills installed for that client. New upstream skill files are installed, **unchanged managed skills** are updated, and any skill the user has edited is preserved. This is best-effort update revalidation, not a guaranteed immediate push: npm/GitHub availability and caching can affect when a new revision is used. MCP sessions already running continue on their current version.
+
+Disable this behavior when reproducibility matters by passing `--no-auto-update`; for stricter release control, pin `--source github:rikoarik/figcraft-mcp-awsm#<commit-or-tag>`. Enabling automatic updates means trusting newly published code to execute on the developer machine. Use tagged releases for teams that require reviewed changes.
+
+**For users who installed AWSM before this change**, rerun setup with `--upgrade-config` to migrate an existing AWSM command to managed updates. Configuration replacement is limited to entries that match the recognized AWSM source. It does not overwrite unrelated MCP entries:
+
+```sh
+npx -y github:rikoarik/figcraft-mcp-awsm setup --client opencode --source github:rikoarik/figcraft-mcp-awsm --auto-update --upgrade-config
+```
+
+Use `--client all` only when you actually use all supported agents. Installed skills are tracked with a small `.awsm-managed.json` state file in each skill directory. Existing unmanaged or customized skill files are never overwritten unless `--force-skills` is explicitly supplied. For older installs lacking that state file, already-customized skills are preserved rather than force-migrated.
+
+**Why no VPS?** AWSM runs locally over MCP stdio, launched by the user's agent. GitHub supplies the source; npx downloads/builds/executes it. A remote deployment and paid hosting would only be necessary for a separately designed shared HTTP MCP service. Photo/Iconify provider APIs may still impose their own quotas.
 
 ### Choose and verify a client
 
@@ -30,7 +46,7 @@ npx -y github:rikoarik/figcraft-mcp-awsm setup --client CLIENT --source github:r
 
 | Client | Project MCP configuration | Project skill location | How to verify |
 | --- | --- | --- | --- |
-| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with nine tools. |
+| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with twenty tools. |
 | **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Open Claude in the project, approve the project server, and use `/mcp`. |
 | **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Trust the project, run `codex mcp list`, then try `palette`. |
 | **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open the workspace, inspect the agent's MCP tools, and try the prompt below. |
@@ -108,7 +124,7 @@ python3 -m http.server 8080 --directory demo/example
 
 Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page displays an SVG actually returned by MCP; **the server did not automatically generate the website**. Watch the [MP4 walkthrough](demo/awsm-demo.mp4) for the tool calls and their results.
 
-### All 14 skills
+### All 21 skills
 
 | Skill | When to use it | What to inspect |
 | --- | --- | --- |
@@ -123,11 +139,50 @@ Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page
 | [`awsm-auto-prototype`](skills/awsm-auto-prototype/SKILL.md) | Implement live interactions and states | Control → action → feedback; working/simulated/blocked. |
 | [`awsm-motion-storyboard`](skills/awsm-motion-storyboard/SKILL.md) | Transitions and microinteractions | Triggers, final states, reduced motion, evidence. |
 | [`awsm-responsive-audit`](skills/awsm-responsive-audit/SKILL.md) | Fix mobile/tablet/desktop layout issues | Viewport screenshots and retest status. |
+| [`awsm-visual-qa`](skills/awsm-visual-qa/SKILL.md) | Compare FigCraft frame and real browser UI using screenshots and heatmaps | Matched viewport PNGs, changed-pixel metrics and agent-guided corrective iteration. |
 | [`awsm-prototype-qa`](skills/awsm-prototype-qa/SKILL.md) | Validate before handoff | Journey matrix, reproducible findings, limits. |
+| [`awsm-fast-design`](skills/awsm-fast-design/SKILL.md) | Produce the first useful screen quickly while preserving product context | Quick brief, focused reuse, desktop/mobile first render, then polish. |
+| [`awsm-typography`](skills/awsm-typography/SKILL.md) | Pick, inspect and integrate real fonts across web and native apps | Observed FigCraft type, local fonts, platform mapping, glyph/license review. |
+| [`awsm-iconography`](skills/awsm-iconography/SKILL.md) | Build a coherent icon system, download reusable SVG sets, inspect custom vector icons | One family, accessible usage, verified local assets. |
+| [`awsm-admin-dashboard`](skills/awsm-admin-dashboard/SKILL.md) | Implement data-heavy operational admin panels | Functional tables, forms, state handling, permission-aware UI. |
+| [`awsm-app-ui`](skills/awsm-app-ui/SKILL.md) | Build Flutter, Expo/React Native or Compose UI flows | Navigation, platform assets, interaction states and device checks. |
+| [`awsm-product-ui`](skills/awsm-product-ui/SKILL.md) | Unify SaaS marketing and authenticated product UI | Product narrative and usable in-app components. |
 | [`awsm-figcraft-to-web`](skills/awsm-figcraft-to-web/SKILL.md) | Translate FigCraft layers into semantic DOM, components and exportable assets | Layer inventory, deterministic export plan, synced assets, browser QA. |
 | [`awsm-figcraft-handoff`](skills/awsm-figcraft-handoff/SKILL.md) | Handoff to the FigCraft app | Frame specifications, tokens, assets, interaction gaps. |
 
 Mention a skill ID in your prompt to make agent loading more reliable. Skills are **workflow instructions**, not components that build a UI without the agent implementing one. Each file is editable and contains decisions, validation, example tasks, and handoff criteria. Tailor them to your product and asset licensing policy.
+
+## Fast design: first render before exhaustive analysis
+
+AWSM offers `design_quickstart` to minimize repeated analysis and tool calls. Example for an existing Next.js administrative app:
+
+```js
+design_quickstart({
+  brief: "Design an invoice admin screen with dense data table, meaningful filters and a working approval flow",
+  root: ".",
+  kind: "admin",
+  speed: "fast"
+})
+```
+
+The tool detects the framework and existing UI packages (without recursively scanning the entire repo), selects relevant skills, and defines a small first-render target. Agents should implement the first useful screen, inspect 375px and 1440px renders, then continue with visual polish and comprehensive QA. The output is a **plan and project context**, not an automatically generated or visually verified design.
+
+Use `find_design_assets({ iconQueries: ["invoice", "filter"], imageQueries: ["construction project team at work"] })` to perform several image/icon searches in a single request. This runs provider queries concurrently and caches successful results within the MCP process for five minutes; candidates are not automatically downloaded or license-cleared.
+
+Use `inspect_ui_project({ root: "." })` for a bounded framework/component/asset directory inventory. If you already have FigCraft JSON, pass it directly as `document` to `design_quickstart` instead of repeating document, token and handoff analysis in separate calls. Image and icon discovery should be batched by what the first render actually needs. Fast mode does not allow bypassing destructive-operation safety, licensing requirements or production validation.
+
+## Fonts and observed design tokens
+
+AWSM can now inspect or download requested Google Fonts WOFF2 files **locally** (no paid backend or API key):
+
+```js
+google_font({ family: "Manrope", action: "inspect", weights: [400, 600, 700] })
+google_font({ family: "Manrope", action: "install", weights: [400, 600, 700], dir: "./public/fonts" })
+```
+
+Installed fonts are checked for WOFF2 signatures, capped in size, hashed, and never overwritten without opt-in. Subset selection prefers Latin. Check the actual font's license and required glyph coverage before distributing a product. Local CSS `@font-face` definitions are returned as implementation hints; your coding agent applies fonts in Next.js, CSS, Flutter, Expo or Compose using the proper platform mechanisms.
+
+For FigCraft designs, `extract_design_tokens({ document: <layerTree> })` returns **observed** fonts, colors, sizes, radii and gaps, plus CSS primitives; it intentionally does not invent semantic roles. `check_contrast` computes WCAG 2.x AA/AAA ratios for supplied opaque hex pairs. Do not mistake calculations for rendered accessibility testing or design fidelity.
 
 ## FigCraft → Web handoff (new)
 
@@ -141,6 +196,61 @@ AWSM now provides **prepare_web_handoff** and **sync_figcraft_assets** MCP tools
 6. Implement HTML/React/Next.js from the DOM layer plan, FigCraft's native inspect.code and component mapping (if available). Compare real browser screenshots to the source design and verify responsive layout and interactions.
 
 Layer classification is intentionally **conservative**. Use `pluginData["awsm.kind"]` to explicitly mark `image`, `photo`, `icon`, `illustration`, `asset`, `layout`, `component`, `text` or `decoration` when FigCraft exposes this metadata. The tool recognizes common node types, fills, and hints from asset inventories, but it is **not** a substitute for a FigCraft-specific schema adapter, visual analysis or an actual export. No automatic canvas edits or AI image generation occur.
+
+### Consistent icon assets
+
+`save_icon_set({ icons: ["lucide:users", "lucide:settings", "lucide:bell"], dir: "./public/icons", height: 24 })` downloads SVG files from a single Iconify family and returns file paths and hashes. It rejects mixed icon families and does not overwrite existing files by default. It **does not generate AI artwork**. For original branded icons, the agent authors and visually verifies SVGs or uses the actual FigCraft export capability. Review each family's license before shipping.
+
+For a genuinely original icon, `draw_icon` accepts agent-authored SVG primitives in a 24×24 coordinate system and writes a standalone file. Example:
+
+```js
+draw_icon({
+  name: "project-progress",
+  dir: "./public/icons/custom",
+  elements: [
+    { kind: "circle", cx: 12, cy: 12, r: 9 },
+    { kind: "path", d: "M 7 12 L 10 15 L 17 8" }
+  ]
+})
+```
+
+The agent still has to design path geometry, inspect the result, and correct any optical issues. This is structured local SVG generation, not a prompt-to-image model.
+
+For dashboard and native application workflows, mention `awsm-admin-dashboard`, `awsm-app-ui` or `awsm-iconography` explicitly to improve skill selection. Skills guide a coding agent; the MCP itself does not scaffold or build a complete app automatically.
+
+## Browser screenshot and FigCraft visual regression
+
+Two new MCP tools support measurable design-to-code quality:
+
+1. `capture_ui_screenshots` captures PNGs from **localhost** using the target project's existing Playwright installation, with named mobile/desktop viewports, reduced motion and a list of browser errors. It does not install Playwright automatically or capture public websites; external network requests are intentionally blocked, so remote fonts and images must be available locally for faithful screenshots.
+2. `compare_ui_screenshots` compares a FigCraft reference PNG against a matching-size browser PNG, produces changed-pixel percentage, mean absolute difference, a bounding box and an optional red heatmap. The PNG decoder supports non-interlaced 8-bit grayscale/RGB/indexed/GA/RGBA inputs and rejects unsupported formats.
+
+Optional browser dependency **inside the web project** (not the AWSM package):
+
+```sh
+npm i -D playwright
+npx playwright install chromium
+```
+
+Example calls by the coding agent:
+
+```js
+capture_ui_screenshots({
+  url: "http://127.0.0.1:3000/",
+  projectRoot: ".",
+  outDir: ".awsm/visual",
+  viewports: [{ name: "mobile", width: 375, height: 812 }, { name: "desktop", width: 1440, height: 900 }]
+});
+compare_ui_screenshots({
+  reference: "./figcraft-exports/home-desktop.png",
+  actual: "./.awsm/visual/desktop.png",
+  diffPath: "./.awsm/visual/desktop-diff.png"
+});
+```
+
+For practical DOM QA run `audit_ui_page({ url: "http://127.0.0.1:3000/", projectRoot: ".", reportPath: ".awsm/ui-audit.json" })`. It checks mobile and desktop for overflow, offscreen elements, images that fail to load, unnamed controls, unlabeled inputs, placeholder links, small buttons and JavaScript errors. The audit is read-only and does not submit forms. Findings include CSS selectors and suggested fixes. It is heuristic, not a WCAG certification.
+
+Make sure source and actual PNGs have **identical physical dimensions**. Screenshot diff reports dominant change regions grouped into 24px tiles, along with a global pixel metric. Neither measure establishes semantic visual critique or proves that interactions work. Use `awsm-visual-qa` and the agent's own image understanding to inspect screenshots and prioritize fixes. Accessibility and functional QA remain separate.
 
 ## Troubleshooting and limitations
 
@@ -156,7 +266,7 @@ Layer classification is intentionally **conservative**. Use `pluginData["awsm.ki
 
 ```sh
 npm ci
-npm test                     # build and smoke-test the installer, seven MCP tools, and HTTP preview
+npm test                     # build and smoke-test the installer, twenty MCP tools, and HTTP preview
 npm audit --audit-level=high
 npm pack --dry-run           # check that build output, README, and skills are packaged
 npm run demo                 # regenerate MP4, GIF, poster, and SVG/HTML examples

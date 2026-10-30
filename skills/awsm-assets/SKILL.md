@@ -24,3 +24,14 @@ Record `file | slot | source page | creator | license | required attribution | d
 **Handoff:** selected files and paths, verified licenses and attribution, and unresolved slots. Example request: “Find a small café interior photo for a 16:9 hero and a reservation icon; avoid random images and include credits.”
 
 For FigCraft targets, import assets using the available design-app tools and follow the FigCraft-specific workflow. This MCP does not edit the canvas.
+
+## Icon files and app delivery
+
+Icon discovery is not enough for implementation. When several icons are needed, build a semantic icon map and use awsm-iconography. Call save_icon_set with a single Iconify family to create consistent, named SVG files, or call draw_icon with original vector primitives for a genuinely custom concept. Inspect rendered output and verify icon meaning at production sizes. Keep an explicit file-to-component mapping and ensure icons follow platform conventions for the current web, Flutter, Compose or React Native project.
+
+For FigCraft designs, use the document layer manifest to distinguish photos, decorative textures, icon vectors and ordinary CSS backgrounds. Export only the eligible nodes through FigCraft's own MCP, then sync them to the local project. Never treat a full screenshot as a source photo. Verify every intended asset appears at its final path before claiming that the UI is ready.
+
+
+## Faster asset discovery
+
+When a brief needs several icons and images, call find_design_assets with a small set of specific iconQueries and imageQueries. Use the results to shortlist actual visual slots; then download or implement only the selected candidates. A batch search minimizes agent/tool round trips and caches metadata briefly, but does not prove a candidate is correctly licensed or relevant. Do not fetch random placeholders just to fill a grid.
