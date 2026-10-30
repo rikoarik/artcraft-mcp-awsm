@@ -58,7 +58,7 @@ assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-admin-dashboard/SKILL
 assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-app-ui/SKILL.md')));
 assert(existsSync(path.join(multiCwd, '.claude/skills/awsm-antislop-ui/SKILL.md')));
 const skillNames = readdirSync(path.join(root, 'skills'));
-assert.equal(skillNames.length, 20);
+assert.equal(skillNames.length, 21);
 for (const name of skillNames) {
   const text = readFileSync(path.join(root, 'skills', name, 'SKILL.md'), 'utf8');
   assert(text.startsWith('---\n') && text.includes(`\nname: ${name}\n`) && /\ndescription: .+\n/.test(text), `${name}: invalid frontmatter`);
