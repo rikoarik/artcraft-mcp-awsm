@@ -7,6 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import * as icons from "./tools/icons.js";
 import { saveIconSet } from "./tools/icon-set.js";
+import { drawIcon } from "./tools/draw-icon.js";
 import * as images from "./tools/images.js";
 import * as assets from "./tools/assets.js";
 import * as serveMod from "./tools/serve.js";
@@ -82,6 +83,32 @@ server.registerTool(
   },
   async (args) => {
     try { return json(await saveIconSet(args)); }
+    catch (e) { return fail(e); }
+  },
+);
+
+server.registerTool(
+  "draw_icon",
+  {
+    title: "Draw Original UI Icon",
+    description: "Produce a local custom SVG icon from structured path, line, circle, rectangle, ellipse or polyline primitives authored by the coding agent. Not text-to-image generation; verify the rendered result.",
+    inputSchema: {
+      name: z.string().describe("Lowercase kebab-case filename, e.g. project-progress."),
+      elements: z.array(z.object({
+        kind: z.enum(["path","circle","rect","line","polyline","ellipse"]),
+        d: z.string().optional(), points: z.string().optional(),
+        x: z.number().optional(), y: z.number().optional(), x2: z.number().optional(), y2: z.number().optional(),
+        cx: z.number().optional(), cy: z.number().optional(), r: z.number().optional(), rx: z.number().optional(), ry: z.number().optional(),
+        width: z.number().optional(), height: z.number().optional(), fill: z.boolean().optional(),
+      })).min(1).max(30).describe("Vector primitives in a 24x24 coordinate system."),
+      dir: z.string().optional().describe("Output folder, default ./public/icons/custom."),
+      size: z.number().min(12).max(512).optional().describe("Rendered icon dimensions, default 24."),
+      strokeWidth: z.number().min(0.5).max(5).optional().describe("Outline width, default 1.75."),
+      overwrite: z.boolean().optional().describe("Explicitly replace the target SVG; default false."),
+    },
+  },
+  async (args) => {
+    try { return json(await drawIcon(args)); }
     catch (e) { return fail(e); }
   },
 );
