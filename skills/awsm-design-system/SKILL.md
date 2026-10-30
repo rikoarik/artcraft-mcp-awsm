@@ -24,3 +24,9 @@ Specify type roles (display/title/body/label), density and spacing, and breakpoi
 - Hand off token files, an old-to-new mapping, component examples, accessibility decisions, and uncovered items.
 
 **Example:** “Unify four admin screens with three competing greens and six button shapes into reusable tokens without changing the brand.”
+
+## Product-specific component libraries
+
+For a data-heavy admin system, include navigation chrome, filter bars, high-density tables, column settings, forms, approval dialogs, alerts and record activity trails. For native apps, include platform-specific safe-area handling, bottom navigation, screen transitions, input states, sheet behavior and scaling with the system text size. In both cases define icon dimensions, optical alignment and semantic meanings. Keep action icons stable across screens through awsm-iconography rather than mixing arbitrary libraries.
+
+Connect source-design layers and their code counterparts when FigCraft is involved. Name exportable artwork separately from reusable functional components; do not describe rasterized controls as design-system components. Validate each semantic token in actual states and in representative layouts, not only in a token table. Preserve existing code names and migrations unless the requested work explicitly authorizes a breaking rename.
