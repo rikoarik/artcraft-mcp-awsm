@@ -99,7 +99,7 @@ export async function captureUiScreenshots(input:{
         page.on("console",(message:{type():string;text():string})=>{
           if(message.type()==="error" && consoleErrors.length<20)consoleErrors.push(message.text().slice(0,400));
         });
-        await page.goto(url.toString(),{waitUntil:"domcontentloaded",timeout});
+        await page.goto(url.toString(),{waitUntil:"load",timeout});
         // Do not assume animations have finished on load; this is a stable reduced-motion snapshot.
         const screenshot=await page.screenshot({fullPage:input.fullPage??false,animations:"disabled",caret:"hide",timeout});
         const dimensions=readPngDimensions(screenshot);
