@@ -46,7 +46,7 @@ npx -y github:rikoarik/figcraft-mcp-awsm setup --client CLIENT --source github:r
 
 | Client | Project MCP configuration | Project skill location | How to verify |
 | --- | --- | --- | --- |
-| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with sixteen tools. |
+| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with seventeen tools. |
 | **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Open Claude in the project, approve the project server, and use `/mcp`. |
 | **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Trust the project, run `codex mcp list`, then try `palette`. |
 | **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open the workspace, inspect the agent's MCP tools, and try the prompt below. |
@@ -166,6 +166,8 @@ design_quickstart({
 
 The tool detects the framework and existing UI packages (without recursively scanning the entire repo), selects relevant skills, and defines a small first-render target. Agents should implement the first useful screen, inspect 375px and 1440px renders, then continue with visual polish and comprehensive QA. The output is a **plan and project context**, not an automatically generated or visually verified design.
 
+Use `find_design_assets({ iconQueries: ["invoice", "filter"], imageQueries: ["construction project team at work"] })` to perform several image/icon searches in a single request. This runs provider queries concurrently and caches successful results within the MCP process for five minutes; candidates are not automatically downloaded or license-cleared.
+
 Use `inspect_ui_project({ root: "." })` for a bounded framework/component/asset directory inventory. If you already have FigCraft JSON, pass it directly as `document` to `design_quickstart` instead of repeating document, token and handoff analysis in separate calls. Image and icon discovery should be batched by what the first render actually needs. Fast mode does not allow bypassing destructive-operation safety, licensing requirements or production validation.
 
 ## Fonts and observed design tokens
@@ -229,7 +231,7 @@ For dashboard and native application workflows, mention `awsm-admin-dashboard`, 
 
 ```sh
 npm ci
-npm test                     # build and smoke-test the installer, sixteen MCP tools, and HTTP preview
+npm test                     # build and smoke-test the installer, seventeen MCP tools, and HTTP preview
 npm audit --audit-level=high
 npm pack --dry-run           # check that build output, README, and skills are packaged
 npm run demo                 # regenerate MP4, GIF, poster, and SVG/HTML examples
