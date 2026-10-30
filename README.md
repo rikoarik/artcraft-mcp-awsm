@@ -1,6 +1,6 @@
 # FigCraft MCP AWSM
 
-A **local stdio MCP server and 20 editable agent skills** for finding relevant photos and icons, creating simple SVG assets, and designing, building, and reviewing web prototypes with a coding agent. Supports OpenCode V2, Claude Code, Codex, Google Antigravity CLI, Zed Agent, and GitHub Copilot CLI. **This package does not control the FigCraft canvas**; connect FigCraft's own MCP separately to design inside the application.
+A **local stdio MCP server and 21 editable agent skills** for finding relevant photos and icons, creating simple SVG assets, and designing, building, and reviewing web prototypes with a coding agent. Supports OpenCode V2, Claude Code, Codex, Google Antigravity CLI, Zed Agent, and GitHub Copilot CLI. **This package does not control the FigCraft canvas**; connect FigCraft's own MCP separately to design inside the application.
 
 ## See the tools in use—and the result
 
@@ -46,7 +46,7 @@ npx -y github:rikoarik/figcraft-mcp-awsm setup --client CLIENT --source github:r
 
 | Client | Project MCP configuration | Project skill location | How to verify |
 | --- | --- | --- | --- |
-| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with seventeen tools. |
+| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with nineteen tools. |
 | **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Open Claude in the project, approve the project server, and use `/mcp`. |
 | **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Trust the project, run `codex mcp list`, then try `palette`. |
 | **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open the workspace, inspect the agent's MCP tools, and try the prompt below. |
@@ -124,7 +124,7 @@ python3 -m http.server 8080 --directory demo/example
 
 Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page displays an SVG actually returned by MCP; **the server did not automatically generate the website**. Watch the [MP4 walkthrough](demo/awsm-demo.mp4) for the tool calls and their results.
 
-### All 20 skills
+### All 21 skills
 
 | Skill | When to use it | What to inspect |
 | --- | --- | --- |
@@ -139,6 +139,7 @@ Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page
 | [`awsm-auto-prototype`](skills/awsm-auto-prototype/SKILL.md) | Implement live interactions and states | Control → action → feedback; working/simulated/blocked. |
 | [`awsm-motion-storyboard`](skills/awsm-motion-storyboard/SKILL.md) | Transitions and microinteractions | Triggers, final states, reduced motion, evidence. |
 | [`awsm-responsive-audit`](skills/awsm-responsive-audit/SKILL.md) | Fix mobile/tablet/desktop layout issues | Viewport screenshots and retest status. |
+| [`awsm-visual-qa`](skills/awsm-visual-qa/SKILL.md) | Compare FigCraft frame and real browser UI using screenshots and heatmaps | Matched viewport PNGs, changed-pixel metrics and agent-guided corrective iteration. |
 | [`awsm-prototype-qa`](skills/awsm-prototype-qa/SKILL.md) | Validate before handoff | Journey matrix, reproducible findings, limits. |
 | [`awsm-fast-design`](skills/awsm-fast-design/SKILL.md) | Produce the first useful screen quickly while preserving product context | Quick brief, focused reuse, desktop/mobile first render, then polish. |
 | [`awsm-typography`](skills/awsm-typography/SKILL.md) | Pick, inspect and integrate real fonts across web and native apps | Observed FigCraft type, local fonts, platform mapping, glyph/license review. |
@@ -217,6 +218,38 @@ The agent still has to design path geometry, inspect the result, and correct any
 
 For dashboard and native application workflows, mention `awsm-admin-dashboard`, `awsm-app-ui` or `awsm-iconography` explicitly to improve skill selection. Skills guide a coding agent; the MCP itself does not scaffold or build a complete app automatically.
 
+## Browser screenshot and FigCraft visual regression
+
+Two new MCP tools support measurable design-to-code quality:
+
+1. `capture_ui_screenshots` captures PNGs from **localhost** using the target project's existing Playwright installation, with named mobile/desktop viewports, reduced motion and a list of browser errors. It does not install Playwright automatically or capture public websites; external network requests are intentionally blocked, so remote fonts and images must be available locally for faithful screenshots.
+2. `compare_ui_screenshots` compares a FigCraft reference PNG against a matching-size browser PNG, produces changed-pixel percentage, mean absolute difference, a bounding box and an optional red heatmap. The PNG decoder supports non-interlaced 8-bit grayscale/RGB/indexed/GA/RGBA inputs and rejects unsupported formats.
+
+Optional browser dependency **inside the web project** (not the AWSM package):
+
+```sh
+npm i -D playwright
+npx playwright install chromium
+```
+
+Example calls by the coding agent:
+
+```js
+capture_ui_screenshots({
+  url: "http://127.0.0.1:3000/",
+  projectRoot: ".",
+  outDir: ".awsm/visual",
+  viewports: [{ name: "mobile", width: 375, height: 812 }, { name: "desktop", width: 1440, height: 900 }]
+});
+compare_ui_screenshots({
+  reference: "./figcraft-exports/home-desktop.png",
+  actual: "./.awsm/visual/desktop.png",
+  diffPath: "./.awsm/visual/desktop-diff.png"
+});
+```
+
+Make sure source and actual PNGs have **identical physical dimensions**. Screenshot diff is a pixel metric, not semantic visual critique or a proof that interactions work. Use `awsm-visual-qa` and the agent's own image understanding to inspect screenshots and prioritize fixes. Accessibility and functional QA remain separate.
+
 ## Troubleshooting and limitations
 
 - **MCP not listed:** check the active project and configuration, restart the agent session, approve the project or server where required (Claude/Codex/Copilot), and try `npx -y github:rikoarik/figcraft-mcp-awsm` in a terminal. That launches the stdio server, not a web page; stop it with Ctrl-C. Check client stderr logs for startup errors. Zed requires `--global` for MCP.
@@ -231,7 +264,7 @@ For dashboard and native application workflows, mention `awsm-admin-dashboard`, 
 
 ```sh
 npm ci
-npm test                     # build and smoke-test the installer, seventeen MCP tools, and HTTP preview
+npm test                     # build and smoke-test the installer, nineteen MCP tools, and HTTP preview
 npm audit --audit-level=high
 npm pack --dry-run           # check that build output, README, and skills are packaged
 npm run demo                 # regenerate MP4, GIF, poster, and SVG/HTML examples
