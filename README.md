@@ -46,7 +46,7 @@ npx -y github:rikoarik/figcraft-mcp-awsm setup --client CLIENT --source github:r
 
 | Client | Project MCP configuration | Project skill location | How to verify |
 | --- | --- | --- | --- |
-| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with twenty tools. |
+| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with twenty-one tools. |
 | **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Open Claude in the project, approve the project server, and use `/mcp`. |
 | **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Trust the project, run `codex mcp list`, then try `palette`. |
 | **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open the workspace, inspect the agent's MCP tools, and try the prompt below. |
@@ -218,6 +218,26 @@ The agent still has to design path geometry, inspect the result, and correct any
 
 For dashboard and native application workflows, mention `awsm-admin-dashboard`, `awsm-app-ui` or `awsm-iconography` explicitly to improve skill selection. Skills guide a coding agent; the MCP itself does not scaffold or build a complete app automatically.
 
+## One-call design review
+
+The new `review_ui` tool combines browser DOM inspection, mobile/desktop screenshots, optional FigCraft PNG comparisons, and a prioritized issue report in **one browser pass**. This avoids launching separate browser sessions for capture and audit.
+
+```js
+review_ui({
+  url: "http://127.0.0.1:3000/",
+  projectRoot: ".",
+  outputDir: ".awsm/review",
+  referenceImages: [
+    { viewport: "desktop", file: "./figcraft-exports/home-desktop.png" }
+  ],
+  reportPath: ".awsm/review-report.json"
+});
+```
+
+Default viewports are mobile 375×812 and desktop 1440×900; reference names must match capture names and the PNG dimensions must match. Without a reference, AWSM still captures and audits both viewports. Results include severity-ranked issues, changed screenshot regions, source and output paths, and recommended next checks. The tool does not edit code or perform autonomous visual interpretation; your coding agent reads the evidence and applies changes.
+
+The browser package remains optional in the target project, and both the MCP and local browser tooling remain free to run without a VPS.
+
 ## Browser screenshot and FigCraft visual regression
 
 Two new MCP tools support measurable design-to-code quality:
@@ -284,7 +304,7 @@ This optional browser dependency lives in the **developer/test environment**. Th
 
 ```sh
 npm ci
-npm test                     # build and smoke-test the installer, twenty MCP tools, and HTTP preview
+npm test                     # build and smoke-test the installer, twenty-one MCP tools, and HTTP preview
 npm audit --audit-level=high
 npm pack --dry-run           # check that build output, README, and skills are packaged
 npm run demo                 # regenerate MP4, GIF, poster, and SVG/HTML examples
