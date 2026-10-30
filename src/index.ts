@@ -6,6 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import * as icons from "./tools/icons.js";
+import { saveIconSet } from "./tools/icon-set.js";
 import * as images from "./tools/images.js";
 import * as assets from "./tools/assets.js";
 import * as serveMod from "./tools/serve.js";
@@ -64,6 +65,24 @@ server.registerTool(
     } catch (e) {
       return fail(e);
     }
+  },
+);
+
+server.registerTool(
+  "save_icon_set",
+  {
+    title: "Save Consistent SVG Icons",
+    description: "Download a group of Iconify SVG icons from one family into a local project folder, without overwriting existing icons by default. Returns a path and checksum for each icon.",
+    inputSchema: {
+      icons: z.array(z.string()).min(1).max(40).describe("Icon identifiers in the same family, e.g. lucide:users, lucide:settings."),
+      dir: z.string().optional().describe("Destination folder, default ./public/icons."),
+      height: z.number().int().min(16).max(512).optional().describe("SVG height (default 24)."),
+      overwrite: z.boolean().optional().describe("Replace changed existing SVG files. Default false."),
+    },
+  },
+  async (args) => {
+    try { return json(await saveIconSet(args)); }
+    catch (e) { return fail(e); }
   },
 );
 
