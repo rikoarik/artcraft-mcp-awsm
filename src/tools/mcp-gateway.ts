@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
@@ -58,9 +59,14 @@ function validate(raw:unknown):ConfigFile {
     if(item.env!==undefined&&(!plain(item.env)||Object.entries(item.env).some(([k,v])=>
       !/^[A-Z_][A-Z_0-9]*$/i.test(k)||typeof v!=="string"||v.length>4096)))
       throw new Error("Invalid env for bridge "+name);
-    const execution=(command+" "+args.join(" ")).toLowerCase();
-    if(execution.includes("figcraft-mcp-awsm")||execution.includes("my-awsm-mcp"))
-      throw new Error("Refusing to launch AWSM as a child of itself.");
+    const resolvedBinary=path.basename(command).toLowerCase();
+    const selfEntrypoint=fileURLToPath(new URL("../index.js",import.meta.url));
+    const binaryIsNode=resolvedBinary==="node"||resolvedBinary==="node.exe";
+    const childScript=binaryIsNode && args[0]?path.resolve(item.cwd??process.cwd(),args[0]):null;
+    const invokesSelf=resolvedBinary==="my-awsm-mcp" ||
+      args.some((arg:string)=>arg==="github:rikoarik/figcraft-mcp-awsm"||arg==="my-awsm-mcp") ||
+      childScript===selfEntrypoint;
+    if(invokesSelf)throw new Error("Refusing to launch AWSM as a child of itself.");
     out[name]={command,args,allowedTools,
       ...(item.cwd?{cwd:item.cwd}:{}),...(item.env?{env:item.env as Record<string,string>}:{})};
   }
