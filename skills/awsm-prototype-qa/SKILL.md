@@ -26,3 +26,8 @@ Get the URL or local run command and the developer's primary journeys. Record 36
 Conclude with pass/fail status per journey, build and test commands, screenshot paths, and explicitly simulated behavior. Block handoff for blank screens, dead primary CTAs, fake persistence claims, or unlicensed assets.
 
 **Example:** “QA checkout from 360–1200px, including empty and valid form states, keyboard, console, and reduced motion; report reproducible findings.”
+
+
+## Optional automated browser audit
+
+If Playwright is already installed for the actual project, run `audit_ui_page` at mobile and desktop widths before claiming a production-quality UI. Review overflow, broken image URLs, placeholder navigation, unnamed controls, unlabeled form fields and browser runtime errors. Use `capture_ui_screenshots` and `compare_ui_screenshots` for visual regression against original FigCraft frames, but never treat pixel matching as a functional test. If Playwright is unavailable, report that these checks were skipped instead of inventing results.
