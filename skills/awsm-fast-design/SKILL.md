@@ -26,3 +26,8 @@ Only after a usable preview exists, expand the number of screens, refine motion 
 ## Fast feedback without skipping quality
 
 After the first useful render, if Playwright is available, run audit_ui_page on mobile and desktop to detect broken image paths, page overflow, placeholder links, missing control names and errors before any broad redesign. Use screenshot capture only when an actual page is running, and avoid regenerating reference assets that already exist. Defer exhaustive full-page visual diff to the second pass when the user explicitly prioritizes speed. Never claim browser verification without a real capture.
+
+
+## Single-pass QA for speed
+
+Once the first meaningful UI is rendered and Playwright is installed, prefer `review_ui` over separate `audit_ui_page` and `capture_ui_screenshots` calls. It captures and inspects each viewport in one browser pass; attach a matching FigCraft reference when available. Fix high-severity breakages before adding more screens. If Playwright is missing, do not install it automatically or claim a screenshot test occurred.
