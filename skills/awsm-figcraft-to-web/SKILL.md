@@ -31,3 +31,13 @@ Keep assets under public/figcraft and handoff JSON under design-handoff. Do not 
 Compare real browser screenshots at equivalent widths with FigCraft renders. Inspect typography, spacing, clipping, cropping, missing image requests, keyboard behavior, long copy, mobile layout and reduced motion. Use browser automation provided by the coding agent; AWSM serve only starts a static HTTP preview.
 
 Stop and report limitations when no complete layer data exists or native export is unavailable. This skill does not promise that every shape can be classified automatically; review items remain explicit until resolved.
+
+## Component and asset boundary for applications
+
+Do not equate a FigCraft node type with an implementation technology. Use an explicit mapping table per screen: visual node, intended role, native/web implementation component, export decision and source file. For desktop dashboards, map sidebar, toolbar, data grid, filters, modals and content panels to functional UI components. For mobile apps, map headers, bottom navigation, cards, form fields and sheets into Flutter, React Native or Compose widgets; browser markup from inspect.code is only a reference.
+
+When image fills are mixed with text in a group, separate the background-image layer and the live content. Use a naming convention: Page / Region / Component / Role. Typical roles include HeroPhoto, BrandIllustration, NavIcon, DecorativeTexture, DataVisualization, Copy and PrimaryAction. Export visual assets only when they cannot be recreated safely using primitives or native widgets. Retain source layer ID, meaningful alt text, crop intent, file type and licensing data.
+
+Before code implementation, inventory every screen and every asset with unresolved role. Validate that the handoff does not contain duplicate filenames, missing page roots or fully rasterized functional sections. Reusable FigCraft components are not automatically reusable code components; decide variants, props and state transitions using the application's actual data model. Confirm whether a chart is decorative or driven by data; data-driven charts belong in code, not an exported bitmap.
+
+After the UI is implemented, use browser or device screenshots for a design-to-code comparison. Review primary navigation, text accessibility, all real controls, image cropping and empty/loading/error states before accepting the handoff. A correct screenshot with dead interactions is not a completed application.
