@@ -10,6 +10,9 @@ import * as images from "./tools/images.js";
 import * as assets from "./tools/assets.js";
 import * as serveMod from "./tools/serve.js";
 import * as handoff from "./tools/handoff.js";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { syncSkills } from "./skill-sync.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
 
@@ -221,6 +224,14 @@ server.registerTool(
 );
 
 async function main(): Promise<void> {
+  const managed = process.argv[2] === "--managed-skills" ? process.argv[3] : undefined;
+  if (managed) {
+    try {
+      const bundled = fileURLToPath(new URL("../skills", import.meta.url));
+      const report = syncSkills(bundled, path.resolve(managed));
+      console.error(`AWSM skills synced: ${report.added} added, ${report.updated} updated, ${report.preserved} customized preserved`);
+    } catch (error) { console.error(`AWSM skills sync warning: ${String(error)}`); }
+  }
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // Keep logs on stderr; stdout is reserved for MCP messages.
@@ -233,11 +244,11 @@ if (process.argv[2] === "setup") {
     console.error("Failed to run setup:", error);
     process.exitCode = 1;
   });
-} else if (process.argv.length > 2 && process.argv[2] !== "--help") {
+} else if (process.argv.length > 2 && process.argv[2] !== "--help" && !(process.argv[2] === "--managed-skills" && process.argv[3] && process.argv.length === 4)) {
   console.error(`Unknown subcommand: ${process.argv[2]}. Use 'setup' or run without arguments for MCP stdio.`);
   process.exitCode = 1;
 } else if (process.argv[2] === "--help") {
-  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' to install client configurations and skills.");
+  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' to install client configurations and skills. Use --auto-update or --no-auto-update, and --upgrade-config for existing AWSM clients.");
 } else {
   main().catch((error) => {
     console.error("Failed to start AWSM MCP server:", error);
