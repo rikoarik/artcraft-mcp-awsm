@@ -93,10 +93,18 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 10);
+  assert.equal(tools.tools.length, 11);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
+  const customIcon = await client.callTool({name:'draw_icon',arguments:{
+    name:'project-progress',dir:path.join(cwd,'icons'),
+    elements:[{kind:'circle',cx:12,cy:12,r:9},{kind:'path',d:'M 7 12 L 10 15 L 17 8'}]
+  }});
+  assert.equal(customIcon.isError,undefined,customIcon.content[0].text);
+  assert(existsSync(JSON.parse(customIcon.content[0].text).file));
+  const customDuplicate = await client.callTool({name:'draw_icon',arguments:{name:'project-progress',dir:path.join(cwd,'icons'),elements:[{kind:'circle',cx:12,cy:12,r:9}]}});
+  assert.equal(customDuplicate.isError,true);
   const iconSetInvalid = await client.callTool({name:'save_icon_set',arguments:{icons:['lucide:users','tabler:bell']}});
   assert.equal(iconSetInvalid.isError,true);
   const example = { pages: [{id:"p1",name:"Home",type:"PAGE",children:[{id:"hero",name:"Hero",type:"FRAME",children:[{id:"t1",name:"Headline",type:"TEXT",characters:"Build better"},{id:"img",name:"Factory photo",type:"RECTANGLE",fills:[{type:"IMAGE"}]},{id:"ic",name:"icon arrow",type:"VECTOR"},{id:"rect",name:"Rectangle 2",type:"RECTANGLE"}]}]}] };
