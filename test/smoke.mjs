@@ -14,9 +14,9 @@ let result = run('setup');
 assert.equal(result.status, 0, result.stderr);
 let config = JSON.parse(readFileSync(path.join(cwd, '.opencode/opencode.json'), 'utf8'));
 assert.deepEqual(config.mcp.servers.awsm.command, ['npx', '-y', 'my-awsm-mcp']);
-for (const id of ['awsm-assets', 'awsm-asset-lab', 'awsm-auto-prototype', 'awsm-prompt-to-prototype', 'awsm-prototype-qa']) {
-  assert(existsSync(path.join(cwd, '.opencode/skills', id, 'SKILL.md')));
-}
+assert(existsSync(path.join(cwd, '.opencode/skills/awsm-design/SKILL.md')));
+assert(!existsSync(path.join(cwd, '.opencode/skills/awsm-assets/SKILL.md')),
+  'Default installation should not include 21 overlapping specialist skills');
 result = run('setup');
 assert.equal(result.status, 0, result.stderr);
 const cfgPath = path.join(cwd, '.opencode/opencode.json');
@@ -44,7 +44,7 @@ up = spawnSync(process.execPath,[path.join(root,'build/index.js'),'setup','--sou
 assert.equal(up.status,0,up.stderr);
 assert.equal(JSON.parse(readFileSync(path.join(upgradeCwd,'.opencode/opencode.json'),'utf8')).mcp.servers.awsm.command[2],'--prefer-online');
 const multiCwd = mkdtempSync(path.join(tmpdir(), 'awsm-all-test-'));
-const allResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
+const allResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--all-skills', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
 assert.equal(allResult.status, 0, allResult.stderr);
 const json = p => JSON.parse(readFileSync(path.join(multiCwd, p), 'utf8'));
 assert.equal(json('.opencode/opencode.json').mcp.servers.awsm.command[3], 'github:rikoarik/figcraft-mcp-awsm');
@@ -58,7 +58,7 @@ assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-admin-dashboard/SKILL
 assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-app-ui/SKILL.md')));
 assert(existsSync(path.join(multiCwd, '.claude/skills/awsm-antislop-ui/SKILL.md')));
 const skillNames = readdirSync(path.join(root, 'skills'));
-assert.equal(skillNames.length, 21);
+assert.equal(skillNames.length, 22);
 for (const name of skillNames) {
   const text = readFileSync(path.join(root, 'skills', name, 'SKILL.md'), 'utf8');
   assert(text.startsWith('---\n') && text.includes(`\nname: ${name}\n`) && /\ndescription: .+\n/.test(text), `${name}: invalid frontmatter`);
@@ -70,7 +70,7 @@ const allAgain = spawnSync(process.execPath, [path.join(root, 'build/index.js'),
 assert.equal(allAgain.status, 0, allAgain.stderr); // idempotent
 assert.equal(readFileSync(path.join(multiCwd, '.codex/config.toml'), 'utf8').match(/\[mcp_servers\.awsm\]/g).length, 1);
 const fakeHome = mkdtempSync(path.join(tmpdir(), 'awsm-home-test-'));
-const globalResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--global', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, env: { ...process.env, HOME: fakeHome }, encoding: 'utf8' });
+const globalResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--global', '--all-skills', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, env: { ...process.env, HOME: fakeHome }, encoding: 'utf8' });
 assert.equal(globalResult.status, 0, globalResult.stderr);
 assert.equal(JSON.parse(readFileSync(path.join(fakeHome, '.gemini/config/mcp_config.json'), 'utf8')).mcpServers.awsm.command, 'npx');
 assert(existsSync(path.join(fakeHome, '.gemini/antigravity-cli/skills/awsm-taste-ui/SKILL.md')));
@@ -93,6 +93,17 @@ writeFileSync(path.join(fakeSource,'awsm-demo/SKILL.md'),'upstream v3');
 assert.equal(syncSkills(fakeSource,fakeTarget).preserved,1);
 assert.equal(readFileSync(path.join(fakeTarget,'awsm-demo/SKILL.md'),'utf8'),'my customization');
 assert.equal(syncSkills(fakeSource,fakeTarget,true).updated,1);
+const coreSource=mkdtempSync(path.join(tmpdir(),'awsm-core-source-'));
+const coreTarget=mkdtempSync(path.join(tmpdir(),'awsm-core-target-'));
+fsSync.mkdirSync(path.join(coreSource,'awsm-design'));
+fsSync.mkdirSync(path.join(coreSource,'awsm-extra'));
+writeFileSync(path.join(coreSource,'awsm-design/SKILL.md'),'core instruction');
+writeFileSync(path.join(coreSource,'awsm-extra/SKILL.md'),'specialist instruction');
+assert.equal(syncSkills(coreSource,coreTarget,false,'core').added,1);
+assert(existsSync(path.join(coreTarget,'awsm-design/SKILL.md')));
+assert(!existsSync(path.join(coreTarget,'awsm-extra/SKILL.md')));
+assert.equal(syncSkills(coreSource,coreTarget,false,'all').added,1);
+
 
 const { parseGoogleFontFaces } = await import('../build/tools/google-font.js');
 const fixtureCss = "/* latin */\n@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 400; src: url(https://fonts.gstatic.com/s/manrope/test.woff2) format('woff2'); }";
@@ -263,5 +274,6 @@ const secondTransport = new StdioClientTransport({command:process.execPath,args:
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
 try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,21); }
 finally { await secondClient.close(); }
-assert(existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
+assert(existsSync(path.join(skillTarget,'awsm-design','SKILL.md')));
+assert(!existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
 console.log('Smoke tests passed');
