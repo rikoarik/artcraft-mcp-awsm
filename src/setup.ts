@@ -58,13 +58,13 @@ function jsonConfig(file: string, keys: string[], entry: object, schema = false)
   if (previous !== undefined) {
     if (JSON.stringify(previous) !== JSON.stringify(entry)) {
       const existing = JSON.stringify(previous);
-      if (!upgradeConfig || (!existing.includes(source) && !existing.includes(pkg.name)) || existing.includes("\\"type\\":\\"remote\\"")) {
+      if (!upgradeConfig || (!existing.includes(source) && !existing.includes(pkg.name)) || existing.includes('"type":"remote"')) {
         errors.push(`${file}: awsm already has a different configuration; left unchanged (use --upgrade-config for owned entries)`);
         return;
       }
-      const options = { formattingOptions: { insertSpaces: true, tabSize: 2, eol: "\\n" } };
+      const options = { formattingOptions: { insertSpaces: true, tabSize: 2, eol: "\n" } };
       const changed = applyEdits(original, modify(original, keys, entry, options));
-      writeFileSync(file, changed.endsWith("\\n") ? changed : changed + "\\n");
+      writeFileSync(file, changed.endsWith("\n") ? changed : changed + "\n");
       messages.push(`~ MCP ${file} upgraded`);
     } else messages.push(`= MCP ${file} already configured`);
     return;
@@ -86,8 +86,8 @@ function tomlConfig(file: string): void {
     if (section.includes(`command = ${JSON.stringify(command[0])}`) && section.includes(`args = ${JSON.stringify(command.slice(1))}`))
       messages.push(`= MCP ${file} already configured`);
     else if (upgradeConfig && (section.includes(source) || section.includes(pkg.name))) {
-      const table = `[mcp_servers.awsm]\\ncommand = ${JSON.stringify(command[0])}\\nargs = ${JSON.stringify(command.slice(1))}\\n`;
-      const changed = original.replace(/^\\s*\\[mcp_servers\\.awsm\\]\\s*(?:\\n(?!\\s*\\[)[^\\n]*)*/m, table.trimEnd());
+      const table = `[mcp_servers.awsm]\ncommand = ${JSON.stringify(command[0])}\nargs = ${JSON.stringify(command.slice(1))}\n`;
+      const changed = original.replace(/^\s*\[mcp_servers\.awsm\]\s*(?:\n(?!\s*\[)[^\n]*)*/m, table.trimEnd());
       writeFileSync(file, changed); messages.push(`~ MCP ${file} upgraded`);
     } else errors.push(`${file}: mcp_servers.awsm already has a different configuration; left unchanged (use --upgrade-config for owned entries)`);
     return;
