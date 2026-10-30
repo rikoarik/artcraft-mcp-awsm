@@ -15,6 +15,10 @@ import * as handoff from "./tools/handoff.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { syncSkills } from "./skill-sync.js";
+import { googleFont } from "./tools/google-font.js";
+import { extractDesignTokens, checkContrast } from "./tools/design-tokens.js";
+import { inspectUiProject } from "./tools/project-scan.js";
+import { designQuickstart } from "./tools/design-quickstart.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
 
@@ -267,6 +271,81 @@ server.registerTool(
     try { return json(await handoff.syncFigcraftAssets(args)); }
     catch (e) { return fail(e); }
   },
+);
+
+
+server.registerTool(
+  "inspect_ui_project",
+  {
+    title: "Quick UI Project Inspection",
+    description: "Bounded filesystem inspection: detect app framework, reusable components, existing assets, icon/design packages and scripts without recursive scans.",
+    inputSchema: {
+      root: z.string().optional().describe("Target local project directory; default current working directory."),
+      maxEntries: z.number().int().min(10).max(400).optional().describe("Upper bound for entries sampled per inspected directory."),
+    },
+  },
+  async args => { try { return json(await inspectUiProject(args)); } catch(e) { return fail(e); } },
+);
+
+server.registerTool(
+  "design_quickstart",
+  {
+    title: "Fast First UI Pass",
+    description: "Single-call brief-to-first-render plan: lightweight project detection, optional FigCraft layer classification and typography, first screen scope, relevant skills and viewport checks. Fast mode postpones exhaustive audits until after a usable preview.",
+    inputSchema: {
+      brief: z.string().min(8).max(8000).describe("Product and UI request, with actual tasks/content if available."),
+      kind: z.enum(["auto","marketing","admin","mobile","web-app"]).optional().describe("UI context; auto if omitted."),
+      speed: z.enum(["fast","balanced","thorough"]).optional().describe("Fast first pass by default, balanced or thorough for wider checks."),
+      root: z.string().optional().describe("Project directory if an existing codebase is available."),
+      document: z.unknown().optional().describe("Optional FigCraft inspect_document JSON."),
+      inspectAssets: z.unknown().optional().describe("Optional FigCraft inspect.assets JSON."),
+    },
+  },
+  async args => { try { return json(await designQuickstart(args)); } catch(e) { return fail(e); } },
+);
+
+server.registerTool(
+  "extract_design_tokens",
+  {
+    title: "Extract Observed Design Values",
+    description: "Collect observed FigCraft colors, font families, weights, sizes, radii and gaps; return token candidates and CSS primitives. Does not guess semantic color roles.",
+    inputSchema: {
+      document: z.unknown().describe("Raw FigCraft layer tree; not a screenshot."),
+      maxNodes: z.number().int().min(1).max(20000).optional(),
+    },
+  },
+  async args => { try { return json(extractDesignTokens(args)); } catch(e) { return fail(e); } },
+);
+
+server.registerTool(
+  "check_contrast",
+  {
+    title: "Check WCAG Text Contrast",
+    description: "Evaluate opaque foreground/background hex color ratios against WCAG AA and AAA; specify largeText for large type.",
+    inputSchema: {
+      pairs: z.array(z.object({
+        foreground: z.string(),background:z.string(),label:z.string().optional(),largeText:z.boolean().optional(),
+      })).min(1).max(100),
+    },
+  },
+  async args => { try { return json(checkContrast(args)); } catch(e) { return fail(e); } },
+);
+
+server.registerTool(
+  "google_font",
+  {
+    title: "Inspect or Install Google Font",
+    description: "Fetch Google Fonts CSS2 WOFF2 face metadata; optionally install selected font weights to a local public/fonts folder with content hash, signature and overwrite safeguards. License and glyph coverage require review.",
+    inputSchema: {
+      family: z.string().min(2).max(80).describe("Exact Google Fonts family name."),
+      action: z.enum(["inspect","install"]).optional().describe("Default inspect; install writes local WOFF2 files."),
+      weights: z.array(z.number().int().min(100).max(900)).min(1).max(8).optional(),
+      style: z.enum(["normal","italic"]).optional(),
+      dir: z.string().optional().describe("Output directory for install, default ./public/fonts."),
+      overwrite: z.boolean().optional().describe("Allow overwrite of changed font file; default false."),
+    },
+  },
+  async args => { try { return json(await googleFont(args)); } catch(e) { return fail(e); } },
 );
 
 async function main(): Promise<void> {
