@@ -87,7 +87,12 @@ function tomlConfig(file: string): void {
       messages.push(`= MCP ${file} already configured`);
     else if (upgradeConfig && (section.includes(source) || section.includes(pkg.name))) {
       const table = `[mcp_servers.awsm]\ncommand = ${JSON.stringify(command[0])}\nargs = ${JSON.stringify(command.slice(1))}\n`;
-      const changed = original.replace(/^\s*\[mcp_servers\.awsm\]\s*(?:\n(?!\s*\[)[^\n]*)*/m, table.trimEnd());
+      const heading = "[mcp_servers.awsm]";
+      const start = original.indexOf(heading);
+      const tail = original.slice(start + heading.length);
+      const next = tail.search(/\n\s*\[/);
+      const end = next < 0 ? original.length : start + heading.length + next + 1;
+      const changed = original.slice(0, start) + table + original.slice(end);
       writeFileSync(file, changed); messages.push(`~ MCP ${file} upgraded`);
     } else errors.push(`${file}: mcp_servers.awsm already has a different configuration; left unchanged (use --upgrade-config for owned entries)`);
     return;
