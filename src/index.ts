@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // AWSM MCP server using stdio transport.
-// Tools: find_icons, get_icon, find_images, download_asset, make_asset, palette, serve
+// Tools: find_icons, get_icon, find_images, download_asset, make_asset, palette, serve, prepare_web_handoff, sync_figcraft_assets
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -9,6 +9,7 @@ import * as icons from "./tools/icons.js";
 import * as images from "./tools/images.js";
 import * as assets from "./tools/assets.js";
 import * as serveMod from "./tools/serve.js";
+import * as handoff from "./tools/handoff.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
 
@@ -175,6 +176,47 @@ server.registerTool(
     } catch (e) {
       return fail(e);
     }
+  },
+);
+
+
+server.registerTool(
+  "prepare_web_handoff",
+  {
+    title: "Prepare FigCraft Web Handoff",
+    description: "Classify FigCraft inspect_document layers as HTML/CSS, components, review items, or exportable assets. Generate a deterministic export plan and optional JSON manifest. Supply the raw inspect_document JSON, not a screenshot.",
+    inputSchema: {
+      document: z.unknown().optional().describe("Raw JSON from FigCraft inspect_document."),
+      documentPath: z.string().optional().describe("Local JSON file from FigCraft inspect_document. Use instead of document."),
+      inspectAssets: z.unknown().optional().describe("Optional output of FigCraft inspect.assets."),
+      inspectAssetsPath: z.string().optional().describe("Optional JSON file containing FigCraft inspect.assets output."),
+      exportDir: z.string().optional().describe("Folder for FigCraft native export files, default ./figcraft-exports."),
+      outputPath: z.string().optional().describe("Optional path to save the handoff manifest as JSON."),
+      overwrite: z.boolean().optional().describe("Allow replacing an existing handoff manifest. Default false."),
+    },
+  },
+  async (args) => {
+    try { return json(await handoff.prepareWebHandoff(args)); }
+    catch (e) { return fail(e); }
+  },
+);
+
+server.registerTool(
+  "sync_figcraft_assets",
+  {
+    title: "Sync FigCraft Exports into Web Assets",
+    description: "Copy only files listed in an AWSM handoff manifest from the native FigCraft export directory to <publicDir>/figcraft, recording SHA-256 hashes, missing files and conflicts. Does not export from FigCraft itself.",
+    inputSchema: {
+      handoff: z.unknown().optional().describe("Handoff JSON returned by prepare_web_handoff."),
+      handoffPath: z.string().optional().describe("Local path to the saved handoff JSON."),
+      exportDir: z.string().optional().describe("Native FigCraft export directory; default ./figcraft-exports."),
+      publicDir: z.string().optional().describe("Web public folder; default ./public."),
+      overwrite: z.boolean().optional().describe("Replace changed assets. Default false."),
+    },
+  },
+  async (args) => {
+    try { return json(await handoff.syncFigcraftAssets(args)); }
+    catch (e) { return fail(e); }
   },
 );
 
