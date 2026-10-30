@@ -7,6 +7,10 @@ description: Compare real rendered web UI against FigCraft frames or reference s
 
 Visual QA is a repeatable comparison, not a generic aesthetic score. Determine which source screen or FigCraft frame represents the target UI, its viewport size, target platform, theme, font availability, and relevant UI state. Never compare arbitrary screenshots with different dimensions and conclude that the code is wrong.
 
+## One-call review when available
+
+Prefer `review_ui` for a new UI or design-to-code comparison: it audits DOM issues and captures screenshots in a single browser session, optionally compares matching FigCraft PNGs, and returns prioritized issues with the largest visual difference regions. Only use the separate capture, audit and compare tools when troubleshooting an individual step. A clean screenshot alone cannot prove functional UX or data correctness.
+
 ## Capture
 
 Render the actual local project in a browser. When project-local Playwright is available, use `capture_ui_screenshots` with a local HTTP URL, project root, named viewports and a dedicated .awsm/visual directory. Browser capture intentionally rejects remote URLs and blocks requests to external origins: review reported blocked fonts or images, since a screenshot missing them cannot be considered visually faithful.
