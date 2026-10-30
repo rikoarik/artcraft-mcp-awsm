@@ -107,8 +107,7 @@ export function encodeRgbaPng(image:DecodedPng):Buffer {
   for(let y=0;y<height;y++) Buffer.from(pixels.buffer,pixels.byteOffset+y*width*4,width*4).copy(raw,y*(width*4+1)+1);
   return Buffer.concat([PNG_SIGNATURE,chunk("IHDR",ihdr),chunk("IDAT",zlib.deflateSync(raw,{level:6})),chunk("IEND",Buffer.alloc(0))]);
 }
-const linear=(c:number)=>c/255;
-const composite=(channel:number,alpha:number)=>Math.round(linear(channel)*alpha+255*(1-alpha));
+const composite=(channel:number,alpha:number)=>Math.round(channel*alpha+255*(1-alpha));
 export async function compareUiScreenshots(input:{
   reference:string;actual:string;threshold?:number;maxChangedPercent?:number;
   diffPath?:string;overwrite?:boolean;
