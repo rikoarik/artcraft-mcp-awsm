@@ -106,7 +106,7 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 19);
+  assert.equal(tools.tools.length, 20);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
@@ -185,12 +185,39 @@ try {
   assert.equal(diff.changedPercent,25);
   assert.equal(diff.passed,false);
   assert.deepEqual(diff.changedBoundingBox,{x:0,y:0,width:1,height:1});
+  assert.equal(diff.regions.length,1);
+  assert.equal(diff.regions[0].changedPixels,1);
+  assert.equal(diff.regions[0].shareOfChanges,100);
   assert(existsSync(heatmap));
   assert.equal(decodePng(readFileSync(heatmap)).width,2);
   const identical=await client.callTool({name:'compare_ui_screenshots',arguments:{reference,actual:reference}});
   assert.equal(JSON.parse(identical.content[0].text).passed,true);
   const captureValidation=await client.callTool({name:'capture_ui_screenshots',arguments:{url:'https://example.com'}});
   assert.equal(captureValidation.isError,true);
+
+  const { analyzeUiSnapshot } = await import('../build/tools/browser-audit.js');
+  const snapshot={
+    width:375,height:812,scrollWidth:490,clientWidth:375,totalElements:44,truncated:false,
+    hasMain:false,title:'Example',
+    brokenImages:[{selector:'#broken',detail:'/missing.png'}],
+    missingControlNames:[{selector:'button:nth-of-type(1)'}],
+    unlabeledInputs:[{selector:'#email'}],placeholderLinks:[{selector:'a:nth-of-type(1)',detail:'#'}],
+    horizontalOverflow:[{selector:'#wide',detail:'right 490px'}],
+    smallTargets:[{selector:'#tiny',detail:'18x18'}],
+  };
+  const findings=analyzeUiSnapshot(snapshot,'mobile');
+  assert(findings.some(x=>x.code==='HORIZONTAL_PAGE_OVERFLOW'&&x.severity==='high'));
+  assert(findings.some(x=>x.code==='BROKEN_IMAGE'));
+  assert(findings.some(x=>x.code==='UNLABELED_INPUT'));
+  assert(findings.some(x=>x.code==='SMALL_CONTROL'));
+  assert.equal(analyzeUiSnapshot({...snapshot,scrollWidth:375,brokenImages:[],missingControlNames:[],
+      unlabeledInputs:[],placeholderLinks:[],horizontalOverflow:[],smallTargets:[],hasMain:true},'mobile').length,0);
+  const invalidAudit=await client.callTool({name:'audit_ui_page',arguments:{url:'https://example.com'}});
+  assert.equal(invalidAudit.isError,true);
+  const auditMissingBrowser=await client.callTool({name:'audit_ui_page',
+    arguments:{url:'http://127.0.0.1:51000',projectRoot:cwd,viewports:[{name:'mobile',width:375,height:812}]}});
+  assert.equal(auditMissingBrowser.isError,true);
+  assert.match(auditMissingBrowser.content[0].text,/Playwright not found/);
   const palette = await client.callTool({ name: 'palette', arguments: { color: '#1b7f5a' } });
   assert.equal(JSON.parse(palette.content[0].text).base, '#1b7f5a');
   assert.match(JSON.parse(palette.content[0].text).note, /contrast/);
@@ -210,7 +237,7 @@ try {
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
-try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,19); }
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,20); }
 finally { await secondClient.close(); }
 assert(existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
 console.log('Smoke tests passed');
