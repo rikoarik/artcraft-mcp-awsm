@@ -129,10 +129,11 @@ export function checkContrast(input: { pairs: Array<{ foreground: string; backgr
   const results = input.pairs.map(pair => {
     const fg=normalizeHex(pair.foreground),bg=normalizeHex(pair.background);
     const a=luminance(fg),b=luminance(bg);
-    const ratio=rounded((Math.max(a,b)+0.05)/(Math.min(a,b)+0.05));
+    const exactRatio=(Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+    const ratio=rounded(exactRatio);
     return { label: pair.label ?? "", foreground:fg,background:bg,ratio,
-      wcagAA:ratio >= (pair.largeText ? 3 : 4.5),
-      wcagAAA:ratio >= (pair.largeText ? 4.5 : 7),
+      wcagAA:exactRatio >= (pair.largeText ? 3 : 4.5),
+      wcagAAA:exactRatio >= (pair.largeText ? 4.5 : 7),
       textSize:pair.largeText ? "large" : "normal" };
   });
   return { standard: "WCAG 2.x contrast-ratio evaluation", results, failedAA:results.filter(r=>!r.wcagAA).length,
