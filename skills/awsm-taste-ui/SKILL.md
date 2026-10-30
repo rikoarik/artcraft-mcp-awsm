@@ -29,3 +29,9 @@ Provide a concept paragraph, core tokens, a compact wireframe when useful, scree
 **Example:** “Design a small stationery catalog that feels like a physical archive instead of a SaaS template; keep our existing logo and explain the type system and mobile layout.”
 
 These instructions are original. If learning from another repository or template, cite it and respect its license rather than copying code or assets unchecked.
+
+## Visual references and implementation fidelity
+
+When supplied with an actual website, FigCraft document or screenshots, inspect the reference instead of guessing its visual style from a URL. Describe observable hierarchy, rhythm, typography, image treatment, grid and interaction intent, then interpret those decisions for the current product rather than copying a reference wholesale. Identify which source elements are actual assets and which should remain editable text, functional components and CSS/native primitives.
+
+Distinguish admin, SaaS marketing and mobile application contexts. Admin interfaces favor operational clarity and accurate states; native apps must honor platform ergonomics; editorial websites can use stronger motion and composition when it serves the story. In each case verify the output with a rendered page or device capture, not only a proposed direction. If no visual inspection tool is available, explicitly mark conclusions as provisional.
