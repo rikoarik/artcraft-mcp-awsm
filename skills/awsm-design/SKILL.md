@@ -13,9 +13,15 @@ For a brief or existing project, call `design_quickstart` once with the actual b
 
 Implement the first useful screen or section using the existing stack, including real content and the primary interaction. Render and review it early. Avoid generic gradient hero templates, arbitrary icon sets, excessive decorative cards, dead controls and long speculative planning.
 
+## One connection to other MCP servers
+
+AWSM can be the **only configured MCP entry in the coding agent** while forwarding to explicitly configured downstream MCP servers. Discover available integrations with `bridge_list({connect:true})` and call a named tool using `bridge_call({server,tool,arguments})`. Read each tool's input schema before invoking it.
+
+A project owner configures downstream stdio servers in `.awsm/bridges.json` with command, args and an explicit `allowedTools` list. Never invent credentials, command paths or tool names; a missing bridge is not an available integration. Do not assume the AWSM bridge automatically discovers or installs third-party servers. Use native FigCraft through this bridge if configured; otherwise the project must connect FigCraft separately. Calls to downstream tools can modify documents or files, so respect the user's permissions and avoid destructive actions without authorization.
+
 ## When a FigCraft source exists
 
-Inspect the source document through **FigCraft's own MCP**. Call AWSM `prepare_web_handoff` with a complete layer tree and optional asset inventory; review ambiguous layers. Use FigCraft's native export for individual artwork, then `sync_figcraft_assets` for file paths and a verified asset manifest. Keep text, buttons, tables, layouts and application components as editable HTML or native widgets. Never flatten a full functional screen to a single image.
+Inspect the source document through **FigCraft's own MCP**, either directly when already connected or through the AWSM gateway when configured. Call AWSM `prepare_web_handoff` with a complete layer tree and optional asset inventory; review ambiguous layers. Use FigCraft's native export for individual artwork, then `sync_figcraft_assets` for file paths and a verified asset manifest. Keep text, buttons, tables, layouts and application components as editable HTML or native widgets. Never flatten a full functional screen to a single image.
 
 ## Visual assets and typography
 
