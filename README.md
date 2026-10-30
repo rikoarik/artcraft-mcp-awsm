@@ -166,6 +166,21 @@ Layer classification is intentionally **conservative**. Use `pluginData["awsm.ki
 
 `save_icon_set({ icons: ["lucide:users", "lucide:settings", "lucide:bell"], dir: "./public/icons", height: 24 })` downloads SVG files from a single Iconify family and returns file paths and hashes. It rejects mixed icon families and does not overwrite existing files by default. It **does not generate AI artwork**. For original branded icons, the agent authors and visually verifies SVGs or uses the actual FigCraft export capability. Review each family's license before shipping.
 
+For a genuinely original icon, `draw_icon` accepts agent-authored SVG primitives in a 24×24 coordinate system and writes a standalone file. Example:
+
+```js
+draw_icon({
+  name: "project-progress",
+  dir: "./public/icons/custom",
+  elements: [
+    { kind: "circle", cx: 12, cy: 12, r: 9 },
+    { kind: "path", d: "M 7 12 L 10 15 L 17 8" }
+  ]
+})
+```
+
+The agent still has to design path geometry, inspect the result, and correct any optical issues. This is structured local SVG generation, not a prompt-to-image model.
+
 For dashboard and native application workflows, mention `awsm-admin-dashboard`, `awsm-app-ui` or `awsm-iconography` explicitly to improve skill selection. Skills guide a coding agent; the MCP itself does not scaffold or build a complete app automatically.
 
 ## Troubleshooting and limitations
