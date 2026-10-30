@@ -46,7 +46,7 @@ npx -y github:rikoarik/figcraft-mcp-awsm setup --client CLIENT --source github:r
 
 | Client | Project MCP configuration | Project skill location | How to verify |
 | --- | --- | --- | --- |
-| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with nineteen tools. |
+| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with twenty tools. |
 | **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Open Claude in the project, approve the project server, and use `/mcp`. |
 | **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Trust the project, run `codex mcp list`, then try `palette`. |
 | **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open the workspace, inspect the agent's MCP tools, and try the prompt below. |
@@ -248,7 +248,9 @@ compare_ui_screenshots({
 });
 ```
 
-Make sure source and actual PNGs have **identical physical dimensions**. Screenshot diff is a pixel metric, not semantic visual critique or a proof that interactions work. Use `awsm-visual-qa` and the agent's own image understanding to inspect screenshots and prioritize fixes. Accessibility and functional QA remain separate.
+For practical DOM QA run `audit_ui_page({ url: "http://127.0.0.1:3000/", projectRoot: ".", reportPath: ".awsm/ui-audit.json" })`. It checks mobile and desktop for overflow, offscreen elements, images that fail to load, unnamed controls, unlabeled inputs, placeholder links, small buttons and JavaScript errors. The audit is read-only and does not submit forms. Findings include CSS selectors and suggested fixes. It is heuristic, not a WCAG certification.
+
+Make sure source and actual PNGs have **identical physical dimensions**. Screenshot diff reports dominant change regions grouped into 24px tiles, along with a global pixel metric. Neither measure establishes semantic visual critique or proves that interactions work. Use `awsm-visual-qa` and the agent's own image understanding to inspect screenshots and prioritize fixes. Accessibility and functional QA remain separate.
 
 ## Troubleshooting and limitations
 
@@ -264,7 +266,7 @@ Make sure source and actual PNGs have **identical physical dimensions**. Screens
 
 ```sh
 npm ci
-npm test                     # build and smoke-test the installer, nineteen MCP tools, and HTTP preview
+npm test                     # build and smoke-test the installer, twenty MCP tools, and HTTP preview
 npm audit --audit-level=high
 npm pack --dry-run           # check that build output, README, and skills are packaged
 npm run demo                 # regenerate MP4, GIF, poster, and SVG/HTML examples
