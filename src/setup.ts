@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { syncSkills } from "./skill-sync.js";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,6 +13,7 @@ const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as
 const args = process.argv.slice(2);
 const globalInstall = args.includes("--global");
 const forceSkills = args.includes("--force-skills");
+const upgradeConfig = args.includes("--upgrade-config");
 const sourceIndex = args.indexOf("--source");
 const source = sourceIndex < 0 ? pkg.name : args[sourceIndex + 1];
 const clientIndex = args.indexOf("--client");
@@ -25,9 +27,13 @@ if (!clientArg || (clientArg !== "all" && !clients.includes(clientArg as Client)
   process.exit(1);
 }
 const selected = clientArg === "all" ? clients : [clientArg as Client];
+const autoUpdate = args.includes("--auto-update") || (!args.includes("--no-auto-update") && source.startsWith("github:"));
+if (args.includes("--auto-update") && args.includes("--no-auto-update")) {
+  console.error("Cannot combine --auto-update and --no-auto-update"); process.exit(1);
+}
 const home = os.homedir();
 const cwd = process.cwd();
-const command = ["npx", "-y", source];
+let command = ["npx", "-y", source];
 const errors: string[] = [];
 const messages: string[] = [];
 
@@ -50,8 +56,17 @@ function jsonConfig(file: string, keys: string[], entry: object, schema = false)
   }
   const previous = cursor && typeof cursor === "object" ? (cursor as Record<string, unknown>)[keys.at(-1)!] : undefined;
   if (previous !== undefined) {
-    if (JSON.stringify(previous) !== JSON.stringify(entry)) errors.push(`${file}: awsm already has a different configuration; left unchanged`);
-    else messages.push(`= MCP ${file} already configured`);
+    if (JSON.stringify(previous) !== JSON.stringify(entry)) {
+      const existing = JSON.stringify(previous);
+      if (!upgradeConfig || (!existing.includes(source) && !existing.includes(pkg.name)) || existing.includes("\\"type\\":\\"remote\\"")) {
+        errors.push(`${file}: awsm already has a different configuration; left unchanged (use --upgrade-config for owned entries)`);
+        return;
+      }
+      const options = { formattingOptions: { insertSpaces: true, tabSize: 2, eol: "\\n" } };
+      const changed = applyEdits(original, modify(original, keys, entry, options));
+      writeFileSync(file, changed.endsWith("\\n") ? changed : changed + "\\n");
+      messages.push(`~ MCP ${file} upgraded`);
+    } else messages.push(`= MCP ${file} already configured`);
     return;
   }
   const options = { formattingOptions: { insertSpaces: true, tabSize: 2, eol: "\n" } };
@@ -70,7 +85,11 @@ function tomlConfig(file: string): void {
     const section = original.split(/^\s*\[mcp_servers\.(?:awsm|"awsm")\]\s*$/m)[1]?.split(/^\s*\[/m)[0] ?? "";
     if (section.includes(`command = ${JSON.stringify(command[0])}`) && section.includes(`args = ${JSON.stringify(command.slice(1))}`))
       messages.push(`= MCP ${file} already configured`);
-    else errors.push(`${file}: mcp_servers.awsm already has a different configuration; left unchanged`);
+    else if (upgradeConfig && (section.includes(source) || section.includes(pkg.name))) {
+      const table = `[mcp_servers.awsm]\\ncommand = ${JSON.stringify(command[0])}\\nargs = ${JSON.stringify(command.slice(1))}\\n`;
+      const changed = original.replace(/^\\s*\\[mcp_servers\\.awsm\\]\\s*(?:\\n(?!\\s*\\[)[^\\n]*)*/m, table.trimEnd());
+      writeFileSync(file, changed); messages.push(`~ MCP ${file} upgraded`);
+    } else errors.push(`${file}: mcp_servers.awsm already has a different configuration; left unchanged (use --upgrade-config for owned entries)`);
     return;
   }
   mkdirSync(path.dirname(file), { recursive: true });
@@ -82,20 +101,19 @@ function tomlConfig(file: string): void {
 function copySkills(dir: string): void {
   const src = path.join(root, "skills");
   if (!existsSync(src)) { errors.push(`Skill directory not found: ${src}`); return; }
-  mkdirSync(dir, { recursive: true });
-  let count = 0;
-  for (const item of readdirSync(src, { withFileTypes: true })) {
-    if (!item.isDirectory()) continue;
-    const target = path.join(dir, item.name);
-    if (existsSync(target) && !forceSkills) continue;
-    cpSync(path.join(src, item.name), target, { recursive: true, force: forceSkills });
-    count++;
-  }
-  messages.push(`+ ${count} skills → ${dir}${forceSkills ? " (overwrite requested)" : " (existing skills preserved)"}`);
+  try {
+    const report = syncSkills(src, dir, forceSkills);
+    messages.push(`+ Skills ${dir}: ${report.added} new, ${report.updated} updated, ${report.preserved} customized preserved`);
+  } catch (error) { errors.push(`Skill sync failed: ${String(error)}`); }
 }
 
 const sharedSkills = new Set<string>();
 for (const client of selected) {
+  const skillsDir = client === "opencode" ? (globalInstall ? path.join(home, ".config/opencode/skills") : path.join(cwd, ".opencode/skills"))
+    : client === "claude" ? (globalInstall ? path.join(home, ".claude/skills") : path.join(cwd, ".claude/skills"))
+    : client === "antigravity" && globalInstall ? path.join(home, ".gemini/antigravity-cli/skills")
+    : globalInstall ? path.join(home, ".agents/skills") : path.join(cwd, ".agents/skills");
+  command = autoUpdate ? ["npx", "-y", "--prefer-online", source, "--managed-skills", skillsDir] : ["npx", "-y", source];
   if (!args.includes("--skip-mcp")) {
     switch (client) {
       case "opencode": jsonConfig(globalInstall ? path.join(home, ".config/opencode/opencode.json") : path.join(cwd, ".opencode/opencode.json"), ["mcp", "servers", "awsm"], { type: "local", command }, true); break;
@@ -108,11 +126,8 @@ for (const client of selected) {
     }
   }
   if (args.includes("--skip-skills")) continue;
-  const skillsDir = client === "opencode" ? (globalInstall ? path.join(home, ".config/opencode/skills") : path.join(cwd, ".opencode/skills"))
-    : client === "claude" ? (globalInstall ? path.join(home, ".claude/skills") : path.join(cwd, ".claude/skills"))
-    : client === "antigravity" && globalInstall ? path.join(home, ".gemini/antigravity-cli/skills")
-    : globalInstall ? path.join(home, ".agents/skills") : path.join(cwd, ".agents/skills");
   if (!sharedSkills.has(skillsDir)) { copySkills(skillsDir); sharedSkills.add(skillsDir); }
 }
+messages.push(autoUpdate ? "= Automatic updates enabled on MCP start (network revalidation; local skill edits preserved)" : "= Automatic updates disabled");
 console.error([...messages, ...errors.map(e => `✗ ${e}`), `\n${errors.length ? "Finished with conflicts" : "Finished"}. Check the MCP status in your client before using the tools.`].join("\n"));
 if (errors.length) process.exitCode = 1;
