@@ -104,7 +104,7 @@ export function analyzeFigcraft(input: { document: unknown; inspectAssets?: unkn
   let domLayers = 0;
   let reviewLayers = 0;
 
-  function walk(node: RecordValue, parentId: string | null, pageName: string, parentPath: string, depth: number): void {
+  function walk(node: RecordValue, parentId: string | null, pageName: string, parentPath: string, depth: number, parentType: string): void {
     if (++sequence > 20000) throw new Error("Layer limit exceeded (20,000). Inspect fewer pages.");
     if (depth > 64) throw new Error("Layer nesting exceeds 64 levels.");
     if (visited.has(node)) throw new Error("Cyclic or reused layer object in document.");
@@ -118,7 +118,7 @@ export function analyzeFigcraft(input: { document: unknown; inspectAssets?: unkn
     const explicit = str(data["awsm.kind"] ?? data["awsm.role"]).toLowerCase();
     const hint = hints.get(id);
     const kids = children(node.children ?? node.layers ?? node.nodes);
-    const screen = (type === "FRAME" || type === "SECTION") && (parentId === null || /PAGE/i.test(parentPath.split("/").at(-1) ?? ""));
+    const screen = (type === "FRAME" || type === "SECTION") && (parentId === null || parentType === "PAGE");
     let role: Role = "review";
     let format: AssetFormat | undefined;
 
@@ -182,10 +182,10 @@ export function analyzeFigcraft(input: { document: unknown; inspectAssets?: unkn
     if (imageHint(node) && kids.length > 0 && role !== "asset")
       issues.push({ code: "BACKGROUND_IMAGE", severity: "warning", nodeId: id,
         message: "Layer has an image fill and children. Separate the image from the content before export." });
-    for (const child of kids) walk(child, id, currentPage, currentPath, depth + 1);
+    for (const child of kids) walk(child, id, currentPage, currentPath, depth + 1, type);
   }
 
-  for (const root of roots) walk(root, null, "Page", "", 0);
+  for (const root of roots) walk(root, null, "Page", "", 0, "");
   if (!assets.length) issues.push({ code: "NO_EXPORTABLE_ASSETS", severity: "info",
     message: "No obvious exportable image/icon layers. Review inspect.assets; do not rasterize full frames as a shortcut." });
   return {
