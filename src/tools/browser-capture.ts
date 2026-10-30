@@ -6,7 +6,7 @@ import { readPngDimensions } from "./visual-png.js";
 export type Viewport = { name:string; width:number; height:number };
 const RESERVED=new Set(["__proto__","constructor","prototype"]);
 const PRESETS:Viewport[]=[{name:"mobile",width:375,height:812},{name:"desktop",width:1440,height:900}];
-const validUrl=(text:string):URL=>{
+export const validUrl=(text:string):URL=>{
   let value:URL;
   try {value=new URL(text);} catch {throw new Error("Expected a fully qualified localhost URL.");}
   if(value.protocol!=="http:" || !["localhost","127.0.0.1","[::1]"].includes(value.hostname) || value.username || value.password)
@@ -21,7 +21,7 @@ const validViewport=(v:Viewport):Viewport=>{
     throw new Error("Viewport must be 240..2560 wide, 320..1800 high.");
   return v;
 };
-type BrowserLike={
+export type BrowserLike={
   newContext(options:unknown):Promise<{
     route(pattern:string, handler:(route:{request():{url():string};continue():Promise<void>;abort():Promise<void>})=>Promise<void>):Promise<void>;
     newPage():Promise<{
@@ -29,12 +29,13 @@ type BrowserLike={
       goto(url:string,options:unknown):Promise<unknown>;
       screenshot(options:unknown):Promise<Buffer>;
       title():Promise<string>;
+      evaluate<T>(pageFunction:()=>T):Promise<T>;
     }>;
     close():Promise<void>;
   }>;
   close():Promise<void>;
 };
-function findPlaywright(projectRoot:string): {chromium:{launch(options:unknown):Promise<BrowserLike>}} {
+export function findPlaywright(projectRoot:string): {chromium:{launch(options:unknown):Promise<BrowserLike>}} {
   let module:unknown;
   try {
     const require=createRequire(path.join(projectRoot,"package.json"));
