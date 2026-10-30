@@ -235,6 +235,8 @@ try {
   });
   assert.equal(reviewSummary.issues.high,1);
   assert.equal(reviewSummary.failedComparisons,1);
+  assert.equal(reviewSummary.visualStatus,'mismatches-or-errors');
+  assert.equal(summarizeReview({issues:[],comparisons:[],blockedRequests:0,viewports:1}).visualStatus,'not-compared');
   assert.equal(reviewSummary.priorityFindings[0].code,'BROKEN_IMAGE');
   assert.equal(reviewSummary.priorityVisualRegions[0].changedPixels,20);
   assert.equal(reviewSummary.passed,false);
