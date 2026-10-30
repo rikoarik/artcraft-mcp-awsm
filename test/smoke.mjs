@@ -112,15 +112,34 @@ assert.equal(parsedFaces.length,1);
 assert.equal(parsedFaces[0].subset,'latin');
 assert.equal(parsedFaces[0].weight,'400');
 
+fsSync.mkdirSync(path.join(cwd,'.awsm'),{recursive:true});
+writeFileSync(path.join(cwd,'.awsm/bridges.json'),JSON.stringify({
+  version:1,servers:{
+    demo:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['echo']}
+  }
+}));
 const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd });
 const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 21);
+  assert.equal(tools.tools.length, 23);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
+  const bridges = await client.callTool({name:'bridge_list',arguments:{connect:true}});
+  assert.equal(bridges.isError,undefined,bridges.content[0].text);
+  const found=JSON.parse(bridges.content[0].text);
+  assert.equal(found.configuredServers,1);
+  assert.equal(found.servers[0].status,'connected');
+  assert.deepEqual(found.servers[0].tools.map(x=>x.name),['echo']);
+  const proxied=await client.callTool({name:'bridge_call',arguments:{server:'demo',tool:'echo',arguments:{value:'hello'}}});
+  assert.equal(proxied.isError,undefined,proxied.content[0].text);
+  assert.equal(proxied.content[0].text,'echo:hello');
+  const denied=await client.callTool({name:'bridge_call',arguments:{server:'demo',tool:'forbidden'}});
+  assert.equal(denied.isError,true);
+  const noServer=await client.callTool({name:'bridge_call',arguments:{server:'missing',tool:'echo'}});
+  assert.equal(noServer.isError,true);
   const customIcon = await client.callTool({name:'draw_icon',arguments:{
     name:'project-progress',dir:path.join(cwd,'icons'),
     elements:[{kind:'circle',cx:12,cy:12,r:9},{kind:'path',d:'M 7 12 L 10 15 L 17 8'}]
@@ -272,7 +291,7 @@ try {
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
-try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,21); }
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,23); }
 finally { await secondClient.close(); }
 assert(existsSync(path.join(skillTarget,'awsm-design','SKILL.md')));
 assert(!existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));

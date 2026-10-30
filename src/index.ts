@@ -23,9 +23,11 @@ import { findDesignAssets } from "./tools/batch-assets.js";
 import { compareUiScreenshots } from "./tools/visual-png.js";
 import { auditUiPage } from "./tools/browser-audit.js";
 import { reviewUi } from "./tools/review-ui.js";
+import { McpGateway } from "./tools/mcp-gateway.js";
 import { captureUiScreenshots } from "./tools/browser-capture.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
+const gateway=new McpGateway();
 
 const json = (result: unknown) => ({
   content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
@@ -455,6 +457,33 @@ server.registerTool(
   async args=>{try{return json(await reviewUi(args));}catch(e){return fail(e);}},
 );
 
+server.registerTool(
+  "bridge_list",
+  {
+    title:"Discover Connected MCPs",
+    description:"List explicitly configured downstream MCPs, optionally connect and discover their allowed tools with input schemas. Downstream servers run under the user's local permissions; a .awsm/bridges.json config is required.",
+    inputSchema:{
+      server:z.string().optional().describe("Optional configured bridge name, e.g. figcraft."),
+      connect:z.boolean().optional().describe("If true, start downstream servers and fetch their tools; otherwise list configurations without starting them."),
+    },
+  },
+  async args=>{try{return json(await gateway.list(args));}catch(e){return fail(e);}},
+);
+
+server.registerTool(
+  "bridge_call",
+  {
+    title:"Call a Connected MCP Tool",
+    description:"Forward a tool call to an explicitly allowed downstream MCP, returning original text/image/tool output. Use bridge_list with connect:true for available tool names and schemas. Calls may change files or other state; only configure trusted commands and allowlist necessary tools.",
+    inputSchema:{
+      server:z.string().min(1).describe("Configured downstream MCP name."),
+      tool:z.string().min(1).describe("Exact downstream tool name returned by bridge_list."),
+      arguments:z.record(z.string(),z.unknown()).optional().describe("JSON object of arguments matching the downstream tool input schema."),
+    },
+  },
+  async args=>{try{return await gateway.call(args);}catch(e){return fail(e);}},
+);
+
 async function main(): Promise<void> {
   const managed = process.argv[2] === "--managed-skills" ? process.argv[3] : undefined;
   if (managed) {
@@ -466,6 +495,8 @@ async function main(): Promise<void> {
   }
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  process.once("SIGINT",()=>{void gateway.close().finally(()=>process.exit(0));});
+  process.once("SIGTERM",()=>{void gateway.close().finally(()=>process.exit(0));});
   // Keep logs on stderr; stdout is reserved for MCP messages.
   console.error("AWSM MCP server active (stdio)");
 }
