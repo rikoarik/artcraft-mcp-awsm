@@ -1,6 +1,6 @@
 # FigCraft MCP AWSM
 
-A **local stdio MCP server and 18 editable agent skills** for finding relevant photos and icons, creating simple SVG assets, and designing, building, and reviewing web prototypes with a coding agent. Supports OpenCode V2, Claude Code, Codex, Google Antigravity CLI, Zed Agent, and GitHub Copilot CLI. **This package does not control the FigCraft canvas**; connect FigCraft's own MCP separately to design inside the application.
+A **local stdio MCP server and 20 editable agent skills** for finding relevant photos and icons, creating simple SVG assets, and designing, building, and reviewing web prototypes with a coding agent. Supports OpenCode V2, Claude Code, Codex, Google Antigravity CLI, Zed Agent, and GitHub Copilot CLI. **This package does not control the FigCraft canvas**; connect FigCraft's own MCP separately to design inside the application.
 
 ## See the tools in use—and the result
 
@@ -46,7 +46,7 @@ npx -y github:rikoarik/figcraft-mcp-awsm setup --client CLIENT --source github:r
 
 | Client | Project MCP configuration | Project skill location | How to verify |
 | --- | --- | --- | --- |
-| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with ten tools. |
+| **OpenCode V2** (`opencode`) | `.opencode/opencode.json` → `mcp.servers.awsm` | `.opencode/skills/awsm-*/SKILL.md` | Reopen the project; use `/mcps` and confirm `awsm` connects with sixteen tools. |
 | **Claude Code** (`claude`) | `.mcp.json` → `mcpServers.awsm` | `.claude/skills/awsm-*/SKILL.md` | Open Claude in the project, approve the project server, and use `/mcp`. |
 | **Codex CLI/IDE** (`codex`) | `.codex/config.toml` → `[mcp_servers.awsm]` | `.agents/skills/awsm-*/SKILL.md` | Trust the project, run `codex mcp list`, then try `palette`. |
 | **Antigravity CLI** (`antigravity`) | `.agents/mcp_config.json` → `mcpServers.awsm` | `.agents/skills/awsm-*/SKILL.md` | Open the workspace, inspect the agent's MCP tools, and try the prompt below. |
@@ -124,7 +124,7 @@ python3 -m http.server 8080 --directory demo/example
 
 Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page displays an SVG actually returned by MCP; **the server did not automatically generate the website**. Watch the [MP4 walkthrough](demo/awsm-demo.mp4) for the tool calls and their results.
 
-### All 18 skills
+### All 20 skills
 
 | Skill | When to use it | What to inspect |
 | --- | --- | --- |
@@ -140,6 +140,8 @@ Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page
 | [`awsm-motion-storyboard`](skills/awsm-motion-storyboard/SKILL.md) | Transitions and microinteractions | Triggers, final states, reduced motion, evidence. |
 | [`awsm-responsive-audit`](skills/awsm-responsive-audit/SKILL.md) | Fix mobile/tablet/desktop layout issues | Viewport screenshots and retest status. |
 | [`awsm-prototype-qa`](skills/awsm-prototype-qa/SKILL.md) | Validate before handoff | Journey matrix, reproducible findings, limits. |
+| [`awsm-fast-design`](skills/awsm-fast-design/SKILL.md) | Produce the first useful screen quickly while preserving product context | Quick brief, focused reuse, desktop/mobile first render, then polish. |
+| [`awsm-typography`](skills/awsm-typography/SKILL.md) | Pick, inspect and integrate real fonts across web and native apps | Observed FigCraft type, local fonts, platform mapping, glyph/license review. |
 | [`awsm-iconography`](skills/awsm-iconography/SKILL.md) | Build a coherent icon system, download reusable SVG sets, inspect custom vector icons | One family, accessible usage, verified local assets. |
 | [`awsm-admin-dashboard`](skills/awsm-admin-dashboard/SKILL.md) | Implement data-heavy operational admin panels | Functional tables, forms, state handling, permission-aware UI. |
 | [`awsm-app-ui`](skills/awsm-app-ui/SKILL.md) | Build Flutter, Expo/React Native or Compose UI flows | Navigation, platform assets, interaction states and device checks. |
@@ -148,6 +150,36 @@ Open `http://localhost:8080/` and stop the server with Ctrl-C. This example page
 | [`awsm-figcraft-handoff`](skills/awsm-figcraft-handoff/SKILL.md) | Handoff to the FigCraft app | Frame specifications, tokens, assets, interaction gaps. |
 
 Mention a skill ID in your prompt to make agent loading more reliable. Skills are **workflow instructions**, not components that build a UI without the agent implementing one. Each file is editable and contains decisions, validation, example tasks, and handoff criteria. Tailor them to your product and asset licensing policy.
+
+## Fast design: first render before exhaustive analysis
+
+AWSM offers `design_quickstart` to minimize repeated analysis and tool calls. Example for an existing Next.js administrative app:
+
+```js
+design_quickstart({
+  brief: "Design an invoice admin screen with dense data table, meaningful filters and a working approval flow",
+  root: ".",
+  kind: "admin",
+  speed: "fast"
+})
+```
+
+The tool detects the framework and existing UI packages (without recursively scanning the entire repo), selects relevant skills, and defines a small first-render target. Agents should implement the first useful screen, inspect 375px and 1440px renders, then continue with visual polish and comprehensive QA. The output is a **plan and project context**, not an automatically generated or visually verified design.
+
+Use `inspect_ui_project({ root: "." })` for a bounded framework/component/asset directory inventory. If you already have FigCraft JSON, pass it directly as `document` to `design_quickstart` instead of repeating document, token and handoff analysis in separate calls. Image and icon discovery should be batched by what the first render actually needs. Fast mode does not allow bypassing destructive-operation safety, licensing requirements or production validation.
+
+## Fonts and observed design tokens
+
+AWSM can now inspect or download requested Google Fonts WOFF2 files **locally** (no paid backend or API key):
+
+```js
+google_font({ family: "Manrope", action: "inspect", weights: [400, 600, 700] })
+google_font({ family: "Manrope", action: "install", weights: [400, 600, 700], dir: "./public/fonts" })
+```
+
+Installed fonts are checked for WOFF2 signatures, capped in size, hashed, and never overwritten without opt-in. Subset selection prefers Latin. Check the actual font's license and required glyph coverage before distributing a product. Local CSS `@font-face` definitions are returned as implementation hints; your coding agent applies fonts in Next.js, CSS, Flutter, Expo or Compose using the proper platform mechanisms.
+
+For FigCraft designs, `extract_design_tokens({ document: <layerTree> })` returns **observed** fonts, colors, sizes, radii and gaps, plus CSS primitives; it intentionally does not invent semantic roles. `check_contrast` computes WCAG 2.x AA/AAA ratios for supplied opaque hex pairs. Do not mistake calculations for rendered accessibility testing or design fidelity.
 
 ## FigCraft → Web handoff (new)
 
@@ -197,7 +229,7 @@ For dashboard and native application workflows, mention `awsm-admin-dashboard`, 
 
 ```sh
 npm ci
-npm test                     # build and smoke-test the installer, ten MCP tools, and HTTP preview
+npm test                     # build and smoke-test the installer, sixteen MCP tools, and HTTP preview
 npm audit --audit-level=high
 npm pack --dry-run           # check that build output, README, and skills are packaged
 npm run demo                 # regenerate MP4, GIF, poster, and SVG/HTML examples
