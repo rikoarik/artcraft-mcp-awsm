@@ -22,6 +22,7 @@ import { designQuickstart } from "./tools/design-quickstart.js";
 import { findDesignAssets } from "./tools/batch-assets.js";
 import { compareUiScreenshots } from "./tools/visual-png.js";
 import { auditUiPage } from "./tools/browser-audit.js";
+import { reviewUi } from "./tools/review-ui.js";
 import { captureUiScreenshots } from "./tools/browser-capture.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
@@ -424,6 +425,34 @@ server.registerTool(
     },
   },
   async args=>{try{return json(await auditUiPage(args));}catch(e){return fail(e);}},
+);
+
+
+server.registerTool(
+  "review_ui",
+  {
+    title: "One-Call UI Review",
+    description: "Capture and audit real localhost web UI in one browser pass, optionally compare matching FigCraft screenshot references, and return prioritized UI issues and visual mismatch regions. Requires project-local Playwright.",
+    inputSchema: {
+      url:z.string().url().describe("Local HTTP application URL with port 1024+."),
+      projectRoot:z.string().optional().describe("Project directory containing Playwright dependency."),
+      viewports:z.array(z.object({
+        name:z.string(),width:z.number().int().min(240).max(2560),
+        height:z.number().int().min(320).max(1800),
+      })).min(1).max(5).optional().describe("Default mobile 375x812, desktop 1440x900."),
+      referenceImages:z.array(z.object({
+        viewport:z.string().describe("Must match a viewport name from captures."),
+        file:z.string().describe("Local FigCraft reference PNG path, same physical dimensions."),
+      })).max(5).optional(),
+      outputDir:z.string().optional().describe("Capture and heatmap directory, default .awsm/review."),
+      reportPath:z.string().optional().describe("Optional machine-readable review JSON file."),
+      threshold:z.number().int().min(0).max(255).optional().describe("Per-channel pixel difference threshold."),
+      maxChangedPercent:z.number().min(0).max(100).optional().describe("Percentage of pixels allowed to differ, default 2%."),
+      timeoutMs:z.number().int().min(1000).max(30000).optional(),
+      overwrite:z.boolean().optional().describe("Replace previous screenshots/report; default false."),
+    },
+  },
+  async args=>{try{return json(await reviewUi(args));}catch(e){return fail(e);}},
 );
 
 async function main(): Promise<void> {
