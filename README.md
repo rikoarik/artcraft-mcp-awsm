@@ -248,9 +248,27 @@ compare_ui_screenshots({
 });
 ```
 
-For practical DOM QA run `audit_ui_page({ url: "http://127.0.0.1:3000/", projectRoot: ".", reportPath: ".awsm/ui-audit.json" })`. It checks mobile and desktop for overflow, offscreen elements, images that fail to load, unnamed controls, unlabeled inputs, placeholder links, small buttons and JavaScript errors. The audit is read-only and does not submit forms. Findings include CSS selectors and suggested fixes. It is heuristic, not a WCAG certification.
+For practical DOM QA run `audit_ui_page({ url: "http://127.0.0.1:3000/", projectRoot: ".", reportPath: ".awsm/ui-audit.json" })`. It checks mobile and desktop for overflow, offscreen elements, images that fail to load, images missing alt text, unnamed links or buttons, unlabeled inputs, placeholder links, small buttons and JavaScript errors. The audit is read-only and does not submit forms. Findings include CSS selectors and suggested fixes. It is heuristic, not a WCAG certification.
 
 Make sure source and actual PNGs have **identical physical dimensions**. Screenshot diff reports dominant change regions grouped into 24px tiles, along with a global pixel metric. Neither measure establishes semantic visual critique or proves that interactions work. Use `awsm-visual-qa` and the agent's own image understanding to inspect screenshots and prioritize fixes. Accessibility and functional QA remain separate.
+
+### Real-browser verification
+
+The repository includes a Chromium fixture test at `test/browser-e2e.mjs`. Unlike the standard smoke tests, it launches a real browser to verify missing images, horizontal overflow, inaccessible controls, screenshot capture and identical-image comparison. It is tested separately in `.github/workflows/browser-e2e.yml` on relevant browser-QA PR changes and can also be started manually from GitHub Actions.
+
+To run it locally:
+
+```sh
+npm ci
+npm install --no-save playwright@1.55.0
+npx playwright install chromium
+npm run build
+node test/browser-e2e.mjs
+```
+
+This optional browser dependency lives in the **developer/test environment**. The distributed MCP package itself does not include Playwright or Chromium. For design QA against a real application, install Playwright in that target project, start its local development server and run `audit_ui_page`, `capture_ui_screenshots`, then `compare_ui_screenshots` if matching FigCraft screenshots exist.
+
+
 
 ## Troubleshooting and limitations
 
