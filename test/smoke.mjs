@@ -95,7 +95,7 @@ assert.equal(readFileSync(path.join(fakeTarget,'awsm-demo/SKILL.md'),'utf8'),'my
 assert.equal(syncSkills(fakeSource,fakeTarget,true).updated,1);
 
 const { parseGoogleFontFaces } = await import('../build/tools/google-font.js');
-const fixtureCss = "/* latin */\\n@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 400; src: url(https://fonts.gstatic.com/s/manrope/test.woff2) format('woff2'); }";
+const fixtureCss = "/* latin */\n@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 400; src: url(https://fonts.gstatic.com/s/manrope/test.woff2) format('woff2'); }";
 const parsedFaces = parseGoogleFontFaces(fixtureCss);
 assert.equal(parsedFaces.length,1);
 assert.equal(parsedFaces[0].subset,'latin');
