@@ -200,6 +200,7 @@ try {
     width:375,height:812,scrollWidth:490,clientWidth:375,totalElements:44,truncated:false,
     hasMain:false,title:'Example',
     brokenImages:[{selector:'#broken',detail:'/missing.png'}],
+    missingAltImages:[{selector:'#no-alt'}],unnamedLinks:[{selector:'#blank-link'}],
     missingControlNames:[{selector:'button:nth-of-type(1)'}],
     unlabeledInputs:[{selector:'#email'}],placeholderLinks:[{selector:'a:nth-of-type(1)',detail:'#'}],
     horizontalOverflow:[{selector:'#wide',detail:'right 490px'}],
@@ -208,10 +209,13 @@ try {
   const findings=analyzeUiSnapshot(snapshot,'mobile');
   assert(findings.some(x=>x.code==='HORIZONTAL_PAGE_OVERFLOW'&&x.severity==='high'));
   assert(findings.some(x=>x.code==='BROKEN_IMAGE'));
+  assert(findings.some(x=>x.code==='IMAGE_MISSING_ALT'));
+  assert(findings.some(x=>x.code==='UNNAMED_LINK'));
   assert(findings.some(x=>x.code==='UNLABELED_INPUT'));
   assert(findings.some(x=>x.code==='SMALL_CONTROL'));
   assert.equal(analyzeUiSnapshot({...snapshot,scrollWidth:375,brokenImages:[],missingControlNames:[],
-      unlabeledInputs:[],placeholderLinks:[],horizontalOverflow:[],smallTargets:[],hasMain:true},'mobile').length,0);
+      unlabeledInputs:[],placeholderLinks:[],horizontalOverflow:[],smallTargets:[],
+      missingAltImages:[],unnamedLinks:[],hasMain:true},'mobile').length,0);
   const invalidAudit=await client.callTool({name:'audit_ui_page',arguments:{url:'https://example.com'}});
   assert.equal(invalidAudit.isError,true);
   const auditMissingBrowser=await client.callTool({name:'audit_ui_page',
