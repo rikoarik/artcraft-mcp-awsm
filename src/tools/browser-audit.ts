@@ -8,7 +8,8 @@ type NodeIssue = {selector:string; detail?:string};
 export interface UiAuditSnapshot {
   width:number; height:number; scrollWidth:number; clientWidth:number;
   totalElements:number; truncated:boolean; hasMain:boolean; title:string;
-  brokenImages:NodeIssue[]; missingControlNames:NodeIssue[];
+  brokenImages:NodeIssue[]; missingAltImages:NodeIssue[]; missingControlNames:NodeIssue[];
+  unnamedLinks:NodeIssue[];
   unlabeledInputs:NodeIssue[]; placeholderLinks:NodeIssue[];
   horizontalOverflow:NodeIssue[]; smallTargets:NodeIssue[];
 }
@@ -28,6 +29,8 @@ export function analyzeUiSnapshot(snapshot:UiAuditSnapshot,viewport:string):Find
       suggestedFix:"Inspect offending containers and replace fixed widths with responsive constraints."});
   add("ELEMENT_OFFSCREEN","medium",snapshot.horizontalOverflow,"Visible element extends beyond the right viewport edge.","Inspect min-width, transforms, flex shrink and grid sizing.");
   add("BROKEN_IMAGE","high",snapshot.brokenImages,"Image failed to load.","Verify the local asset path, source URL and bundler public directory.");
+  add("IMAGE_MISSING_ALT","medium",snapshot.missingAltImages,"Image lacks an alt attribute.","Provide meaningful alternative text, or alt=\"\" when purely decorative.");
+  add("UNNAMED_LINK","medium",snapshot.unnamedLinks,"Link has no discernible name.","Provide visible link text or an accessible name.");
   add("UNNAMED_CONTROL","medium",snapshot.missingControlNames,"Interactive control has no discernible name.","Provide visible text or an accessible name with aria-label/aria-labelledby.");
   add("UNLABELED_INPUT","medium",snapshot.unlabeledInputs,"Form control has no associated label.","Associate a visible label using htmlFor/id or use aria-labelledby.");
   add("PLACEHOLDER_LINK","medium",snapshot.placeholderLinks,"Link points to an empty or placeholder destination.","Connect the link to a meaningful route or replace it with a real button action.");
@@ -111,6 +114,8 @@ export async function auditUiPage(input:{
               (el.querySelector("img[alt]")?.getAttribute("alt")||"").trim());
           };
           const brokenImages:Array<{selector:string;detail?:string}>=[];
+          const missingAltImages:Array<{selector:string;detail?:string}>=[];
+          const unnamedLinks:Array<{selector:string;detail?:string}>=[];
           const missingControlNames:Array<{selector:string;detail?:string}>=[];
           const unlabeledInputs:Array<{selector:string;detail?:string}>=[];
           const placeholderLinks:Array<{selector:string;detail?:string}>=[];
@@ -125,11 +130,13 @@ export async function auditUiPage(input:{
               horizontalOverflow.push({selector:sel,detail:"right "+Math.round(rect.right)+"px"});
             const tag=el.tagName.toLowerCase();
             if(tag==="img") {
+              if(!el.hasAttribute("alt")&&missingAltImages.length<20)missingAltImages.push({selector:sel});
               const img=el as HTMLImageElement;
               if(img.complete&&img.naturalWidth===0&&brokenImages.length<20)
                 brokenImages.push({selector:sel,detail:img.getAttribute("src")?.slice(0,120)});
             }
             if(tag==="a") {
+              if(!named(el)&&unnamedLinks.length<20)unnamedLinks.push({selector:sel});
               const href=el.getAttribute("href");
               if((href===null||href===""||href==="#"||href.startsWith("javascript:"))&&placeholderLinks.length<20)
                 placeholderLinks.push({selector:sel,detail:href??"missing href"});
@@ -155,7 +162,7 @@ export async function auditUiPage(input:{
             clientWidth:document.documentElement.clientWidth,
             totalElements:all.length,truncated:all.length>2500,
             title:document.title,hasMain:Boolean(document.querySelector("main,[role=main]")),
-            brokenImages,missingControlNames,unlabeledInputs,placeholderLinks,
+            brokenImages,missingAltImages,missingControlNames,unnamedLinks,unlabeledInputs,placeholderLinks,
             horizontalOverflow,smallTargets,
           };
         });
