@@ -37,6 +37,12 @@ const fromGithub = spawnSync(process.execPath, [path.join(root, 'build/index.js'
 assert.equal(fromGithub.status, 0, fromGithub.stderr);
 assert.deepEqual(JSON.parse(readFileSync(path.join(githubCwd, '.opencode/opencode.json'), 'utf8')).mcp.servers.awsm.command, ['npx', '-y', '--prefer-online', 'github:someone/my-awsm-mcp', '--managed-skills', path.join(githubCwd, '.opencode/skills')]);
 
+const upgradeCwd = mkdtempSync(path.join(tmpdir(),'awsm-upgrade-'));
+let up = spawnSync(process.execPath,[path.join(root,'build/index.js'),'setup','--source','github:rikoarik/figcraft-mcp-awsm','--no-auto-update'],{cwd:upgradeCwd,encoding:'utf8'});
+assert.equal(up.status,0,up.stderr);
+up = spawnSync(process.execPath,[path.join(root,'build/index.js'),'setup','--source','github:rikoarik/figcraft-mcp-awsm','--auto-update','--upgrade-config'],{cwd:upgradeCwd,encoding:'utf8'});
+assert.equal(up.status,0,up.stderr);
+assert.equal(JSON.parse(readFileSync(path.join(upgradeCwd,'.opencode/opencode.json'),'utf8')).mcp.servers.awsm.command[2],'--prefer-online');
 const multiCwd = mkdtempSync(path.join(tmpdir(), 'awsm-all-test-'));
 const allResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
 assert.equal(allResult.status, 0, allResult.stderr);
@@ -141,4 +147,10 @@ try {
 } finally {
   await client.close();
 }
+const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
+const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
+const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,11); }
+finally { await secondClient.close(); }
+assert(existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
 console.log('Smoke tests passed');
