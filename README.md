@@ -1,52 +1,125 @@
-# AWSM — one MCP for design engineering
+# AWSM
 
-AWSM is **one local MCP server** that helps a coding agent design, implement and review real websites and application interfaces. It runs through stdio on the developer's computer. **No VPS, paid deployment or separate backend is required.**
+**One MCP connection. A practical toolkit for building better interfaces.**
 
-AWSM has **one default agent skill** (`awsm-design`) and a toolbox for design context, fonts, icons, photos, FigCraft handoff and visual QA. The project still bundles the 21 original specialist skills as optional documentation. One MCP server does **not** mean cramming every capability into one enormous MCP tool—individual tools retain small, typed inputs.
+AWSM is a local [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for coding agents. It brings UI design utilities, asset discovery, FigCraft-to-code handoff, and browser-based visual QA into **one MCP entry**. An optional gateway can forward calls to other trusted, locally installed MCP servers.
 
-## Install
+No hosted service or VPS is required. AWSM runs on your computer over stdio.
 
-Requires Node.js 18+, npx, and a coding agent with local MCP support. For OpenCode, run inside your project:
+![AWSM MCP tools walkthrough — icons, palette and local preview](demo/awsm-demo.gif)
 
-```sh
+<sub>Demo of built-in tools; gateway connections and FigCraft editing are configured separately.</sub>
+
+[Get started](#quick-start) · [Connect other MCPs](#connect-other-mcps) · [Explore tools](#whats-included) · [Updates](#updates-and-existing-installations) · [GitHub issues](https://github.com/rikoarik/figcraft-mcp-awsm/issues)
+
+---
+
+## How it works
+
+```text
+┌───────────────────────────────────────────────────────┐
+│ Coding agent (OpenCode, Claude Code, Codex, etc.)     │
+└─────────────────────────┬─────────────────────────────┘
+                          │ one MCP connection (stdio)
+                          ▼
+                   ┌─────────────┐
+                   │  AWSM MCP   │
+                   └──────┬──────┘
+                          │
+            ┌─────────────┴─────────────┐
+            ▼                           ▼
+    Built-in design tools        Optional MCP gateway
+    • assets and icons           • bridge_list
+    • typography and tokens      • bridge_call
+    • FigCraft handoff                   │
+    • browser visual QA                 ▼
+                               Configured local MCPs
+                               (e.g. FigCraft server)
+```
+
+**One connection does not mean one tool or one process.** AWSM exposes small, typed tools within a single MCP server. Third-party MCPs remain independent processes, launched only when explicitly configured.
+
+AWSM complements your coding agent: the **agent implements and fixes code**; AWSM supplies design utilities, integration access, and evidence from rendered UI. It is not an autonomous coding agent or a replacement for the FigCraft MCP.
+
+## Quick start
+
+**Requirements:** Node.js 18+, `npx`, and an MCP-compatible coding agent.
+
+Run this inside the project where you use your agent:
+
+```bash
 npx -y github:rikoarik/figcraft-mcp-awsm setup \
   --client opencode \
   --source github:rikoarik/figcraft-mcp-awsm
 ```
 
-Supported clients: `opencode`, `claude`, `codex`, `antigravity`, `zed`, `copilot`, or `all`. Use `--client all` **only** when you actually run multiple clients; otherwise it creates unnecessary configurations. Zed requires `--global` for its user-level MCP setting.
+Restart the coding agent or reconnect its MCP servers. You should see **`awsm`** as one MCP connection, with the `awsm-design` skill installed.
 
-**Default installation:** one MCP entry named `awsm` + one skill named `awsm-design`. The 23 MCP tools include internal capabilities and two gateway tools, all exposed through that one server—not 23 separately installed MCP servers.
+For OpenCode V2, verify the local connection with `opencode mcp list` or the `/mcps` view. AWSM's installer writes the entry under `mcp.servers.awsm` in `.opencode/opencode.json`.
 
-**For advanced users**, install the full specialist skill library with `--all-skills`:
+> AWSM currently installs from GitHub; it is **not published to npm** under `my-awsm-mcp`. The setup command downloads/builds and executes the GitHub source. Review code before running third-party packages.
 
-```sh
-npx -y github:rikoarik/figcraft-mcp-awsm setup \
-  --client opencode --source github:rikoarik/figcraft-mcp-awsm \
-  --all-skills --upgrade-config
-```
+### Choose your agent
 
-The expanded library contains the core skill and 21 specialist skills. Existing user-modified skills are **not deleted or overwritten**. If you installed an older version with many skills, the new core mode will not automatically delete those old folders. You can archive unused skills yourself after confirming they are not customized.
+Replace `opencode` with the client you actually use:
 
-### Existing installations and updates
+| Client | `--client` | MCP configuration created |
+| --- | --- | --- |
+| OpenCode | `opencode` | `.opencode/opencode.json` |
+| Claude Code | `claude` | `.mcp.json` |
+| Codex | `codex` | `.codex/config.toml` |
+| Google Antigravity | `antigravity` | `.agents/mcp_config.json` |
+| GitHub Copilot CLI | `copilot` | `.github/mcp.json` |
+| Zed | `zed` | User-level Zed settings with `--global` |
 
-To migrate an existing AWSM MCP configuration to the current launch command:
+Use `--client all` only if you really need multiple clients. For Zed, `--global` configures the MCP entry; project-level setup can still install the skill separately. Restart the relevant client after setup.
 
-```sh
-npx -y github:rikoarik/figcraft-mcp-awsm setup \
-  --client opencode --source github:rikoarik/figcraft-mcp-awsm \
-  --upgrade-config
-```
+### Try your first task
 
-On GitHub-source installs, npx checks for newer package revisions at MCP startup and managed skills sync non-destructively. This is best effort and can depend on cache/network state. Disable it with `--no-auto-update`, or pin the source to a reviewed Git tag/commit if reproducibility matters. Auto-updates run newly fetched code on the developer machine, so use pinned releases in controlled environments.
+Give the agent a real interface request instead of asking it to test every AWSM tool:
 
-Relevant options: `--global` for user-level installation, `--skip-mcp`, `--skip-skills`, `--all-skills`, `--upgrade-config`, `--force-skills` (explicitly overwrite managed skill changes), `--auto-update` and `--no-auto-update`.
+> Design and implement a construction-project dashboard in this existing app. Reuse its components and styles, use AWSM for missing icons or assets, and check the mobile and desktop render. Build working UI rather than stopping at a plan.
 
-## AWSM as an MCP gateway — one connection to multiple MCPs
+The default installation provides **one skill**, `awsm-design`, to guide that workflow. AWSM's individual tools remain available when the agent needs them.
 
-You can configure **only `awsm` in your coding agent**. AWSM then exposes its own internal tools and can forward calls to other trusted **local stdio MCP servers** (such as a separately installed FigCraft MCP). This means one **agent-facing MCP connection**, not one process that magically contains all third-party providers.
+## What's included
 
-Create `.awsm/bridges.json` at your project root:
+| Capability | What it helps with | Key tools |
+| --- | --- | --- |
+| Project context | Inspect an existing UI repo and plan a fast first render | `inspect_ui_project`, `design_quickstart` |
+| Icons and images | Find, download, and prepare visual assets | `find_design_assets`, `find_icons`, `get_icon`, `find_images`, `save_icon_set`, `download_asset` |
+| Design foundations | Work with local fonts, palette, observed tokens, and contrast | `google_font`, `palette`, `extract_design_tokens`, `check_contrast` |
+| FigCraft handoff | Classify inspected layers and copy exported artwork into a web project | `prepare_web_handoff`, `sync_figcraft_assets` |
+| Visual QA | Inspect a running UI and compare screenshots at matching viewports | `review_ui`, `audit_ui_page`, `capture_ui_screenshots`, `compare_ui_screenshots` |
+| MCP connections | Discover and invoke configured third-party tools | `bridge_list`, `bridge_call` |
+
+Additional utilities include `draw_icon`, `make_asset`, and `serve`. In total, AWSM currently exposes **23 MCP tools** through one server.
+
+### FigCraft → working UI
+
+When a FigCraft document is available:
+
+1. Use the **actual FigCraft MCP** to inspect the document and export artwork. AWSM does not edit the FigCraft canvas.
+2. Pass the inspected layer data to `prepare_web_handoff` to classify text, layout, components, and exportable assets.
+3. Run `sync_figcraft_assets` after the native exports exist.
+4. Let the coding agent implement semantic HTML/components with editable text and functioning interactions.
+5. Compare a running page to a same-size reference image using `review_ui`, if local Playwright is available.
+
+This workflow is deliberately **design-to-code**, not a one-click pixel-perfect export.
+
+## Connect other MCPs
+
+The gateway is **optional**. Without additional configuration, AWSM's built-in tools still work.
+
+If you want the coding agent to connect **only to AWSM**, you can let AWSM start trusted downstream **stdio MCP servers**, then discover and call their tools through `bridge_list` and `bridge_call`.
+
+### 1. Install the downstream MCP separately
+
+For example, install a FigCraft MCP server using its own instructions. Obtain its **real launch command**, arguments, and tool names. AWSM does **not** install third-party MCPs or automatically read your other clients' configurations.
+
+### 2. Create `.awsm/bridges.json`
+
+Place the file in the working directory from which AWSM starts:
 
 ```json
 {
@@ -54,78 +127,140 @@ Create `.awsm/bridges.json` at your project root:
   "servers": {
     "figcraft": {
       "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/YOUR/FIGCRAFT/MCP-SERVER.js"],
-      "allowedTools": ["inspect_document", "get_node", "export"]
+      "args": ["/absolute/path/to/figcraft-mcp-entry.js"],
+      "allowedTools": ["exact_tool_name_from_figcraft"]
     }
   }
 }
 ```
 
-**The command, arguments and tool names above are illustrative.** Use the real FigCraft MCP launch command and exact tool names from its installed documentation. No FigCraft MCP is bundled or installed automatically by AWSM. The gateway is optional; without this file, AWSM works with its built-in tools.
+**This is a configuration template, not a verified FigCraft command.** Replace both the file path and tool names with the values supported by your installed provider. Other stdio servers may use different executables and arguments.
 
-The coding agent first calls `bridge_list({connect:true})` to discover configured downstream tools and their schemas, then `bridge_call({server:"figcraft",tool:"inspect_document",arguments:{...}})` to forward a request. The original tool result is returned when possible, including image/text content blocks. Gateway tools are available under the same AWSM MCP entry—no separate FigCraft entry is necessary **when its stdio process can be launched by AWSM**.
+If AWSM starts from another directory, set `AWSM_BRIDGE_CONFIG` to an **absolute file path** pointing to the JSON configuration. Restart AWSM after changing the file.
 
-- Only named local stdio MCP servers are supported initially. Remote HTTP/SSE integrations are not yet proxied.
-- The user must explicitly configure each downstream command. AWSM does **not** scan arbitrary MCP configuration files, install providers or discover secrets automatically.
-- `allowedTools` limits which downstream tools AWSM can invoke. Choose the smallest useful set; `["*"]` allows every tool, including potentially destructive actions.
-- Downstream processes run with the developer's local user permissions and inherited environment. Review every command and token source you add.
-- Default config location is `.awsm/bridges.json` relative to AWSM's working directory. If the agent starts AWSM elsewhere, set the `AWSM_BRIDGE_CONFIG` environment variable to the full path instead.
-- An unavailable downstream server does not prevent AWSM's own design/image/font tools from working.
+### 3. Discover, then call
 
-This keeps AWSM a **single free local entrypoint**. It does not require a VPS or paid hosting, and there is no automated third-party authorization bypass.
+Ask the coding agent to:
 
-## How to use AWSM
+```text
+Use AWSM bridge_list with connect=true.
+List the available tools for the configured "figcraft" server.
+Then use bridge_call with the exact tool name and required arguments.
+Do not invent tool names or modify the FigCraft document unless requested.
+```
 
-Give the coding agent the normal product task and let it use `awsm-design`:
+At the MCP level the workflow looks like:
 
-> Design and implement an operational invoice administration interface in this existing Next.js project. Reuse its components, icons, fonts and design tokens. Produce a functional first render and check mobile/desktop usability.
+```js
+bridge_list({ connect: true })
 
-The core skill favors three practical outcomes:
+bridge_call({
+  server: "figcraft",
+  tool: "exact_tool_name_from_figcraft",
+  arguments: { /* use the discovered tool schema */ }
+})
+```
 
-1. **Design intelligence:** understand the actual product, inspect the existing stack, reuse design assets, source missing fonts/icons/photos only when needed, and render a useful first screen.
-2. **FigCraft → code:** use the real FigCraft MCP for layer inspection and native export. AWSM prepares layer/asset handoff and syncs exports so text, layout and controls remain real code rather than flattened screenshots.
-3. **Visual QA:** when project-local Playwright is available, `review_ui` collects browser audit findings, screenshots and optional same-size FigCraft comparisons in one pass. The coding agent interprets the evidence and edits its own source files.
+The bridge returns downstream MCP content, including text or images when supported. It does **not** automatically expose every downstream tool as a new top-level tool.
 
-AWSM is **not a replacement for the coding agent**, a UI image generator, or a FigCraft canvas editor. It does not automatically install Chromium or guarantee production-quality UI.
+**Security and limits**
 
-### Tool capabilities
+- Only **explicitly configured local stdio MCP servers** are supported. Direct HTTP/SSE proxying is not implemented.
+- `allowedTools` restricts what AWSM can call. Avoid `["*"]` unless you trust every action exposed by that server.
+- Child servers execute with your local account's permissions and may inherit your process environment. Review commands, environment variables, and provider trust.
+- Third-party tools can perform writes or destructive actions. Use the coding agent's normal approval process.
+- Missing or failed downstream MCPs do not disable AWSM's built-in utilities.
 
-| Category | MCP tools |
-| --- | --- |
-| Rapid context | `inspect_ui_project`, `design_quickstart` |
-| Icons, photos and assets | `find_design_assets`, `find_icons`, `get_icon`, `save_icon_set`, `draw_icon`, `find_images`, `download_asset`, `make_asset` |
-| Fonts and design values | `google_font`, `extract_design_tokens`, `palette`, `check_contrast` |
-| FigCraft to web | `prepare_web_handoff`, `sync_figcraft_assets` |
-| UI verification | `review_ui`, `capture_ui_screenshots`, `audit_ui_page`, `compare_ui_screenshots`, `serve` |
-| Connected MCPs | `bridge_list`, `bridge_call` |
+## Browser visual QA
 
-The purpose of keeping separate, narrowly typed MCP tools is to make the agent's inputs verifiable. The single `awsm-design` skill provides routing and workflow context; specialists remain optional.
+`review_ui` combines a read-only DOM audit, responsive screenshots, and optional comparison against reference PNGs in a single local browser pass.
 
-## Local browser verification
+Install Playwright and Chromium **in the target web project**:
 
-To use `review_ui` on a web project, install Playwright **inside that project** and install Chromium when you actually want browser tests:
-
-```sh
-npm i -D playwright
+```bash
+npm install -D playwright
 npx playwright install chromium
 ```
 
-Then start the app's development server and ask the coding agent to call `review_ui` against a localhost URL. AWSM blocks external browser requests to limit unwanted access and reports the blocked resources. External fonts and images may therefore need local copies for accurate screenshots.
+Start the app's local development server, then ask the agent to run a review:
 
-For development tests on this MCP itself:
+```js
+review_ui({
+  url: "http://127.0.0.1:3000/",
+  projectRoot: ".",
+  outputDir: ".awsm/review"
+})
+```
 
-```sh
+Optional reference images can be supplied for pixel comparison, provided their physical dimensions match the capture viewport:
+
+```js
+referenceImages: [
+  { viewport: "desktop", file: "./figcraft-exports/desktop.png" }
+]
+```
+
+AWSM reports issues such as horizontal overflow, broken images, missing accessible names, placeholder links, and browser errors. When a reference is supplied it also reports pixel-difference regions.
+
+**What it doesn't do:** edit application code on its own, test every interaction, certify WCAG compliance, or infer semantic design quality from pixels alone. External browser requests are intentionally blocked, which can affect remote font and photo rendering. Check blocked resources before judging fidelity.
+
+## Updates and existing installations
+
+GitHub-source setup enables **best-effort update checks on MCP restart** using `npx --prefer-online`. Managed skill files are synchronized when AWSM starts. User-edited skills are preserved rather than silently overwritten.
+
+This is **not** a background auto-updater. A running MCP session does not receive new code without restart, and caching/network conditions can delay a revision.
+
+To refresh an existing AWSM configuration:
+
+```bash
+npx -y --prefer-online github:rikoarik/figcraft-mcp-awsm setup \
+  --client opencode \
+  --source github:rikoarik/figcraft-mcp-awsm \
+  --upgrade-config
+```
+
+Use `--no-auto-update` to disable startup revalidation or pin `--source` to a Git commit/tag for reproducible installations.
+
+AWSM installs **one default skill**. The optional specialist library can be installed with `--all-skills`. Existing specialist skill folders are **not deleted** when returning to core mode.
+
+| Installer option | Purpose |
+| --- | --- |
+| `--client <name>` | Configure a specific agent; default `opencode` |
+| `--global` | Install at user level rather than project level |
+| `--all-skills` | Install the 21 optional specialist skills alongside `awsm-design` |
+| `--upgrade-config` | Update a previously recognized AWSM MCP configuration |
+| `--skip-mcp` / `--skip-skills` | Install only skills or only the MCP config |
+| `--no-auto-update` | Disable startup package revalidation |
+| `--force-skills` | Explicitly overwrite customized skill files; use with care |
+
+If using a **local Git clone** rather than a GitHub-source `npx` entry, updates to that clone require `git pull`, `npm ci`, `npm run build`, and a server restart. A local checkout does not pull changes itself.
+
+## Development
+
+```bash
+git clone https://github.com/rikoarik/figcraft-mcp-awsm.git
+cd figcraft-mcp-awsm
 npm ci
 npm test
 ```
 
-A separate Chromium fixture workflow exists in `.github/workflows/browser-e2e.yml`.
+The test script compiles TypeScript and runs MCP smoke tests. Optional Chromium fixture tests live in `test/browser-e2e.mjs` and have a separate GitHub Actions workflow.
 
-## Important constraints
+For development issues or feature requests, [open an issue](https://github.com/rikoarik/figcraft-mcp-awsm/issues).
 
-- **FigCraft integration:** install and configure the native FigCraft MCP as a downstream bridge, or connect it separately, when reading, editing or exporting the design canvas. AWSM only handles handoff/asset management and code-side checks.
-- **Third-party assets and fonts:** verify source licenses, attribution and glyph coverage. Search results are candidates, not automatic rights clearance.
-- **UI validation:** pixel differences and DOM audits are heuristics, not accessibility certification or proof that the application works.
-- **No destructive migration:** switching to the one-skill default does not remove old installed skills or override user changes.
+### Troubleshooting
 
-Source: [GitHub repository](https://github.com/rikoarik/figcraft-mcp-awsm) · License: MIT.
+- **AWSM not listed in the agent:** confirm setup ran in the same project, inspect the client config, restart the MCP session and check the client's MCP status. For OpenCode V2, run `opencode mcp list`.
+- **`bridge_list` returns no servers:** add `.awsm/bridges.json` in the MCP process working directory or set `AWSM_BRIDGE_CONFIG` to its absolute path, then restart.
+- **Downstream connection error:** use the provider's launch command directly to verify it works, and check the `allowedTools` names. A provider requiring remote HTTP transport cannot be bridged with this stdio-only gateway.
+- **Visual review cannot run:** install Playwright/Chromium in the target project, start the local web server, and use an explicit localhost HTTP URL with a port of at least 1024.
+
+## Scope and licensing
+
+AWSM is an open-source local developer tool under the [MIT License](LICENSE). There is no required paid hosting, but third-party image/font providers can have their own usage terms and rate limits. Verify licensing before using assets commercially.
+
+The local FigCraft MCP, remote HTTP MCP servers, and application-specific code generation are **not bundled** into AWSM. The gateway connects only to downstream MCP processes that you explicitly configure.
+
+---
+
+<sub>Built for coding-agent workflows, from early UI design to evidence-based implementation review.</sub>
