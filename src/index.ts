@@ -19,6 +19,7 @@ import { googleFont } from "./tools/google-font.js";
 import { extractDesignTokens, checkContrast } from "./tools/design-tokens.js";
 import { inspectUiProject } from "./tools/project-scan.js";
 import { designQuickstart } from "./tools/design-quickstart.js";
+import { findDesignAssets } from "./tools/batch-assets.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
 
@@ -273,6 +274,23 @@ server.registerTool(
   },
 );
 
+
+server.registerTool(
+  "find_design_assets",
+  {
+    title: "Batch UI Image and Icon Discovery",
+    description: "Search multiple relevant images and icons in one MCP call; concurrent capped provider requests and a short in-process cache reduce repeated design work. Discovery only; licensing and download remain separate.",
+    inputSchema: {
+      iconQueries: z.array(z.string()).max(4).optional().describe("Up to 4 distinct icon search phrases."),
+      imageQueries: z.array(z.string()).max(4).optional().describe("Up to 4 image briefs for actual UI slots."),
+      iconFamily: z.string().optional().describe("Iconify family, default lucide."),
+      imageProvider: z.enum(["openverse","pexels","unsplash","picsum"]).optional().describe("Default openverse."),
+      iconLimit: z.number().int().min(1).max(20).optional(),
+      imageLimit: z.number().int().min(1).max(10).optional(),
+    },
+  },
+  async args => { try { return json(await findDesignAssets(args)); } catch(e) { return fail(e); } },
+);
 
 server.registerTool(
   "inspect_ui_project",
