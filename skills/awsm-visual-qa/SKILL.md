@@ -15,9 +15,15 @@ If Playwright is absent, use the agent's existing browser automation tool. Do no
 
 ## Compare
 
-Export the corresponding FigCraft frame to PNG through FigCraft's native MCP and make its physical pixel dimensions match the browser capture. Call `compare_ui_screenshots` with reference, actual, a meaningful color threshold and a heatmap filename. Inspect changed bounding boxes, changed pixel percentage, mean absolute error, and generated heatmap. Pixel comparison alone cannot tell whether a changed region is a font, intentional content update, spacing issue or broken feature.
+Export the corresponding FigCraft frame to PNG through FigCraft's native MCP and make its physical pixel dimensions match the browser capture. Call `compare_ui_screenshots` with reference, actual, a meaningful color threshold and a heatmap filename. Inspect changed bounding boxes, the grouped regions sorted by changed pixels, changed pixel percentage, mean absolute error, and generated heatmap. Pixel comparison alone cannot tell whether a changed region is a font, intentional content update, spacing issue or broken feature.
 
 Do not ignore false differences caused by antialiasing, non-deterministic data, missing image fonts, scrollbars, animation frames or a mismatch between CSS pixels and device pixels. Re-capture correctly before altering source code. Do not flatten text or controls into screenshots to artificially increase image similarity.
+
+## DOM and behavior diagnostics
+
+Run `audit_ui_page` against the same localhost URL before relying on visual judgement. It opens controlled browser contexts and returns viewport-specific issues with suggested fixes: page overflow, offscreen elements, broken images, missing labels, placeholder links, unusually small buttons and console errors. It does not click links, submit forms or inspect authenticated routes unless a local session already provides access.
+
+Prioritize high-severity issues, then medium. Review reported CSS selectors in the real code rather than blindly applying fixes. The audit is heuristic: false positives are possible, and a clean report does not prove WCAG compliance or functional correctness. Browser resources outside the local origin are intentionally blocked and reported; missing remote fonts can change screenshot fidelity.
 
 ## Critique and repair
 
