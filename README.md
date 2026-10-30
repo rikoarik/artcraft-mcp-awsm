@@ -6,6 +6,10 @@ AWSM is a local [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 
 No hosted service or VPS is required. AWSM runs on your computer over stdio.
 
+![AWSM MCP tools walkthrough — icons, palette and local preview](demo/awsm-demo.gif)
+
+<sub>Demo of built-in tools; gateway connections and FigCraft editing are configured separately.</sub>
+
 [Get started](#quick-start) · [Connect other MCPs](#connect-other-mcps) · [Explore tools](#whats-included) · [Updates](#updates-and-existing-installations) · [GitHub issues](https://github.com/rikoarik/figcraft-mcp-awsm/issues)
 
 ---
@@ -50,6 +54,8 @@ npx -y github:rikoarik/figcraft-mcp-awsm setup \
 ```
 
 Restart the coding agent or reconnect its MCP servers. You should see **`awsm`** as one MCP connection, with the `awsm-design` skill installed.
+
+For OpenCode V2, verify the local connection with `opencode mcp list` or the `/mcps` view. AWSM's installer writes the entry under `mcp.servers.awsm` in `.opencode/opencode.json`.
 
 > AWSM currently installs from GitHub; it is **not published to npm** under `my-awsm-mcp`. The setup command downloads/builds and executes the GitHub source. Review code before running third-party packages.
 
@@ -241,6 +247,13 @@ npm test
 The test script compiles TypeScript and runs MCP smoke tests. Optional Chromium fixture tests live in `test/browser-e2e.mjs` and have a separate GitHub Actions workflow.
 
 For development issues or feature requests, [open an issue](https://github.com/rikoarik/figcraft-mcp-awsm/issues).
+
+### Troubleshooting
+
+- **AWSM not listed in the agent:** confirm setup ran in the same project, inspect the client config, restart the MCP session and check the client's MCP status. For OpenCode V2, run `opencode mcp list`.
+- **`bridge_list` returns no servers:** add `.awsm/bridges.json` in the MCP process working directory or set `AWSM_BRIDGE_CONFIG` to its absolute path, then restart.
+- **Downstream connection error:** use the provider's launch command directly to verify it works, and check the `allowedTools` names. A provider requiring remote HTTP transport cannot be bridged with this stdio-only gateway.
+- **Visual review cannot run:** install Playwright/Chromium in the target project, start the local web server, and use an explicit localhost HTTP URL with a port of at least 1024.
 
 ## Scope and licensing
 
