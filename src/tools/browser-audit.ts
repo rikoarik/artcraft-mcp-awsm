@@ -85,7 +85,7 @@ export async function auditUiPage(input:{
         page.on("console",(message:{type():string;text():string})=>{
           if(message.type()==="error"&&jsErrors.length<20)jsErrors.push(message.text().slice(0,400));
         });
-        await page.goto(url.toString(),{waitUntil:"domcontentloaded",timeout});
+        await page.goto(url.toString(),{waitUntil:"load",timeout});
         // Read-only evaluation. No interaction, user input or DOM mutation.
         const snapshot=await page.evaluate(() => {
           const selector=(el:Element)=>{
