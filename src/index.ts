@@ -21,6 +21,7 @@ import { inspectUiProject } from "./tools/project-scan.js";
 import { designQuickstart } from "./tools/design-quickstart.js";
 import { findDesignAssets } from "./tools/batch-assets.js";
 import { compareUiScreenshots } from "./tools/visual-png.js";
+import { auditUiPage } from "./tools/browser-audit.js";
 import { captureUiScreenshots } from "./tools/browser-capture.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
@@ -404,6 +405,25 @@ server.registerTool(
     },
   },
   async args => {try{return json(await compareUiScreenshots(args));}catch(e){return fail(e);}},
+);
+
+server.registerTool(
+  "audit_ui_page",
+  {
+    title: "Audit Real Browser UI",
+    description: "Read-only audit of localhost web UI using project Playwright: detects page overflow, offscreen elements, broken images, unlabeled controls, placeholder links, small buttons, and console errors at multiple viewports. No form actions or remote browsing.",
+    inputSchema: {
+      url:z.string().url().describe("Local HTTP page with explicit port 1024+."),
+      projectRoot:z.string().optional().describe("Project root containing Playwright installation."),
+      viewports:z.array(z.object({
+        name:z.string(),width:z.number().int().min(240).max(2560),height:z.number().int().min(320).max(1800),
+      })).min(1).max(5).optional().describe("Default mobile 375x812 and desktop 1440x900."),
+      reportPath:z.string().optional().describe("Optional JSON report destination; not overwritten by default."),
+      overwrite:z.boolean().optional().describe("Overwrite existing audit report when true."),
+      timeoutMs:z.number().int().min(1000).max(30000).optional(),
+    },
+  },
+  async args=>{try{return json(await auditUiPage(args));}catch(e){return fail(e);}},
 );
 
 async function main(): Promise<void> {
