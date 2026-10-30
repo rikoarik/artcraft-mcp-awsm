@@ -26,6 +26,8 @@ export function summarizeReview(input:{
   return {
     issues:{high,medium,info,total:issues.length},
     comparedViewports:input.comparisons.length,
+    visualStatus:input.comparisons.length===0?"not-compared":
+      failedComparisons.length>0?"mismatches-or-errors":"matched",
     failedComparisons:failedComparisons.length,
     blockedRequests:input.blockedRequests,
     inspectedViewports:input.viewports,
@@ -33,6 +35,7 @@ export function summarizeReview(input:{
     priorityFindings:issues.slice(0,20),
     priorityVisualRegions:visualChanges.slice(0,12),
     nextActions:[
+      ...(!input.comparisons.length?["Visual fidelity was not evaluated: provide matching FigCraft PNG references for screenshot comparison."]:[]),
       ...(high?["Fix blocking layout or broken asset errors first."]:[]),
       ...(medium?["Review semantic controls, links and accessible labels."]:[]),
       ...(failedComparisons.length?["Inspect screenshot heatmaps and visually diagnose the largest changed regions."]:[]),
