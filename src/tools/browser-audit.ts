@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { findPlaywright, validUrl } from "./browser-capture.js";
+import { readPngDimensions } from "./visual-png.js";
 
 type Severity = "high"|"medium"|"info";
 type Finding = { code:string; severity:Severity; viewport:string; selector?:string; message:string; suggestedFix:string };
@@ -45,7 +46,7 @@ export function analyzeUiSnapshot(snapshot:UiAuditSnapshot,viewport:string):Find
 
 export async function auditUiPage(input:{
   url:string; projectRoot?:string; viewports?:Array<{name:string;width:number;height:number}>;
-  reportPath?:string; overwrite?:boolean;timeoutMs?:number;
+  reportPath?:string; captureDir?:string; overwrite?:boolean;timeoutMs?:number;
 }) {
   const url=validUrl(input.url);
   const projectRoot=await fs.realpath(path.resolve(input.projectRoot??"."));
@@ -60,7 +61,8 @@ export async function auditUiPage(input:{
   const playwright=findPlaywright(projectRoot);
   const browser=await playwright.chromium.launch({headless:true,args:["--no-first-run","--disable-extensions"]});
   const views:Array<{viewport:{name:string;width:number;height:number};snapshot:UiAuditSnapshot;
-    findings:Finding[];jsErrors:string[];blockedExternalRequests:string[]}>=[];
+    findings:Finding[];jsErrors:string[];blockedExternalRequests:string[];
+    capture?:{file:string;dimensions:{width:number;height:number}}}>=[];
 
   try {
     for(const viewport of viewports) {
@@ -170,7 +172,17 @@ export async function auditUiPage(input:{
         for(const error of jsErrors.slice(0,10))
           findings.push({code:"JS_ERROR",severity:"high",viewport:viewport.name,
             message:"Browser console/runtime error: "+error,suggestedFix:"Inspect stack trace, failed resources and client initialization."});
-        views.push({viewport,snapshot,findings,jsErrors,blockedExternalRequests});
+        let capture:{file:string;dimensions:{width:number;height:number}}|undefined;
+        if(input.captureDir){
+          const dest=path.resolve(input.captureDir,viewport.name+".png");
+          await fs.mkdir(path.dirname(dest),{recursive:true});
+          // Node's wx mode prevents accidental replacement of existing captures.
+          const bytes=await page.screenshot({fullPage:false,animations:"disabled",caret:"hide",timeout});
+          const dimensions=readPngDimensions(bytes);
+          await fs.writeFile(dest,bytes,{flag:input.overwrite?"w":"wx"});
+          capture={file:dest,dimensions};
+        }
+        views.push({viewport,snapshot,findings,jsErrors,blockedExternalRequests,capture});
       }finally{await context.close();}
     }
   }finally{await browser.close();}

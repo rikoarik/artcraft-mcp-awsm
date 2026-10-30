@@ -6,7 +6,7 @@ import crypto from "node:crypto";
  * Update only AWSM-managed SKILL.md files. A user edit always wins.
  * A file not previously recorded as managed is never overwritten.
  */
-export function syncSkills(sourceDir: string, targetDir: string, force = false) {
+export function syncSkills(sourceDir: string, targetDir: string, force = false, mode: "core" | "all" = "all") {
   const statePath = path.join(targetDir, ".awsm-managed.json");
   const state: { version: number; files: Record<string, string> } = { version: 1, files: {} };
   try {
@@ -22,6 +22,7 @@ export function syncSkills(sourceDir: string, targetDir: string, force = false) 
   const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
   for (const entry of entries) {
     if (!entry.isDirectory() || !/^awsm-[a-z0-9-]+$/.test(entry.name)) continue;
+    if (mode === "core" && entry.name !== "awsm-design") continue;
     const key = entry.name + "/SKILL.md";
     const upstreamFile = path.join(sourceDir, key);
     if (!fs.existsSync(upstreamFile)) continue;
@@ -59,5 +60,5 @@ export function syncSkills(sourceDir: string, targetDir: string, force = false) 
   } finally {
     try { fs.unlinkSync(tmpState); } catch { /* renamed */ }
   }
-  return { added, updated, preserved, unchanged, targetDir };
+  return { added, updated, preserved, unchanged, targetDir, mode };
 }

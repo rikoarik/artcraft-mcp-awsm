@@ -13,6 +13,7 @@ const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as
 const args = process.argv.slice(2);
 const globalInstall = args.includes("--global");
 const forceSkills = args.includes("--force-skills");
+const skillMode = args.includes("--all-skills") ? "all" : "core";
 const upgradeConfig = args.includes("--upgrade-config");
 const sourceIndex = args.indexOf("--source");
 const source = sourceIndex < 0 ? pkg.name : args[sourceIndex + 1];
@@ -107,7 +108,7 @@ function copySkills(dir: string): void {
   const src = path.join(root, "skills");
   if (!existsSync(src)) { errors.push(`Skill directory not found: ${src}`); return; }
   try {
-    const report = syncSkills(src, dir, forceSkills);
+    const report = syncSkills(src, dir, forceSkills, skillMode);
     messages.push(`+ Skills ${dir}: ${report.added} new, ${report.updated} updated, ${report.preserved} customized preserved`);
   } catch (error) { errors.push(`Skill sync failed: ${String(error)}`); }
 }
@@ -118,7 +119,7 @@ for (const client of selected) {
     : client === "claude" ? (globalInstall ? path.join(home, ".claude/skills") : path.join(cwd, ".claude/skills"))
     : client === "antigravity" && globalInstall ? path.join(home, ".gemini/antigravity-cli/skills")
     : globalInstall ? path.join(home, ".agents/skills") : path.join(cwd, ".agents/skills");
-  command = autoUpdate ? ["npx", "-y", "--prefer-online", source, ...(args.includes("--skip-skills") ? [] : ["--managed-skills", skillsDir])] : ["npx", "-y", source];
+  command = autoUpdate ? ["npx", "-y", "--prefer-online", source, ...(args.includes("--skip-skills") ? [] : ["--managed-skills", skillsDir, ...(skillMode === "all" ? ["--all-skills"] : [])])] : ["npx", "-y", source];
   if (!args.includes("--skip-mcp")) {
     switch (client) {
       case "opencode": jsonConfig(globalInstall ? path.join(home, ".config/opencode/opencode.json") : path.join(cwd, ".opencode/opencode.json"), ["mcp", "servers", "awsm"], { type: "local", command }, true); break;
@@ -133,6 +134,7 @@ for (const client of selected) {
   if (args.includes("--skip-skills")) continue;
   if (!sharedSkills.has(skillsDir)) { copySkills(skillsDir); sharedSkills.add(skillsDir); }
 }
+messages.push("= Skill installation mode: " + skillMode + " (use --all-skills to install specialist workflows)");
 messages.push(autoUpdate ? "= Automatic updates enabled on MCP start (network revalidation; local skill edits preserved)" : "= Automatic updates disabled");
 console.error([...messages, ...errors.map(e => `✗ ${e}`), `\n${errors.length ? "Finished with conflicts" : "Finished"}. Check the MCP status in your client before using the tools.`].join("\n"));
 if (errors.length) process.exitCode = 1;

@@ -22,6 +22,7 @@ import { designQuickstart } from "./tools/design-quickstart.js";
 import { findDesignAssets } from "./tools/batch-assets.js";
 import { compareUiScreenshots } from "./tools/visual-png.js";
 import { auditUiPage } from "./tools/browser-audit.js";
+import { reviewUi } from "./tools/review-ui.js";
 import { captureUiScreenshots } from "./tools/browser-capture.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
@@ -426,12 +427,40 @@ server.registerTool(
   async args=>{try{return json(await auditUiPage(args));}catch(e){return fail(e);}},
 );
 
+
+server.registerTool(
+  "review_ui",
+  {
+    title: "One-Call UI Review",
+    description: "Capture and audit real localhost web UI in one browser pass, optionally compare matching FigCraft screenshot references, and return prioritized UI issues and visual mismatch regions. Requires project-local Playwright.",
+    inputSchema: {
+      url:z.string().url().describe("Local HTTP application URL with port 1024+."),
+      projectRoot:z.string().optional().describe("Project directory containing Playwright dependency."),
+      viewports:z.array(z.object({
+        name:z.string(),width:z.number().int().min(240).max(2560),
+        height:z.number().int().min(320).max(1800),
+      })).min(1).max(5).optional().describe("Default mobile 375x812, desktop 1440x900."),
+      referenceImages:z.array(z.object({
+        viewport:z.string().describe("Must match a viewport name from captures."),
+        file:z.string().describe("Local FigCraft reference PNG path, same physical dimensions."),
+      })).max(5).optional(),
+      outputDir:z.string().optional().describe("Capture and heatmap directory, default .awsm/review."),
+      reportPath:z.string().optional().describe("Optional machine-readable review JSON file."),
+      threshold:z.number().int().min(0).max(255).optional().describe("Per-channel pixel difference threshold."),
+      maxChangedPercent:z.number().min(0).max(100).optional().describe("Percentage of pixels allowed to differ, default 2%."),
+      timeoutMs:z.number().int().min(1000).max(30000).optional(),
+      overwrite:z.boolean().optional().describe("Replace previous screenshots/report; default false."),
+    },
+  },
+  async args=>{try{return json(await reviewUi(args));}catch(e){return fail(e);}},
+);
+
 async function main(): Promise<void> {
   const managed = process.argv[2] === "--managed-skills" ? process.argv[3] : undefined;
   if (managed) {
     try {
       const bundled = fileURLToPath(new URL("../skills", import.meta.url));
-      const report = syncSkills(bundled, path.resolve(managed));
+      const report = syncSkills(bundled, path.resolve(managed), false, process.argv[4] === "--all-skills" ? "all" : "core");
       console.error(`AWSM skills synced: ${report.added} added, ${report.updated} updated, ${report.preserved} customized preserved`);
     } catch (error) { console.error(`AWSM skills sync warning: ${String(error)}`); }
   }
@@ -447,11 +476,11 @@ if (process.argv[2] === "setup") {
     console.error("Failed to run setup:", error);
     process.exitCode = 1;
   });
-} else if (process.argv.length > 2 && process.argv[2] !== "--help" && !(process.argv[2] === "--managed-skills" && process.argv[3] && process.argv.length === 4)) {
+} else if (process.argv.length > 2 && process.argv[2] !== "--help" && !(process.argv[2] === "--managed-skills" && process.argv[3] && (process.argv.length === 4 || (process.argv.length === 5 && process.argv[4] === "--all-skills")))) {
   console.error(`Unknown subcommand: ${process.argv[2]}. Use 'setup' or run without arguments for MCP stdio.`);
   process.exitCode = 1;
 } else if (process.argv[2] === "--help") {
-  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' to install client configurations and skills. Use --auto-update or --no-auto-update, and --upgrade-config for existing AWSM clients.");
+  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' to install client configurations and skills. Use --auto-update or --no-auto-update, --upgrade-config for existing clients, or --all-skills for specialist skill installation.");
 } else {
   main().catch((error) => {
     console.error("Failed to start AWSM MCP server:", error);

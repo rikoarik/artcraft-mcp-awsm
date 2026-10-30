@@ -5,6 +5,7 @@ on:
     paths:
       - "src/tools/browser-*.ts"
       - "src/tools/visual-png.ts"
+      - "src/tools/review-ui.ts"
       - "test/browser-e2e.mjs"
       - ".github/workflows/browser-e2e.yml"
 permissions:

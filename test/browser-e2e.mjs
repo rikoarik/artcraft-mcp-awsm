@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import { auditUiPage } from "../build/tools/browser-audit.js";
 import { captureUiScreenshots } from "../build/tools/browser-capture.js";
 import { compareUiScreenshots } from "../build/tools/visual-png.js";
+import { reviewUi } from "../build/tools/review-ui.js";
 
 const root=fileURLToPath(new URL("..",import.meta.url));
 const outDir=mkdtempSync(path.join(tmpdir(),"awsm-browser-e2e-"));
@@ -46,6 +47,14 @@ try {
   const comparison=await compareUiScreenshots({reference:png,actual:png});
   assert.equal(comparison.passed,true);
   assert.equal(comparison.regions.length,0);
+  const review=await reviewUi({url,projectRoot:root,outputDir:path.join(outDir,"review"),
+    referenceImages:[{viewport:"mobile",file:png}],
+    viewports:[{name:"mobile",width:375,height:812}],
+    reportPath:path.join(outDir,"review-summary.json")});
+  assert.equal(review.comparisons[0].passed,true);
+  assert.equal(review.summary.issues.high>0,true);
+  assert.equal(review.summary.passed,false);
+  assert(existsSync(path.join(outDir,"review-summary.json")));
   console.log("Real-browser UI audit and screenshot e2e passed.");
 }finally {
   await new Promise(resolve=>server.close(resolve));

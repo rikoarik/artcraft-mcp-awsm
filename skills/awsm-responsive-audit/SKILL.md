@@ -21,3 +21,9 @@ Start with 360px, 768px, and 1200px viewports, then add intermediate widths wher
 Report `viewport | issue | evidence | change | retest status`. Include screenshot paths or a preview URL, and note testing limits if no browser or device was available. A few CSS media queries do not prove that a page is responsive.
 
 **Example:** “The pricing page breaks at 390px. Audit mobile, tablet, and desktop plus 200% zoom; repair the table and retake screenshots.”
+
+## Instrumented browser evidence
+
+Use audit_ui_page against the real local dev server when Playwright is available. Inspect reported horizontal page overflow and offscreen elements by CSS selector at the relevant viewport rather than blindly reducing global font size. Compare 375px and 1440px screenshots with capture_ui_screenshots, and use compare_ui_screenshots with equal-size FigCraft PNGs when an original design is available.
+
+For wide admin tables, prefer controlled container scrolling, column priority or a dedicated responsive data view over collapsing entire tables into unreadable cards. Distinguish intended horizontal scrolling inside a data grid from accidental page-level overflow. After repairing the actual layout, rerun checks at the problem viewport and a neighboring viewport. Report tests not run when Playwright or a running local server is unavailable.
