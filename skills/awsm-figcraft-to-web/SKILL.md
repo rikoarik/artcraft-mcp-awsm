@@ -41,3 +41,7 @@ When image fills are mixed with text in a group, separate the background-image l
 Before code implementation, inventory every screen and every asset with unresolved role. Validate that the handoff does not contain duplicate filenames, missing page roots or fully rasterized functional sections. Reusable FigCraft components are not automatically reusable code components; decide variants, props and state transitions using the application's actual data model. Confirm whether a chart is decorative or driven by data; data-driven charts belong in code, not an exported bitmap.
 
 After the UI is implemented, use browser or device screenshots for a design-to-code comparison. Review primary navigation, text accessibility, all real controls, image cropping and empty/loading/error states before accepting the handoff. A correct screenshot with dead interactions is not a completed application.
+
+## Verify the exported design as a working UI
+
+Once source layers and assets are mapped, capture the local app at the source FigCraft frame's physical pixel dimensions. Use compare_ui_screenshots to find the largest changed regions, then let the coding agent interpret them against the source design and fix real components. Run audit_ui_page to check overflow, broken assets, link destinations, control names and runtime errors. This separates visual parity from functional and accessibility requirements; a pixel-perfect rasterized screen is never an acceptable substitute for a working application.
