@@ -118,7 +118,7 @@ for (const client of selected) {
     : client === "claude" ? (globalInstall ? path.join(home, ".claude/skills") : path.join(cwd, ".claude/skills"))
     : client === "antigravity" && globalInstall ? path.join(home, ".gemini/antigravity-cli/skills")
     : globalInstall ? path.join(home, ".agents/skills") : path.join(cwd, ".agents/skills");
-  command = autoUpdate ? ["npx", "-y", "--prefer-online", source, "--managed-skills", skillsDir] : ["npx", "-y", source];
+  command = autoUpdate ? ["npx", "-y", "--prefer-online", source, ...(args.includes("--skip-skills") ? [] : ["--managed-skills", skillsDir])] : ["npx", "-y", source];
   if (!args.includes("--skip-mcp")) {
     switch (client) {
       case "opencode": jsonConfig(globalInstall ? path.join(home, ".config/opencode/opencode.json") : path.join(cwd, ".opencode/opencode.json"), ["mcp", "servers", "awsm"], { type: "local", command }, true); break;
