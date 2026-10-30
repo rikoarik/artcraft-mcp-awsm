@@ -106,7 +106,7 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 16);
+  assert.equal(tools.tools.length, 17);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
@@ -160,6 +160,8 @@ try {
   assert(fastResult.reusableSkills.includes('awsm-admin-dashboard'));
   assert(fastResult.reusableSkills.includes('awsm-figcraft-to-web'));
   assert.equal(fastResult.inspectBudget.maxInitialFiles,6);
+  const invalidAssetBatch = await client.callTool({name:'find_design_assets',arguments:{iconQueries:[],imageQueries:[]}});
+  assert.equal(invalidAssetBatch.isError,true);
   const invalidFont = await client.callTool({name:'google_font',arguments:{family:'../../bad'}});
   assert.equal(invalidFont.isError,true);
   const projectFolder = path.join(cwd,'framework-fixture');
@@ -187,7 +189,7 @@ try {
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
-try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,16); }
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,17); }
 finally { await secondClient.close(); }
 assert(existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
 console.log('Smoke tests passed');
