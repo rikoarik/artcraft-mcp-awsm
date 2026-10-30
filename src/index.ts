@@ -460,7 +460,7 @@ async function main(): Promise<void> {
   if (managed) {
     try {
       const bundled = fileURLToPath(new URL("../skills", import.meta.url));
-      const report = syncSkills(bundled, path.resolve(managed));
+      const report = syncSkills(bundled, path.resolve(managed), false, process.argv[4] === "--all-skills" ? "all" : "core");
       console.error(`AWSM skills synced: ${report.added} added, ${report.updated} updated, ${report.preserved} customized preserved`);
     } catch (error) { console.error(`AWSM skills sync warning: ${String(error)}`); }
   }
@@ -476,11 +476,11 @@ if (process.argv[2] === "setup") {
     console.error("Failed to run setup:", error);
     process.exitCode = 1;
   });
-} else if (process.argv.length > 2 && process.argv[2] !== "--help" && !(process.argv[2] === "--managed-skills" && process.argv[3] && process.argv.length === 4)) {
+} else if (process.argv.length > 2 && process.argv[2] !== "--help" && !(process.argv[2] === "--managed-skills" && process.argv[3] && (process.argv.length === 4 || (process.argv.length === 5 && process.argv[4] === "--all-skills")))) {
   console.error(`Unknown subcommand: ${process.argv[2]}. Use 'setup' or run without arguments for MCP stdio.`);
   process.exitCode = 1;
 } else if (process.argv[2] === "--help") {
-  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' to install client configurations and skills. Use --auto-update or --no-auto-update, and --upgrade-config for existing AWSM clients.");
+  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' to install client configurations and skills. Use --auto-update or --no-auto-update, --upgrade-config for existing clients, or --all-skills for specialist skill installation.");
 } else {
   main().catch((error) => {
     console.error("Failed to start AWSM MCP server:", error);
