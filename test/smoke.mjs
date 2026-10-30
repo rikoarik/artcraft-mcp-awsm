@@ -49,7 +49,7 @@ assert(readFileSync(path.join(multiCwd, '.codex/config.toml'), 'utf8').includes(
 assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-taste-ui/SKILL.md')));
 assert(existsSync(path.join(multiCwd, '.claude/skills/awsm-antislop-ui/SKILL.md')));
 const skillNames = readdirSync(path.join(root, 'skills'));
-assert.equal(skillNames.length, 13);
+assert.equal(skillNames.length, 14);
 for (const name of skillNames) {
   const text = readFileSync(path.join(root, 'skills', name, 'SKILL.md'), 'utf8');
   assert(text.startsWith('---\n') && text.includes(`\nname: ${name}\n`) && /\ndescription: .+\n/.test(text), `${name}: invalid frontmatter`);
@@ -73,10 +73,28 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 7);
+  assert.equal(tools.tools.length, 9);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
+  const example = { pages: [{id:"p1",name:"Home",type:"PAGE",children:[{id:"hero",name:"Hero",type:"FRAME",children:[{id:"t1",name:"Headline",type:"TEXT",characters:"Build better"},{id:"img",name:"Factory photo",type:"RECTANGLE",fills:[{type:"IMAGE"}]},{id:"ic",name:"icon arrow",type:"VECTOR"},{id:"rect",name:"Rectangle 2",type:"RECTANGLE"}]}]}] };
+  const prepared = await client.callTool({name:"prepare_web_handoff",arguments:{document:example,exportDir:path.join(cwd,"exports"),outputPath:path.join(cwd,"handoff.json")}});
+  assert.equal(prepared.isError, undefined, prepared.content[0].text);
+  const manifest = JSON.parse(prepared.content[0].text);
+  assert.equal(manifest.summary.exportableAssets, 2);
+  assert.equal(manifest.layers.find(l=>l.id==="t1").implementation,"dom");
+  assert.equal(manifest.assets.find(a=>a.nodeId==="img").format,"png");
+  assert.equal(manifest.assets.find(a=>a.nodeId==="ic").format,"svg");
+  const fsExtra = await import('node:fs');
+  fsExtra.mkdirSync(path.join(cwd,"exports"),{recursive:true});
+  for(const asset of manifest.assets) fsExtra.writeFileSync(path.join(cwd,"exports",asset.filename),asset.format==="svg" ? '<svg xmlns="http://www.w3.org/2000/svg"></svg>' : 'fake-image');
+  const synced = await client.callTool({name:"sync_figcraft_assets",arguments:{handoffPath:path.join(cwd,"handoff.json"),exportDir:path.join(cwd,"exports"),publicDir:path.join(cwd,"public")}});
+  assert.equal(synced.isError,undefined,synced.content[0].text);
+  assert.equal(JSON.parse(synced.content[0].text).complete,true);
+  const syncedAgain = await client.callTool({name:"sync_figcraft_assets",arguments:{handoffPath:path.join(cwd,"handoff.json"),exportDir:path.join(cwd,"exports"),publicDir:path.join(cwd,"public")}});
+  assert.equal(JSON.parse(syncedAgain.content[0].text).files.every(a=>a.status==="unchanged"),true);
+  const ambiguous = await client.callTool({name:"prepare_web_handoff",arguments:{document:{pages:[{id:"p",type:"PAGE",children:[{id:"odd",name:"Unknown",type:"CUSTOM"}]}]}}});
+  assert.equal(JSON.parse(ambiguous.content[0].text).issues.some(i=>i.code==="AMBIGUOUS_LAYER"),true);
   const palette = await client.callTool({ name: 'palette', arguments: { color: '#1b7f5a' } });
   assert.equal(JSON.parse(palette.content[0].text).base, '#1b7f5a');
   assert.match(JSON.parse(palette.content[0].text).note, /contrast/);
