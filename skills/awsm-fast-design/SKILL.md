@@ -13,7 +13,7 @@ Inspect only existing entry points, the current design tokens, and the relevant 
 
 Choose one distinctive direction based on the product and references actually available. A restaurant, construction management system, financial admin and native attendance application should not default to the same three-card layout. Build the first priority section or screen, ideally with its major content and one real interaction. When details are ambiguous, make the smallest reversible interpretation and clearly identify it.
 
-For marketing sites, first render the product value proposition and one strong supporting visual. For an admin interface, first render meaningful navigation, a data-rich screen and an actionable control. For mobile UI, first render a coherent navigation and screen state using native conventions. Source only the necessary images, icons and fonts for that pass, ideally in batches. If the font, icon, or product screenshot is already in the repository, reuse it.
+For marketing sites, first render the product value proposition and one strong supporting visual. For an admin interface, first render meaningful navigation, a data-rich screen and an actionable control. For mobile UI, first render a coherent navigation and screen state using native conventions. Source only the necessary images, icons and fonts for that pass. When several icons or images are missing, call find_design_assets once with specific search queries rather than making many sequential MCP calls. If the font, icon, or product screenshot is already in the repository, reuse it.
 
 ## Check quickly
 
