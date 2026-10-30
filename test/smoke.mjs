@@ -58,7 +58,7 @@ assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-admin-dashboard/SKILL
 assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-app-ui/SKILL.md')));
 assert(existsSync(path.join(multiCwd, '.claude/skills/awsm-antislop-ui/SKILL.md')));
 const skillNames = readdirSync(path.join(root, 'skills'));
-assert.equal(skillNames.length, 18);
+assert.equal(skillNames.length, 20);
 for (const name of skillNames) {
   const text = readFileSync(path.join(root, 'skills', name, 'SKILL.md'), 'utf8');
   assert(text.startsWith('---\n') && text.includes(`\nname: ${name}\n`) && /\ndescription: .+\n/.test(text), `${name}: invalid frontmatter`);
@@ -99,7 +99,7 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 11);
+  assert.equal(tools.tools.length, 16);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
@@ -131,6 +131,36 @@ try {
   assert.equal(JSON.parse(syncedAgain.content[0].text).files.every(a=>a.status==="unchanged"),true);
   const ambiguous = await client.callTool({name:"prepare_web_handoff",arguments:{document:{pages:[{id:"p",type:"PAGE",children:[{id:"odd",name:"Unknown",type:"CUSTOM"}]}]}}});
   assert.equal(JSON.parse(ambiguous.content[0].text).issues.some(i=>i.code==="AMBIGUOUS_LAYER"),true);
+  const tokensDoc = {pages:[{id:'home',type:'PAGE',name:'Home',children:[{id:'txt',name:'Heading',type:'TEXT',characters:'Hello',style:{fontFamily:'Manrope',fontWeight:700,fontSize:28},fills:[{type:'SOLID',color:{r:0.1,g:0.2,b:0.3}}],cornerRadius:4},{id:'box',name:'Panel',type:'FRAME',itemSpacing:16,children:[]}]}]};
+  const tokensResponse = await client.callTool({name:'extract_design_tokens',arguments:{document:tokensDoc}});
+  assert.equal(tokensResponse.isError,undefined,tokensResponse.content[0].text);
+  const observed=JSON.parse(tokensResponse.content[0].text);
+  assert.equal(observed.tokenCandidates.fontFamilies[0].value,'Manrope');
+  assert.equal(observed.tokenCandidates.fontSizes[0].value,28);
+  assert.equal(observed.tokenCandidates.gaps[0].value,16);
+  assert.equal(observed.tokenCandidates.colors[0].value,'#1a334d');
+  const contrast = await client.callTool({name:'check_contrast',arguments:{pairs:[
+    {foreground:'#000',background:'#fff'},
+    {foreground:'#777',background:'#777'}
+  ]}});
+  assert.equal(contrast.isError,undefined,contrast.content[0].text);
+  assert.equal(JSON.parse(contrast.content[0].text).results[0].ratio,21);
+  assert.equal(JSON.parse(contrast.content[0].text).failedAA,1);
+  const fast = await client.callTool({name:'design_quickstart',arguments:{brief:'Create an operational admin dashboard for managing invoices and customers',kind:'admin',speed:'fast',document:tokensDoc}});
+  assert.equal(fast.isError,undefined,fast.content[0].text);
+  const fastResult = JSON.parse(fast.content[0].text);
+  assert.equal(fastResult.kind,'admin');
+  assert(fastResult.reusableSkills.includes('awsm-admin-dashboard'));
+  assert(fastResult.reusableSkills.includes('awsm-figcraft-to-web'));
+  assert.equal(fastResult.inspectBudget.maxInitialFiles,6);
+  const invalidFont = await client.callTool({name:'google_font',arguments:{family:'../../bad'}});
+  assert.equal(invalidFont.isError,true);
+  const projectFolder = path.join(cwd,'framework-fixture');
+  fsSync.mkdirSync(projectFolder);
+  writeFileSync(path.join(projectFolder,'package.json'),JSON.stringify({dependencies:{next:'15.2.1',react:'19.0.0','lucide-react':'*'}}));
+  const scan = await client.callTool({name:'inspect_ui_project',arguments:{root:projectFolder}});
+  assert.equal(scan.isError,undefined,scan.content[0].text);
+  assert.equal(JSON.parse(scan.content[0].text).framework,'nextjs');
   const palette = await client.callTool({ name: 'palette', arguments: { color: '#1b7f5a' } });
   assert.equal(JSON.parse(palette.content[0].text).base, '#1b7f5a');
   assert.match(JSON.parse(palette.content[0].text).note, /contrast/);
@@ -150,7 +180,7 @@ try {
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
-try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,11); }
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,16); }
 finally { await secondClient.close(); }
 assert(existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
 console.log('Smoke tests passed');
