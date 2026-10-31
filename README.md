@@ -2,7 +2,7 @@
 
 **One MCP connection. A practical toolkit for building better interfaces.**
 
-AWSM is a local [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for coding agents. It brings UI design utilities, asset discovery, FigCraft-to-code handoff, and browser-based visual QA into **one MCP entry**. An optional gateway can forward calls to other trusted, locally installed MCP servers, with on-demand SolidCraft discovery for 3D CAD work.
+AWSM is a local [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for coding agents. It brings UI design utilities, asset discovery, FigCraft-to-code handoff, and browser-based visual QA into **one MCP entry**. An optional gateway can forward calls to other trusted, locally installed MCP servers, with on-demand CADCraft and SolidCraft discovery for architectural drafting and 3D modeling.
 
 No hosted service or VPS is required. AWSM runs on your computer over stdio.
 
@@ -110,7 +110,7 @@ This workflow is deliberately **design-to-code**, not a one-click pixel-perfect 
 
 ## Connect other MCPs
 
-The gateway is **optional**. Without additional configuration, AWSM's built-in tools still work.
+The gateway is **optional**. Without additional configuration, AWSM's built-in tools still work. Installed CADCraft and SolidCraft CLIs are discovered on demand; other providers require explicit configuration.
 
 If you want the coding agent to connect **only to AWSM**, you can let AWSM start trusted downstream **stdio MCP servers**, then discover and call their tools through `bridge_list` and `bridge_call`.
 
@@ -135,7 +135,7 @@ Place the file in the working directory from which AWSM starts:
 }
 ```
 
-**This is a configuration template, not a verified FigCraft command.** Replace both the file path and tool names with the values supported by your installed provider. Other stdio servers may use different executables and arguments.
+**This is a configuration template, not a verified FigCraft command.** Replace both the file path and tool names with the values supported by your installed provider. Other stdio servers may use different executables and arguments. Installed CADCraft and SolidCraft are detected automatically unless disabled.
 
 If AWSM starts from another directory, set `AWSM_BRIDGE_CONFIG` to an **absolute file path** pointing to the JSON configuration. Restart AWSM after changing the file.
 
@@ -171,6 +171,50 @@ The bridge returns downstream MCP content, including text or images when support
 - Child servers execute with your local account's permissions and may inherit your process environment. Review commands, environment variables, and provider trust.
 - Third-party tools can perform writes or destructive actions. Use the coding agent's normal approval process.
 - Missing or failed downstream MCPs do not disable AWSM's built-in utilities.
+
+### Architecture workflow: CADCraft to SolidCraft
+
+AWSM can use **CADCraft for an architectural floor plan (2D)** and **SolidCraft for the corresponding building model (3D)**. The agent selects the minimum workflow that matches the request:
+
+| Intent | Applications used | Result |
+| --- | --- | --- |
+| Draw or modify a floor plan | CADCraft | 2D plan only |
+| Convert a floor plan into a 3D building | CADCraft → SolidCraft | Parametric 3D based on measured plan geometry |
+| Design a standalone 3D object or building | SolidCraft | 3D only |
+| Publish a finished 3D model into a website | SolidCraft → `publish_3d_asset` | OBJ/PNG for a web project |
+| Place a model preview in FigCraft | SolidCraft + configured FigCraft bridge | 2D PNG image layer |
+
+**No website, FigCraft canvas, web framework, or unrelated export is created during CAD-to-3D work unless requested.**
+
+AWSM discovers an already installed `cadcraft-cli` from PATH, alongside `solidcraft-cli`. Detection does not open the apps or start the MCP processes. `bridge_list({connect:false})` lists configured/installed integrations without connecting. For a 2D→3D task, the agent uses CADCraft `inspect_drawing`, `query_entities`, `find_text`, `render`, and relevant `execute` drawing-analysis commands (`shapes`, `loops`), then SolidCraft's modeling, inspection and render commands.
+
+**Important:** `cadcraft-cli mcp` starts a **headless drawing**; it does not automatically read the document open in the CADCraft desktop app. To work with the user's **visible drawing**, start CADCraft with its control channel and configure an attached bridge in `.awsm/bridges.json`:
+
+```bash
+cadcraft --control 7979
+```
+
+```json
+{
+  "version": 1,
+  "servers": {
+    "cadcraft": {
+      "command": "cadcraft-cli",
+      "args": ["mcp", "--connect", "127.0.0.1:7979"],
+      "allowedTools": [
+        "inspect_drawing", "query_entities", "find_text", "render",
+        "list_commands", "execute", "command_line", "script", "save"
+      ]
+    }
+  }
+}
+```
+
+That snippet shows **only the CADCraft entry**. Merge it into any existing `servers` object rather than replacing the rest of `.awsm/bridges.json`. Explicit configuration takes precedence over auto-discovery. To disable CADCraft auto-detection, set `AWSM_AUTO_CADCRAFT=0` for the AWSM process.
+
+**No automatic DXF→BIM conversion is claimed.** CADCraft drafting entities do not inherently identify wall types, floors, windows or roof heights. The AWSM skill guides the agent to interpret blocks, layer naming, dimensions, room labels and closed shapes; validate units and openings; then reconstruct those elements using editable SolidCraft parameters. Heights and architectural details not present in the plan remain assumptions requiring explicit treatment. Validate a top-view SolidCraft screenshot, measurements and wall/opening alignment against the source plan before declaring completion.
+
+Useful references: [CADCraft MCP](https://github.com/storytold/cadcraft/blob/main/docs/mcp.md) and [SolidCraft MCP](https://github.com/tangency-labs/solidcraft/blob/main/docs/mcp.md).
 
 ### SolidCraft: installed-only 3D CAD integration
 
@@ -332,7 +376,7 @@ For development issues or feature requests, [open an issue](https://github.com/r
 ### Troubleshooting
 
 - **AWSM not listed in the agent:** confirm setup ran in the same project, inspect the client config, restart the MCP session and check the client's MCP status. For OpenCode V2, run `opencode mcp list`.
-- **`bridge_list` returns no servers:** install `solidcraft-cli` on `PATH` for auto-detection, or add a custom server in `.awsm/bridges.json` (or `AWSM_BRIDGE_CONFIG`), then restart.
+- **`bridge_list` returns no servers:** install `cadcraft-cli` or `solidcraft-cli` on `PATH` for auto-detection, or add a custom server in `.awsm/bridges.json` (or `AWSM_BRIDGE_CONFIG`), then restart.
 - **Downstream connection error:** use the provider's launch command directly to verify it works, and check the `allowedTools` names. A provider requiring remote HTTP transport cannot be bridged with this stdio-only gateway.
 - **Visual review cannot run:** install Playwright/Chromium in the target project, start the local web server, and use an explicit localhost HTTP URL with a port of at least 1024.
 
