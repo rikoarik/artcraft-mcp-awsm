@@ -63,6 +63,10 @@ const coreSkill=readFileSync(path.join(root,'skills/awsm-design/SKILL.md'),'utf8
 assert.match(coreSkill,/Style-first 3D direction/);
 assert.match(coreSkill,/compare silhouette, ratio, edge treatment/);
 assert.match(coreSkill,/Re-measure after geometry edits/);
+const direct3dSkill=readFileSync(path.join(root,'skills/awsm-design/SKILL.md'),'utf8');
+assert.match(direct3dSkill,/## Direct 3D: SolidCraft only/);
+assert.match(direct3dSkill,/Do not connect CADCraft/);
+assert.match(direct3dSkill,/do not.*website/i);
 const skillNames = readdirSync(path.join(root, 'skills'));
 assert.equal(skillNames.length, 22);
 for (const name of skillNames) {
@@ -383,6 +387,53 @@ if (process.platform !== 'win32') {
       arguments:{server:'solidcraft',tool:'new_design',arguments:{}}});
     assert.equal(forbidden.isError,true);
   } finally { await autoClient.close(); }
+
+  // Regression: SolidCraft-only requests must not start CADCraft or any
+  // publishing integration, even when both Craft CLIs are installed.
+  const solidOnlyTransport=new StdioClientTransport({
+    command:process.execPath,args:[path.join(root,'build/index.js')],cwd:autoCwd,
+    env:{...process.env,PATH:autoBin+path.delimiter+(process.env.PATH??''),
+      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_AUTO_CADCRAFT:'1',
+      AWSM_BRIDGE_CONFIG:path.join(autoCwd,'not-created.json')},
+  });
+  const solidOnlyClient=new Client({name:'awsm-solidcraft-only',version:'1.0.0'});
+  try {
+    await solidOnlyClient.connect(solidOnlyTransport);
+    const before=JSON.parse((await solidOnlyClient.callTool({
+      name:'bridge_list',arguments:{connect:false},
+    })).content[0].text);
+    assert.equal(before.servers.find(x=>x.name==='solidcraft').status,'configured');
+    assert.equal(before.servers.find(x=>x.name==='cadcraft').status,'configured');
+    const modeled=await solidOnlyClient.callTool({name:'bridge_call',arguments:{
+      server:'solidcraft',tool:'list_commands',arguments:{filter:'solid'},
+    }});
+    assert.equal(modeled.isError,undefined,modeled.content[0].text);
+    assert.deepEqual(JSON.parse(modeled.content[0].text).commands,['solid.box']);
+    const after=JSON.parse((await solidOnlyClient.callTool({
+      name:'bridge_list',arguments:{connect:false},
+    })).content[0].text);
+    assert.equal(after.servers.find(x=>x.name==='solidcraft').status,'connected');
+    assert.equal(after.servers.find(x=>x.name==='cadcraft').status,'configured',
+      'SolidCraft-only 3D must not connect CADCraft');
+  } finally { await solidOnlyClient.close(); }
+
+  // Users can disable CADCraft auto-discovery without disabling 3D modeling.
+  const optOutTransport=new StdioClientTransport({
+    command:process.execPath,args:[path.join(root,'build/index.js')],cwd:autoCwd,
+    env:{...process.env,PATH:autoBin+path.delimiter+(process.env.PATH??''),
+      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_AUTO_CADCRAFT:'0',
+      AWSM_BRIDGE_CONFIG:path.join(autoCwd,'not-created.json')},
+  });
+  const optOutClient=new Client({name:'awsm-cadcraft-optout',version:'1.0.0'});
+  try {
+    await optOutClient.connect(optOutTransport);
+    const integrations=JSON.parse((await optOutClient.callTool({
+      name:'bridge_list',arguments:{connect:false},
+    })).content[0].text);
+    assert.equal(integrations.configuredServers,1);
+    assert.equal(integrations.servers[0].name,'solidcraft');
+    assert.equal(integrations.servers[0].status,'configured');
+  } finally { await optOutClient.close(); }
 }
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
