@@ -40,14 +40,16 @@ assert.deepEqual(JSON.parse(readFileSync(path.join(githubCwd, '.opencode/opencod
 const upgradeCwd = mkdtempSync(path.join(tmpdir(),'awsm-upgrade-'));
 let up = spawnSync(process.execPath,[path.join(root,'build/index.js'),'setup','--source','github:rikoarik/figcraft-mcp-awsm','--no-auto-update'],{cwd:upgradeCwd,encoding:'utf8'});
 assert.equal(up.status,0,up.stderr);
-up = spawnSync(process.execPath,[path.join(root,'build/index.js'),'setup','--source','github:rikoarik/figcraft-mcp-awsm','--auto-update','--upgrade-config'],{cwd:upgradeCwd,encoding:'utf8'});
+up = spawnSync(process.execPath,[path.join(root,'build/index.js'),'setup','--source','github:rikoarik/artcraft-mcp-awsm','--auto-update','--upgrade-config'],{cwd:upgradeCwd,encoding:'utf8'});
 assert.equal(up.status,0,up.stderr);
 assert.equal(JSON.parse(readFileSync(path.join(upgradeCwd,'.opencode/opencode.json'),'utf8')).mcp.servers.awsm.command[2],'--prefer-online');
+assert.equal(JSON.parse(readFileSync(path.join(upgradeCwd,'.opencode/opencode.json'),'utf8')).mcp.servers.awsm.command[3],
+  'github:rikoarik/artcraft-mcp-awsm');
 const multiCwd = mkdtempSync(path.join(tmpdir(), 'awsm-all-test-'));
-const allResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--all-skills', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
+const allResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--all-skills', '--source', 'github:rikoarik/artcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
 assert.equal(allResult.status, 0, allResult.stderr);
 const json = p => JSON.parse(readFileSync(path.join(multiCwd, p), 'utf8'));
-assert.equal(json('.opencode/opencode.json').mcp.servers.awsm.command[3], 'github:rikoarik/figcraft-mcp-awsm');
+assert.equal(json('.opencode/opencode.json').mcp.servers.awsm.command[3], 'github:rikoarik/artcraft-mcp-awsm');
 assert.equal(json('.mcp.json').mcpServers.awsm.type, 'stdio');
 assert.equal(json('.agents/mcp_config.json').mcpServers.awsm.command, 'npx');
 assert.equal(json('.github/mcp.json').mcpServers.awsm.tools[0], '*');
@@ -57,6 +59,10 @@ assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-iconography/SKILL.md'
 assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-admin-dashboard/SKILL.md')));
 assert(existsSync(path.join(multiCwd, '.agents/skills/awsm-app-ui/SKILL.md')));
 assert(existsSync(path.join(multiCwd, '.claude/skills/awsm-antislop-ui/SKILL.md')));
+const coreSkill=readFileSync(path.join(root,'skills/awsm-design/SKILL.md'),'utf8');
+assert.match(coreSkill,/Style-first 3D direction/);
+assert.match(coreSkill,/compare silhouette, ratio, edge treatment/);
+assert.match(coreSkill,/Re-measure after geometry edits/);
 const skillNames = readdirSync(path.join(root, 'skills'));
 assert.equal(skillNames.length, 22);
 for (const name of skillNames) {
@@ -66,11 +72,11 @@ for (const name of skillNames) {
   assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|setelah|ketika|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(text), `${name}: untranslated skill content`);
   assert(existsSync(path.join(multiCwd, '.agents/skills', name, 'SKILL.md')));
 }
-const allAgain = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--all-skills', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
+const allAgain = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--all-skills', '--source', 'github:rikoarik/artcraft-mcp-awsm'], { cwd: multiCwd, encoding: 'utf8' });
 assert.equal(allAgain.status, 0, allAgain.stderr); // idempotent
 assert.equal(readFileSync(path.join(multiCwd, '.codex/config.toml'), 'utf8').match(/\[mcp_servers\.awsm\]/g).length, 1);
 const fakeHome = mkdtempSync(path.join(tmpdir(), 'awsm-home-test-'));
-const globalResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--global', '--all-skills', '--source', 'github:rikoarik/figcraft-mcp-awsm'], { cwd: multiCwd, env: { ...process.env, HOME: fakeHome }, encoding: 'utf8' });
+const globalResult = spawnSync(process.execPath, [path.join(root, 'build/index.js'), 'setup', '--client', 'all', '--global', '--all-skills', '--source', 'github:rikoarik/artcraft-mcp-awsm'], { cwd: multiCwd, env: { ...process.env, HOME: fakeHome }, encoding: 'utf8' });
 assert.equal(globalResult.status, 0, globalResult.stderr);
 assert.equal(JSON.parse(readFileSync(path.join(fakeHome, '.gemini/config/mcp_config.json'), 'utf8')).mcpServers.awsm.command, 'npx');
 assert(existsSync(path.join(fakeHome, '.gemini/antigravity-cli/skills/awsm-taste-ui/SKILL.md')));
