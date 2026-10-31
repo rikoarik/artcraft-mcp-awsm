@@ -92,35 +92,54 @@ async function config():Promise<ConfigFile> {
       };
     }
   }
+  if(!configured.servers.cadcraft && Object.keys(configured.servers).length<MAX_SERVERS){
+    const executable=await discoverCADCraft();
+    if(executable){
+      configured.servers.cadcraft={
+        command:executable,args:["mcp"],
+        allowedTools:CADCRAFT_TOOLS,
+      };
+    }
+  }
   return configured;
 }
 /**
- * SolidCraft is an opt-out, installed-only integration. Discover its CLI on
- * PATH without running arbitrary shell commands or installing any packages.
- * Keep this narrow: third-party MCPs still require explicit configuration.
+ * Discover installed, executable Craft CLIs without launching programs,
+ * running a shell, downloading dependencies, or searching relative paths.
+ * Only these two known providers are autodiscovered; others need explicit config.
  */
-export async function discoverSolidCraft(pathValue=process.env.PATH??"",platform=process.platform){
-  if(process.env.AWSM_AUTO_SOLIDCRAFT==="0")return undefined;
-  const names=platform==="win32"?["solidcraft-cli.exe"]:["solidcraft-cli"];
+async function discoverExecutable(binary:string,pathValue:string,platform:string) {
+  const filename=platform==="win32"?binary+".exe":binary;
   for(const dir of pathValue.split(path.delimiter).filter(Boolean)){
-    // Never resolve executable names against the working directory.
     if(!path.isAbsolute(dir))continue;
-    for(const name of names){
-      const candidate=path.join(dir,name);
-      try{
-        const stat=await fs.stat(candidate);
-        if(!stat.isFile())continue;
-        await fs.access(candidate,platform==="win32"?fsConstants.F_OK:fsConstants.X_OK);
-        return candidate;
-      }catch{ /* Not installed here; continue searching. */ }
-    }
+    const candidate=path.join(dir,filename);
+    try{
+      const stat=await fs.stat(candidate);
+      if(!stat.isFile())continue;
+      await fs.access(candidate,platform==="win32"?fsConstants.F_OK:fsConstants.X_OK);
+      return candidate;
+    }catch{ /* Not installed in this directory. */ }
   }
   return undefined;
+}
+export async function discoverSolidCraft(pathValue=process.env.PATH??"",platform=process.platform){
+  if(process.env.AWSM_AUTO_SOLIDCRAFT==="0")return undefined;
+  return discoverExecutable("solidcraft-cli",pathValue,platform);
+}
+export async function discoverCADCraft(pathValue=process.env.PATH??"",platform=process.platform){
+  if(process.env.AWSM_AUTO_CADCRAFT==="0")return undefined;
+  return discoverExecutable("cadcraft-cli",pathValue,platform);
 }
 const SOLIDCRAFT_TOOLS=[
   "list_commands","describe_command","skill_reference","inspect_design",
   "measure","body_topology","screenshot","running","pending",
   "execute","batch","set_parameter","undo","redo","save","export",
+];
+// CADCraft's native drawing tools. Do not expose open/new_drawing by default:
+// neither can be assumed safe for unsaved user drawings.
+const CADCRAFT_TOOLS=[
+  "list_commands","inspect_drawing","query_entities","find_text",
+  "render","execute","command_line","script","save","cancel",
 ];
 const allowed=(cfg:ServerConfig,tool:string)=>cfg.allowedTools.includes("*")||cfg.allowedTools.includes(tool);
 
@@ -196,7 +215,7 @@ export class McpGateway {
       }
     }
     return {connectedThrough:"awsm",configuredServers:selected.length,servers:results,
-      note:"Other MCPs require explicit configuration. Installed SolidCraft is automatically discovered but only started when connected/called. Set AWSM_AUTO_SOLIDCRAFT=0 to disable. Tool calls run with local permissions."};
+      note:"Installed SolidCraft and CADCraft can be discovered but only started on request; explicit bridges.json entries override discovery. CADCraft defaults to a headless drawing; configure --connect to edit the visible app. Other MCPs require explicit configuration. Set AWSM_AUTO_SOLIDCRAFT=0 or AWSM_AUTO_CADCRAFT=0 to opt out. All calls run with local permissions."};
   }
   async call(input:{server:string;tool:string;arguments?:Record<string,unknown>}){
     const cfg=await this.getConfig();
