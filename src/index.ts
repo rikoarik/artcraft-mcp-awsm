@@ -24,6 +24,7 @@ import { compareUiScreenshots } from "./tools/visual-png.js";
 import { auditUiPage } from "./tools/browser-audit.js";
 import { reviewUi } from "./tools/review-ui.js";
 import { McpGateway } from "./tools/mcp-gateway.js";
+import { publish3dAsset } from "./tools/publish-3d.js";
 import { captureUiScreenshots } from "./tools/browser-capture.js";
 
 const server = new McpServer({ name: "awsm", version: "1.0.0" });
@@ -482,6 +483,24 @@ server.registerTool(
     },
   },
   async args=>{try{return await gateway.call(args);}catch(e){return fail(e);}},
+);
+
+server.registerTool(
+  "publish_3d_asset",
+  {
+    title:"Publish SolidCraft 3D to Website and FigCraft",
+    description:"Export the current SolidCraft model to a website-ready OBJ asset and PNG preview. Optionally place the preview as a real FigCraft image layer through its configured native MCP. Does not claim native 3D support in FigCraft. Never overwrites existing packages.",
+    inputSchema:{
+      projectRoot:z.string().min(1).describe("Existing local web project root; asset files go to public/assets/3d/<name>/."),
+      name:z.string().regex(/^[a-z][a-z0-9-]{0,49}$/).describe("Unique kebab-case asset identifier; existing asset package is never overwritten."),
+      figcraft:z.object({
+        x:z.number().finite().optional(),y:z.number().finite().optional(),
+        width:z.number().positive().max(10000).optional(),height:z.number().positive().max(10000).optional(),
+        parent:z.union([z.number(),z.string()]).optional(),
+      }).optional().describe("Optional positioning of the PNG preview as a FigCraft image layer. Requires a configured FigCraft bridge targeting the intended document."),
+    },
+  },
+  async args=>{try{return json(await publish3dAsset(gateway,args));}catch(e){return fail(e);}},
 );
 
 async function main(): Promise<void> {

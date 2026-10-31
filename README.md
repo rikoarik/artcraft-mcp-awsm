@@ -92,8 +92,9 @@ The default installation provides **one skill**, `awsm-design`, to guide that wo
 | FigCraft handoff | Classify inspected layers and copy exported artwork into a web project | `prepare_web_handoff`, `sync_figcraft_assets` |
 | Visual QA | Inspect a running UI and compare screenshots at matching viewports | `review_ui`, `audit_ui_page`, `capture_ui_screenshots`, `compare_ui_screenshots` |
 | MCP connections | Discover and invoke configured third-party tools | `bridge_list`, `bridge_call` |
+| 3D asset publishing | Prepare SolidCraft OBJ/PNG for a website; optionally place the PNG into FigCraft | `publish_3d_asset` |
 
-Additional utilities include `draw_icon`, `make_asset`, and `serve`. In total, AWSM currently exposes **23 MCP tools** through one server.
+Additional utilities include `draw_icon`, `make_asset`, and `serve`. In total, AWSM currently exposes **24 MCP tools** through one server.
 
 ### FigCraft → working UI
 
@@ -210,6 +211,36 @@ For a custom path or a tighter tool allowlist, add the following server to `.aws
 The `awsm-design` core skill now guides the agent through **SolidCraft's native modeling and checking skills** (accessible through `skill_reference`), including dimensioned sketches, constrained parameters, named features, staged batches and geometric measurement. For presentation-quality results, it guides deliberate camera framing, coherent material/opaque PBR appearances, and native screenshot/product-render workflows. This does **not** add 3D modeling algorithms to AWSM or guarantee stylistic fidelity without examining the rendered result.
 
 Official technical references: [SolidCraft MCP](https://github.com/tangency-labs/solidcraft/blob/main/docs/mcp.md), [modeling skill](https://github.com/tangency-labs/solidcraft/tree/main/skills/solidcraft-modeling), [checking skill](https://github.com/tangency-labs/solidcraft/tree/main/skills/solidcraft-checking), and [product renders](https://github.com/tangency-labs/solidcraft/blob/main/docs/render-jobs.md).
+
+### Publish 3D assets to a website and FigCraft
+
+AWSM offers one optional handoff tool, `publish_3d_asset`, after the agent builds and verifies a model through the existing SolidCraft MCP:
+
+```text
+SolidCraft model (editable .sc)
+     ├── OBJ geometry → public/assets/3d/product/model.obj → interactive website
+     └── PNG model preview → public/assets/3d/product/preview.png
+                                   └── FigCraft image layer (when connected)
+```
+
+The model remains editable in SolidCraft. **FigCraft does not import a native editable 3D scene via this workflow**; it places a 2D PNG representation in an actual FigCraft document. An OBJ in a website can be an **interactive 3D** model, not just a screenshot.
+
+1. Build a SolidCraft model and verify both dimensions and style against the brief.
+2. Make sure SolidCraft can write to the target website's `public/assets/3d` folder under its own file-access restrictions. When access is denied, add a narrow `--allow-path /absolute/path/to/website/public/assets/3d` to the trusted SolidCraft CLI configuration and restart; **do not use `--allow-any-path`**.
+3. If you also want to place the render directly into the **visible** FigCraft app, configure its native MCP in `.awsm/bridges.json`, using its actual `figcraft-cli mcp --attach <port>` command to connect to the running app. Enable `run_command` on its tool allowlist and grant FigCraft read access to the website assets via its documented automation roots. A plain `figcraft-cli mcp` launches a separate headless document, not the visible app.
+4. Ask your coding agent to call `publish_3d_asset` with `projectRoot`, `name`, and optionally `figcraft` placement coordinates. Example:
+
+```js
+publish_3d_asset({
+  projectRoot: "/absolute/path/to/my-web",
+  name: "desk-speaker",
+  figcraft: { x: 160, y: 260, width: 520, height: 390 }
+})
+```
+
+The tool exports the **current SolidCraft scene** as OBJ and collects a PNG from its `screenshot` MCP tool. It creates a new package without overwriting an existing one and returns web paths, status and instructions. For FigCraft, it calls `run_command` → `file.placeImage` on the configured bridge; failed placement is reported separately from the website export.
+
+For the web implementation, the coding agent adapts the existing stack: in React/Next.js use an established Three.js-based OBJ loader with loading/error states, responsive camera, and a static PNG fallback. OBJ does **not** preserve all SolidCraft materials or PBR fidelity. For production performance, use a *separately verified* local conversion pipeline to GLB/GLTF when available and optimize mesh complexity, render overhead and mobile behavior. AWSM does not bundle Blender, install rendering dependencies, or pretend SolidCraft's MCP exports GLB directly.
 
 ### Matching a requested 3D style
 

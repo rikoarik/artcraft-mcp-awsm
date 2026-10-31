@@ -121,7 +121,9 @@ assert.equal(parsedFaces[0].weight,'400');
 fsSync.mkdirSync(path.join(cwd,'.awsm'),{recursive:true});
 writeFileSync(path.join(cwd,'.awsm/bridges.json'),JSON.stringify({
   version:1,servers:{
-    demo:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['echo']}
+    demo:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['echo']},
+    solidcraft:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['export','screenshot']},
+    figcraft:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['run_command']}
   }
 }));
 const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd, env: {...process.env, AWSM_AUTO_SOLIDCRAFT:'0'} });
@@ -129,14 +131,14 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 23);
+  assert.equal(tools.tools.length, 24);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
   const bridges = await client.callTool({name:'bridge_list',arguments:{connect:true}});
   assert.equal(bridges.isError,undefined,bridges.content[0].text);
   const found=JSON.parse(bridges.content[0].text);
-  assert.equal(found.configuredServers,1);
+  assert.equal(found.configuredServers,3);
   assert.equal(found.servers[0].status,'connected');
   assert.deepEqual(found.servers[0].tools.map(x=>x.name),['echo']);
   const proxied=await client.callTool({name:'bridge_call',arguments:{server:'demo',tool:'echo',arguments:{value:'hello'}}});
@@ -146,6 +148,26 @@ try {
   assert.equal(denied.isError,true);
   const noServer=await client.callTool({name:'bridge_call',arguments:{server:'missing',tool:'echo'}});
   assert.equal(noServer.isError,true);
+  const webProject=mkdtempSync(path.join(tmpdir(),'awsm-3d-web-'));
+  const published=await client.callTool({name:'publish_3d_asset',arguments:{
+    projectRoot:webProject,name:'sample-camera',figcraft:{x:100,y:150,width:560,height:420},
+  }});
+  assert.equal(published.isError,undefined,published.content[0].text);
+  const result3d=JSON.parse(published.content[0].text);
+  assert.equal(result3d.figcraft.status,'placed');
+  assert.equal(result3d.asset.webModelUrl,'/assets/3d/sample-camera/model.obj');
+  assert(existsSync(result3d.asset.model));
+  assert(existsSync(result3d.asset.preview));
+  assert(readFileSync(result3d.asset.model,'utf8').includes('f 1 2 3'));
+  const duplicate3d=await client.callTool({name:'publish_3d_asset',arguments:{
+    projectRoot:webProject,name:'sample-camera',
+  }});
+  assert.equal(duplicate3d.isError,true);
+  assert(existsSync(result3d.asset.model));
+  const badAssetName=await client.callTool({name:'publish_3d_asset',arguments:{
+    projectRoot:webProject,name:'../unsafe',
+  }});
+  assert.equal(badAssetName.isError,true);
   const customIcon = await client.callTool({name:'draw_icon',arguments:{
     name:'project-progress',dir:path.join(cwd,'icons'),
     elements:[{kind:'circle',cx:12,cy:12,r:9},{kind:'path',d:'M 7 12 L 10 15 L 17 8'}]
@@ -334,7 +356,7 @@ if (process.platform !== 'win32') {
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
-try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,23); }
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,24); }
 finally { await secondClient.close(); }
 assert(existsSync(path.join(skillTarget,'awsm-design','SKILL.md')));
 assert(!existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));
