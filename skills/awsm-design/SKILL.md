@@ -1,11 +1,15 @@
 ---
 name: awsm-design
-description: One practical design-to-code skill for AWSM. Use for designing websites, admin dashboards, mobile UI, FigCraft handoff, responsive implementation, fonts, icons, assets, SolidCraft parametric 3D modeling and visual quality checks.
+description: One practical design-to-code skill for AWSM. Use for designing websites, admin dashboards, mobile UI, FigCraft handoff, responsive implementation, fonts, icons, assets, CADCraft architectural drafting, CADCraft-to-SolidCraft building modeling and visual quality checks.
 ---
 
 # AWSM — design, implement, verify
 
 Use **one** workflow rather than loading overlapping design skills. First understand the product, its user, the actual task and target stack. Prioritize a useful rendered result, not an elaborate planning document. Reuse the project's established UI components, assets, tokens, fonts, icons and dependencies.
+
+## Intent-driven tool selection
+
+Choose only the applications needed for the actual requested deliverable. For a 2D architectural plan or edits to an existing CADCraft drawing, use **CADCraft alone**. For new direct 3D modeling, use **SolidCraft alone**. For architectural 2D-to-3D, use **CADCraft to inspect the authoritative floor plan** and **SolidCraft to construct the 3D building**. For an existing 3D model, use SolidCraft without reopening CADCraft unless the user wants source-plan reconciliation. Website publishing (`publish_3d_asset`) and FigCraft image placement are **strictly optional**; never run them just because an asset exists. Do not load browser/UI tools, add web dependencies or export unrelated files unless required by the user's request.
 
 ## First usable design
 
@@ -15,9 +19,23 @@ Implement the first useful screen or section using the existing stack, including
 
 ## One connection to other MCP servers
 
-AWSM can be the **only configured MCP entry in the coding agent** while forwarding to explicitly configured downstream MCP servers. Discover available integrations with `bridge_list({connect:true})` and call a named tool using `bridge_call({server,tool,arguments})`. Read each tool's input schema before invoking it.
+AWSM can be the **only configured MCP entry in the coding agent** while forwarding to explicitly configured downstream MCP servers. List available integrations without launching them using `bridge_list({connect:false})`. Connect only to the provider(s) the task needs with `bridge_list({server:"cadcraft",connect:true})` or the matching server name, then call the discovered tool using `bridge_call({server,tool,arguments})`. Read each tool's input schema before invoking it.
 
-A project owner configures downstream stdio servers in `.awsm/bridges.json` with command, args and an explicit `allowedTools` list. Never invent credentials, command paths or tool names; a missing bridge is not an available integration. Do not assume the AWSM bridge automatically discovers or installs third-party servers. Use native FigCraft through this bridge if configured; otherwise the project must connect FigCraft separately. Calls to downstream tools can modify documents or files, so respect the user's permissions and avoid destructive actions without authorization.
+Installed CADCraft and SolidCraft CLIs are automatically discovered on PATH, **not launched until called**. Explicit entries in `.awsm/bridges.json` take precedence, and all other integrations require explicit configuration with command, args and an `allowedTools` list. Never invent credentials, command paths or tool names; a missing bridge is not an available integration. Never assume detection means the visible app is connected: `cadcraft-cli mcp` starts a separate headless drawing; to edit the visible CADCraft drawing, the user must configure the documented `mcp --connect HOST:PORT` bridge. AWSM never installs external applications. Use native FigCraft through this bridge if configured; otherwise the project must connect FigCraft separately. Calls to downstream tools can modify documents or files, so respect the user's permissions and avoid destructive actions without authorization.
+
+## Architecture: CADCraft floor plan to SolidCraft building
+
+Use this workflow **only for architectural drafting or requested 2D-to-3D conversion**, not for generic UI/website design. CADCraft is the drafting/source-of-truth application; SolidCraft is the parametric modeling and presentation application. Their MCPs do not supply an automatic DXF-to-BIM semantic converter. Keep the handoff tool-driven and lightweight: use existing AWSM `bridge_list` / `bridge_call`, not a second CAD engine, forced file converter, or unsolicited web publishing.
+
+**Read the actual drawing.** For a CADCraft source, first connect the intended CADCraft session and call `inspect_drawing({})`. Use `query_entities({layer, type, limit, offset})` to page real entities, `find_text` for room labels and dimensions, and `render` for the visual plan. Call `execute({command:"shapes",params:{...}})` for explicitly closed profiles, or `execute({command:"loops",params:{...}})` for potential closed loops formed by loose lines and arcs. Inspect detected gaps and intersections; a loop is **not** necessarily a wall, and a layer label is a clue, not proof. Ignore drafting dimensions, hatch patterns, furniture symbols and text as geometry unless the actual brief calls for modeling them. Use world coordinates and layer/block information; do not infer room or wall dimensions from screenshot pixels.
+
+**Build an architectural interpretation.** Identify wall outlines versus centerlines, room boundaries, slab contours, door openings/swing arcs, windows, structural elements, levels and roof cues. Validate units and scale against dimensions, and decide consistent world axes with Z vertical; convert CADCraft drawing units to SolidCraft millimeters explicitly. Preserve original coordinates (or apply one documented origin offset) and map each 2D architectural element to a named 3D feature. Treat wall heights, slab thickness, sill/lintel heights, number of floors, façade and roof as unknown unless shown or specified. When missing values block a correct building, ask for the genuinely required architectural constraints or use clearly labeled, reversible design assumptions; never pass imagined building dimensions off as CAD evidence.
+
+**Construct only what's requested.** On the **SolidCraft MCP**, read `skill_reference({skill:"solidcraft-modeling"})`, inspect the existing design, then construct parametric slabs, wall segments/profiles, openings and optional stairs/roof/furniture using verified real commands from the SolidCraft command catalog. Use parameters for wall thickness, levels, heights and openings; meaningful names and staged rollback-enabled batches. Avoid automatically replacing a live open CAD design; `open` and `new_design` are intentionally not in AWSM's default SolidCraft allowlist. For a small schematic model, a clear massing model can be sufficient; do not invent full interiors or architecture styles that weren't requested.
+
+**Validate fidelity and visual quality.** Check the 3D footprints, outer dimensions, wall continuity, room partition alignment, openings and elevations against CADCraft entities and annotations, not just an attractive render. Measure SolidCraft's bounding boxes and volumes, inspect feature errors, compare top-view model screenshot to the 2D drawing, and review a clean isometric preview. Respect the architectural style/reference for massing, roof, façade, material and details when supplied; do not let styling silently change measured plan geometry. Report gaps, ambiguous symbols and any assumed heights/roof geometry. A successful SolidCraft command isn't evidence that the floor plan was reproduced accurately.
+
+**Scope and persistence.** If user asks only for drafting, leave SolidCraft untouched. If they ask only for 3D, do not involve CADCraft. If they ask for a rendered house, create the 3D and appropriate render; do not build a website or place an image in FigCraft. Save native CAD files or export presentation images only when requested, and respect both applications' file-access restrictions. Retain SolidCraft's editable `.sc` project for revisions when saving is requested. 2D-to-3D here is guided reconstruction using MCP and architectural meaning, **not** a guaranteed automatic DXF/DWG import or bidirectional BIM sync.
 
 ## SolidCraft: high-quality parametric 3D (only when relevant)
 
