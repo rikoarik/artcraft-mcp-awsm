@@ -126,7 +126,7 @@ writeFileSync(path.join(cwd,'.awsm/bridges.json'),JSON.stringify({
     figcraft:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['run_command']}
   }
 }));
-const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd, env: {...process.env, AWSM_AUTO_SOLIDCRAFT:'0'} });
+const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd, env: {...process.env, AWSM_AUTO_SOLIDCRAFT:'0',AWSM_AUTO_CADCRAFT:'0'} });
 const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
@@ -325,16 +325,47 @@ if (process.platform !== 'win32') {
   const shim=path.join(autoBin,'solidcraft-cli');
   writeFileSync(shim,'#!/bin/sh\nexec '+JSON.stringify(process.execPath)+' '+JSON.stringify(path.join(root,'test/bridge-child.mjs'))+' "$@"\n');
   fsSync.chmodSync(shim,0o755);
+  // A second installed CLI should be discovered without starting its process.
+  const cadShim=path.join(autoBin,'cadcraft-cli');
+  writeFileSync(cadShim,'#!/bin/sh\nexec '+JSON.stringify(process.execPath)+' '+JSON.stringify(path.join(root,'test/bridge-child.mjs'))+' "$@"\n');
+  fsSync.chmodSync(cadShim,0o755);
   const autoTransport=new StdioClientTransport({
     command:process.execPath,
     args:[path.join(root,'build/index.js')],
     cwd:autoCwd,
     env:{...process.env,PATH:autoBin+path.delimiter+(process.env.PATH??''),
-      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_BRIDGE_CONFIG:path.join(autoCwd,'not-created.json')},
+      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_AUTO_CADCRAFT:'1',AWSM_BRIDGE_CONFIG:path.join(autoCwd,'not-created.json')},
   });
   const autoClient=new Client({name:'awsm-solidcraft-auto',version:'1.0.0'});
   try {
     await autoClient.connect(autoTransport);
+    const cadListed=await autoClient.callTool({name:'bridge_list',arguments:{server:'cadcraft'}});
+    assert.equal(cadListed.isError,undefined,cadListed.content[0].text);
+    const cadStatus=JSON.parse(cadListed.content[0].text).servers[0];
+    assert.equal(cadStatus.status,'configured');
+    assert(cadStatus.allowedTools.includes('inspect_drawing'));
+    assert(!cadStatus.allowedTools.includes('new_drawing'));
+    const cadContents=await autoClient.callTool({name:'bridge_call',arguments:{
+      server:'cadcraft',tool:'inspect_drawing',arguments:{}
+    }});
+    assert.equal(cadContents.isError,undefined,cadContents.content[0].text);
+    assert.deepEqual(JSON.parse(cadContents.content[0].text).layers,['A-WALL','A-DOOR','A-ANNO']);
+    const walls=await autoClient.callTool({name:'bridge_call',arguments:{
+      server:'cadcraft',tool:'query_entities',arguments:{layer:'A-WALL'}
+    }});
+    assert.equal(JSON.parse(walls.content[0].text).entities[0].closed,true);
+    const closed=await autoClient.callTool({name:'bridge_call',arguments:{
+      server:'cadcraft',tool:'execute',arguments:{command:'loops',params:{}}
+    }});
+    assert.equal(JSON.parse(closed.content[0].text).closedLoops,1);
+    const routeStatuses=await autoClient.callTool({name:'bridge_list',arguments:{connect:false}});
+    const discoveredStatuses=JSON.parse(routeStatuses.content[0].text).servers;
+    assert.equal(discoveredStatuses.find(x=>x.name==='cadcraft').status,'connected');
+    assert.equal(discoveredStatuses.find(x=>x.name==='solidcraft').status,'configured',
+      'CADCraft-only tasks must not start SolidCraft');
+    const cadDenied=await autoClient.callTool({name:'bridge_call',
+      arguments:{server:'cadcraft',tool:'new_drawing',arguments:{}}});
+    assert.equal(cadDenied.isError,true);
     const discovered=await autoClient.callTool({name:'bridge_list',arguments:{server:'solidcraft'}});
     assert.equal(discovered.isError,undefined,discovered.content[0].text);
     const listing=JSON.parse(discovered.content[0].text);
