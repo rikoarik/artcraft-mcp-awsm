@@ -84,10 +84,13 @@ export async function publish3dAsset(gateway:McpGateway,args:PublishArgs){
     // to grant access; never weaken the downstream policy automatically.
     checkResponse(await gateway.call({server:"solidcraft",tool:"export",
       arguments:{path:objPath,format:"obj"}}),"SolidCraft OBJ export");
+    const exported=await fs.stat(objPath);
+    if(exported.size>MAX_OBJ_BYTES)throw new Error("Exported OBJ exceeds 50 MiB.");
     const model=await fs.readFile(objPath);
     validateObj(model);
+    // Keep the camera framing previously chosen by the agent; avoid moving the user's viewport.
     const screenshot=checkResponse(await gateway.call({server:"solidcraft",tool:"screenshot",
-      arguments:{source:"model",view:"iso",width:1024,height:768,grid:false,axes:false}}),"SolidCraft screenshot");
+      arguments:{source:"model",width:1024,height:768,grid:false,axes:false}}),"SolidCraft screenshot");
     const png=pngFromResult(screenshot);
     await fs.writeFile(pngPath,png,{flag:"wx"});
     completed=true;
