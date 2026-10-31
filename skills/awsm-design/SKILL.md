@@ -13,7 +13,7 @@ Choose only the applications needed for the actual requested deliverable. For a 
 
 ## First usable design
 
-For a brief or existing project, call `design_quickstart` once with the actual brief and project root. Respect its context, but do not treat its inferred visual direction as proof of design quality. Choose a layout and hierarchy appropriate to the product: administrative systems need operable tables, filters and states; mobile apps need native navigation, safe areas and accessible controls; landing pages need meaningful copy, product proof and deliberate composition.
+For a **web/mobile UI** brief or existing UI project, call `design_quickstart` once with the actual brief and project root. For drafting or 3D CAD tasks, skip web UI quickstart entirely and use the relevant Craft MCP instead. Respect its context, but do not treat its inferred visual direction as proof of design quality. Choose a layout and hierarchy appropriate to the product: administrative systems need operable tables, filters and states; mobile apps need native navigation, safe areas and accessible controls; landing pages need meaningful copy, product proof and deliberate composition.
 
 Implement the first useful screen or section using the existing stack, including real content and the primary interaction. Render and review it early. Avoid generic gradient hero templates, arbitrary icon sets, excessive decorative cards, dead controls and long speculative planning.
 
