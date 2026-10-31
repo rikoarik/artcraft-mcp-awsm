@@ -118,7 +118,7 @@ writeFileSync(path.join(cwd,'.awsm/bridges.json'),JSON.stringify({
     demo:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['echo']}
   }
 }));
-const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd });
+const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd, env: {...process.env, AWSM_AUTO_SOLIDCRAFT:'0'} });
 const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
@@ -287,6 +287,43 @@ try {
   await client.callTool({ name: 'serve', arguments: { action: 'stop' } });
 } finally {
   await client.close();
+}
+// Installed SolidCraft is discoverable without a user-authored bridges.json,
+// but must remain disconnected until explicitly requested.
+if (process.platform !== 'win32') {
+  const autoCwd = mkdtempSync(path.join(tmpdir(),'awsm-solidcraft-discovery-'));
+  const autoBin = path.join(autoCwd,'bin');
+  fsSync.mkdirSync(autoBin);
+  const shim=path.join(autoBin,'solidcraft-cli');
+  writeFileSync(shim,'#!/bin/sh\\nexec '+JSON.stringify(process.execPath)+' '+JSON.stringify(path.join(root,'test/bridge-child.mjs'))+' "$@"\\n');
+  fsSync.chmodSync(shim,0o755);
+  const autoTransport=new StdioClientTransport({
+    command:process.execPath,
+    args:[path.join(root,'build/index.js')],
+    cwd:autoCwd,
+    env:{...process.env,PATH:autoBin+path.delimiter+(process.env.PATH??''),
+      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_BRIDGE_CONFIG:path.join(autoCwd,'not-created.json')},
+  });
+  const autoClient=new Client({name:'awsm-solidcraft-auto',version:'1.0.0'});
+  try {
+    await autoClient.connect(autoTransport);
+    const discovered=await autoClient.callTool({name:'bridge_list',arguments:{server:'solidcraft'}});
+    assert.equal(discovered.isError,undefined,discovered.content[0].text);
+    const listing=JSON.parse(discovered.content[0].text);
+    assert.equal(listing.servers[0].status,'configured');
+    assert(listing.servers[0].allowedTools.includes('batch'));
+    assert(!listing.servers[0].allowedTools.includes('new_design'));
+    const started=await autoClient.callTool({name:'bridge_list',arguments:{server:'solidcraft',connect:true}});
+    assert.equal(started.isError,undefined,started.content[0].text);
+    assert.equal(JSON.parse(started.content[0].text).servers[0].status,'connected');
+    const catalog=await autoClient.callTool({name:'bridge_call',
+      arguments:{server:'solidcraft',tool:'list_commands',arguments:{filter:'solid'}}});
+    assert.equal(catalog.isError,undefined,catalog.content[0].text);
+    assert.deepEqual(JSON.parse(catalog.content[0].text).commands,['solid.box']);
+    const forbidden=await autoClient.callTool({name:'bridge_call',
+      arguments:{server:'solidcraft',tool:'new_design',arguments:{}}});
+    assert.equal(forbidden.isError,true);
+  } finally { await autoClient.close(); }
 }
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
