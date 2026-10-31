@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -74,18 +75,53 @@ function validate(raw:unknown):ConfigFile {
 }
 async function config():Promise<ConfigFile> {
   const filename=path.resolve(process.env.AWSM_BRIDGE_CONFIG??".awsm/bridges.json");
-  let content:string;
+  let configured:ConfigFile={version:1,servers:Object.create(null)};
   try {
     const stats=await fs.stat(filename);
     if(!stats.isFile()||stats.size>MAX_BYTES)throw new Error("Bridge config is not a file or exceeds 64KB.");
-    content=await fs.readFile(filename,"utf8");
+    configured=validate(JSON.parse(await fs.readFile(filename,"utf8")) as unknown);
   }catch(e){
-    if((e as NodeJS.ErrnoException).code==="ENOENT")
-      return {version:1,servers:Object.create(null)};
-    throw e;
+    if((e as NodeJS.ErrnoException).code!=="ENOENT")throw e;
   }
-  return validate(JSON.parse(content) as unknown);
+  if(!configured.servers.solidcraft && Object.keys(configured.servers).length<MAX_SERVERS){
+    const executable=await discoverSolidCraft();
+    if(executable){
+      configured.servers.solidcraft={
+        command:executable,args:["mcp","--param-check","strict"],
+        allowedTools:SOLIDCRAFT_TOOLS,
+      };
+    }
+  }
+  return configured;
 }
+/**
+ * SolidCraft is an opt-out, installed-only integration. Discover its CLI on
+ * PATH without running arbitrary shell commands or installing any packages.
+ * Keep this narrow: third-party MCPs still require explicit configuration.
+ */
+export async function discoverSolidCraft(pathValue=process.env.PATH??"",platform=process.platform){
+  if(process.env.AWSM_AUTO_SOLIDCRAFT==="0")return undefined;
+  const names=platform==="win32"?["solidcraft-cli.exe"]:["solidcraft-cli"];
+  for(const dir of pathValue.split(path.delimiter).filter(Boolean)){
+    // Never resolve executable names against the working directory.
+    if(!path.isAbsolute(dir))continue;
+    for(const name of names){
+      const candidate=path.join(dir,name);
+      try{
+        const stat=await fs.stat(candidate);
+        if(!stat.isFile())continue;
+        await fs.access(candidate,platform==="win32"?fsConstants.F_OK:fsConstants.X_OK);
+        return candidate;
+      }catch{ /* Not installed here; continue searching. */ }
+    }
+  }
+  return undefined;
+}
+const SOLIDCRAFT_TOOLS=[
+  "list_commands","describe_command","skill_reference","inspect_design",
+  "measure","body_topology","screenshot","running","pending",
+  "execute","batch","set_parameter","undo","redo","save","export",
+];
 const allowed=(cfg:ServerConfig,tool:string)=>cfg.allowedTools.includes("*")||cfg.allowedTools.includes(tool);
 
 export class McpGateway {
@@ -160,7 +196,7 @@ export class McpGateway {
       }
     }
     return {connectedThrough:"awsm",configuredServers:selected.length,servers:results,
-      note:"Only explicitly configured downstream stdio MCP servers can be accessed. Tools run with the child process permissions."};
+      note:"Other MCPs require explicit configuration. Installed SolidCraft is automatically discovered but only started when connected/called. Set AWSM_AUTO_SOLIDCRAFT=0 to disable. Tool calls run with local permissions."};
   }
   async call(input:{server:string;tool:string;arguments?:Record<string,unknown>}){
     const cfg=await this.getConfig();
