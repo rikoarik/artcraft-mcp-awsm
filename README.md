@@ -10,7 +10,7 @@ No hosted service or VPS is required. AWSM runs on your computer over stdio.
 
 <sub>Demo of built-in tools; gateway connections and FigCraft editing are configured separately.</sub>
 
-[Get started](#quick-start) · [Connect other MCPs](#connect-other-mcps) · [Explore tools](#whats-included) · [Updates](#updates-and-existing-installations) · [GitHub issues](https://github.com/rikoarik/figcraft-mcp-awsm/issues)
+[Get started](#quick-start) · [Connect other MCPs](#connect-other-mcps) · [Explore tools](#whats-included) · [Updates](#updates-and-existing-installations) · [GitHub issues](https://github.com/rikoarik/artcraft-mcp-awsm/issues)
 
 ---
 
@@ -48,9 +48,9 @@ AWSM complements your coding agent: the **agent implements and fixes code**; AWS
 Run this inside the project where you use your agent:
 
 ```bash
-npx -y github:rikoarik/figcraft-mcp-awsm setup \
+npx -y github:rikoarik/artcraft-mcp-awsm setup \
   --client opencode \
-  --source github:rikoarik/figcraft-mcp-awsm
+  --source github:rikoarik/artcraft-mcp-awsm
 ```
 
 Restart the coding agent or reconnect its MCP servers. You should see **`awsm`** as one MCP connection, with the `awsm-design` skill installed.
@@ -207,9 +207,17 @@ For a custom path or a tighter tool allowlist, add the following server to `.aws
 }
 ```
 
-The `awsm-design` core skill now guides the agent through **SolidCraft's native modeling and checking skills** (accessible through `skill_reference`), including dimensioned sketches, constrained parameters, named features, staged batches and geometric measurement. For presentation-quality results, it guides deliberate camera framing, coherent material/opaque PBR appearances, and native screenshot/product-render workflows. This is **not** a photorealistic renderer and does not add 3D modeling algorithms to AWSM.
+The `awsm-design` core skill now guides the agent through **SolidCraft's native modeling and checking skills** (accessible through `skill_reference`), including dimensioned sketches, constrained parameters, named features, staged batches and geometric measurement. For presentation-quality results, it guides deliberate camera framing, coherent material/opaque PBR appearances, and native screenshot/product-render workflows. This does **not** add 3D modeling algorithms to AWSM or guarantee stylistic fidelity without examining the rendered result.
 
 Official technical references: [SolidCraft MCP](https://github.com/tangency-labs/solidcraft/blob/main/docs/mcp.md), [modeling skill](https://github.com/tangency-labs/solidcraft/tree/main/skills/solidcraft-modeling), [checking skill](https://github.com/tangency-labs/solidcraft/tree/main/skills/solidcraft-checking), and [product renders](https://github.com/tangency-labs/solidcraft/blob/main/docs/render-jobs.md).
+
+### Matching a requested 3D style
+
+**The current AWSM skill can guide a coding agent to match a 3D style; it is not an automatic reference-image-to-CAD converter.** When a user provides a visual reference that the agent can view, the `awsm-design` skill asks the agent to translate it into a compact style direction *before* modeling: silhouette, proportions, edge treatment, detail density, palette, surface finish, and camera/framing. If no image is accessible, use the text brief and do not claim image-based matching.
+
+For example, an industrial-machined enclosure should use editable thicknesses, purposeful chamfers and restrained metal finishes, whereas a playful rounded desk accessory needs larger corner radii, simpler geometry and coherent matte color blocking. These choices affect **model geometry**, not just render filters. The agent should inspect the actual SolidCraft screenshot, compare it with the reference visually, correct the main mismatches, and re-measure after geometry edits. `review_ui` and pixel-diff tools are for **web UI**, not reliable semantic checks of CAD style.
+
+SolidCraft is strongest for parametric hard-surface and product CAD. It does not become an organic sculptor or a full studio renderer just because AWSM supplies design guidance. Its current opaque PBR/product-image tools do not imply HDRI, refraction, transparent glass, cloth textures or guaranteed photorealism. The final result needs both **geometry validation** and **visible style review**; passing CI alone does not prove visual fidelity.
 
 **Safety:** AWSM uses a constrained built-in allowlist, but `execute` and `batch` can modify the open design and `save`/`export` can write files. Configure the user's normal tool approval process and use SolidCraft's file-access protections. The default integration intentionally does not expose `new_design` or `open`; add them explicitly only when necessary and authorized.
 
@@ -252,12 +260,12 @@ GitHub-source setup enables **best-effort update checks on MCP restart** using `
 
 This is **not** a background auto-updater. A running MCP session does not receive new code without restart, and caching/network conditions can delay a revision.
 
-To refresh an existing AWSM configuration:
+To refresh an existing AWSM configuration (including one installed from the old `figcraft-mcp-awsm` GitHub URL), run setup from the **new** repository:
 
 ```bash
-npx -y --prefer-online github:rikoarik/figcraft-mcp-awsm setup \
+npx -y --prefer-online github:rikoarik/artcraft-mcp-awsm setup \
   --client opencode \
-  --source github:rikoarik/figcraft-mcp-awsm \
+  --source github:rikoarik/artcraft-mcp-awsm \
   --upgrade-config
 ```
 
@@ -280,15 +288,15 @@ If using a **local Git clone** rather than a GitHub-source `npx` entry, updates 
 ## Development
 
 ```bash
-git clone https://github.com/rikoarik/figcraft-mcp-awsm.git
-cd figcraft-mcp-awsm
+git clone https://github.com/rikoarik/artcraft-mcp-awsm.git
+cd artcraft-mcp-awsm
 npm ci
 npm test
 ```
 
 The test script compiles TypeScript and runs MCP smoke tests. Optional Chromium fixture tests live in `test/browser-e2e.mjs` and have a separate GitHub Actions workflow.
 
-For development issues or feature requests, [open an issue](https://github.com/rikoarik/figcraft-mcp-awsm/issues).
+For development issues or feature requests, [open an issue](https://github.com/rikoarik/artcraft-mcp-awsm/issues).
 
 ### Troubleshooting
 
