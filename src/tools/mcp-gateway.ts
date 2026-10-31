@@ -65,7 +65,7 @@ function validate(raw:unknown):ConfigFile {
     const binaryIsNode=resolvedBinary==="node"||resolvedBinary==="node.exe";
     const childScript=binaryIsNode && args[0]?path.resolve(item.cwd??process.cwd(),args[0]):null;
     const invokesSelf=resolvedBinary==="my-awsm-mcp" ||
-      args.some((arg:string)=>arg==="github:rikoarik/figcraft-mcp-awsm"||arg==="my-awsm-mcp") ||
+      args.some((arg:string)=>arg==="github:rikoarik/figcraft-mcp-awsm"||arg==="github:rikoarik/artcraft-mcp-awsm"||arg==="my-awsm-mcp") ||
       childScript===selfEntrypoint;
     if(invokesSelf)throw new Error("Refusing to launch AWSM as a child of itself.");
     out[name]={command,args,allowedTools,
