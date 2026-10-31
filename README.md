@@ -1,14 +1,10 @@
 # AWSM
 
-**One MCP connection. The right design tools for the work you actually request.**
+**One MCP connection. Use only the design tools your task needs.**
 
-AWSM is a local [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for coding agents. One MCP entry provides UI design utilities, assets, browser visual QA and access to trusted design/CAD applications. Installed **SolidCraft** and **CADCraft** are discoverable on demand: ask for a 3D model and AWSM uses SolidCraft; ask for a 2D floor plan and it uses CADCraft. Website publishing and FigCraft handoff are optional, not mandatory next steps.
+AWSM is a local [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for coding agents. It combines UI design utilities, visual assets, browser QA, and an optional gateway to native design/CAD applications. **SolidCraft** is for standalone 3D modeling, **CADCraft** is for 2D drafting, and they can work together when an architectural plan needs to become a 3D building. **FigCraft** supports editable canvas design when its own MCP is connected. Website implementation and 3D publishing are separate workflows, not automatic next steps.
 
 No hosted service or VPS is required. AWSM runs on your computer over stdio.
-
-![AWSM MCP tools walkthrough — icons, palette and local preview](demo/awsm-demo.gif)
-
-<sub>Demo of built-in tools; gateway connections and FigCraft editing are configured separately.</sub>
 
 [Get started](#quick-start) · [Connect other MCPs](#connect-other-mcps) · [Explore tools](#whats-included) · [Updates](#updates-and-existing-installations) · [GitHub issues](https://github.com/rikoarik/artcraft-mcp-awsm/issues)
 
@@ -16,47 +12,35 @@ No hosted service or VPS is required. AWSM runs on your computer over stdio.
 
 ## How it works
 
-```text
-┌───────────────────────────────────────────────────────┐
-│ Coding agent (OpenCode, Claude Code, Codex, etc.)     │
-└─────────────────────────┬─────────────────────────────┘
-                          │ one MCP connection (stdio)
-                          ▼
-                   ┌─────────────┐
-                   │  AWSM MCP   │
-                   └──────┬──────┘
-                          │
-            ┌─────────────┴─────────────┐
-            ▼                           ▼
-    Built-in design tools        Optional MCP gateway
-    • assets and icons           • bridge_list
-    • typography and tokens      • bridge_call
-    • FigCraft handoff                   │
-    • browser visual QA                 ▼
-                               Configured local MCPs
-                               (e.g. FigCraft server)
-```
+Your coding agent connects to **one AWSM MCP server** over local stdio. The agent uses AWSM's built-in UI tools or selects a downstream application through `bridge_list` and `bridge_call`:
 
-**One connection does not mean one tool or one process.** AWSM exposes small, typed tools within a single MCP server. Downstream MCPs remain separate local processes, launched only when the agent connects/calls them. CADCraft and SolidCraft are discoverable if installed; other downstream MCPs require explicit configuration.
+- **Built-in AWSM tools:** project/UI inspection, design assets, typography, tokens, design-to-code handoff and browser visual QA.
+- **SolidCraft:** native, editable parametric 3D models and renders, independently of CADCraft.
+- **CADCraft:** 2D CAD drafting, measured architectural plans and drawing inspection, independently of SolidCraft.
+- **FigCraft:** native canvas editing through its **separately configured FigCraft MCP**, plus optional design-to-code handoff.
+- **3D publishing:** optional `publish_3d_asset` when the user actually wants website assets or a FigCraft preview image.
 
-AWSM complements your coding agent: the **agent carries out the requested task** (code or CAD); AWSM supplies utilities, controlled integration access, and validation evidence. It is not an autonomous coding agent or a replacement for the FigCraft MCP.
+Installed CADCraft and SolidCraft CLIs can be discovered without launching either application; other downstream MCPs require an explicit bridge configuration. AWSM does **not** bundle these applications or become a CAD/BIM engine. The **agent chooses the workflow**; AWSM does not run a hidden automatic intent classifier.
 
 ## Workflows follow your intent
 
-AWSM is not a fixed CADCraft → SolidCraft → FigCraft → website pipeline. The coding agent connects **only the providers required by the requested output**.
+A user may want **only 3D**, **only a floor plan**, **only a FigCraft design**, or a combination. AWSM does **not** enforce CADCraft → SolidCraft → FigCraft → website.
 
-| Request | Tool(s) | Output |
+| Request | Tools used | What you get |
 | --- | --- | --- |
-| "Build a 3D speaker" / "make a 3D building" | **SolidCraft only** | Editable model and relevant preview; no 2D drafting or web work |
-| "Edit my existing 3D model" or "render it" | **SolidCraft only** | Edited 3D session or requested image |
-| "Draw a house floor plan" | **CADCraft only** | 2D drawing |
-| "Turn this measured CADCraft plan into a 3D house" | **CADCraft + SolidCraft** | Parametric building geometry checked against the plan |
-| "Put this finished model on my website" | **SolidCraft + optional publishing** | Web asset via `publish_3d_asset` |
-| "Use the preview in FigCraft" | **SolidCraft + configured FigCraft bridge** | 2D image layer, not editable 3D |
+| Create or revise a 3D product, object, or building | **SolidCraft only** | Native editable 3D model; preview or render when requested |
+| Draw or edit a technical drawing / floor plan | **CADCraft only** | 2D CAD drawing with dimensions and layers |
+| Turn a measured architectural plan into 3D | **CADCraft + SolidCraft** | Reconstructed parametric building model, validated against the plan |
+| Design or revise a landing page inside FigCraft | **FigCraft MCP only** | Editable FigCraft frames, text and layout; no website code unless requested |
+| Implement a UI in an existing codebase | **AWSM built-in UI tools + coding agent** | Working application UI with visual QA where applicable |
+| Publish a 3D model to a website | **SolidCraft + `publish_3d_asset`** | OBJ and PNG in the requested website project |
+| Put a 3D preview into FigCraft | **SolidCraft + configured FigCraft MCP** | A 2D PNG image layer, not editable 3D geometry |
 
-**Standalone 3D is a complete workflow by itself.** The agent inspects or creates the SolidCraft model, applies requested style/materials, validates geometry and checks screenshots. It saves an editable `.sc` file when a permitted output path exists and the user requests a deliverable; it does not generate a website, launch CADCraft, or invoke FigCraft. A high-quality rendered PNG is produced only when the request calls for a render, rather than automatically publishing every model.
+**3D-only is a complete deliverable.** For a request such as “Create a 3D desk speaker with a machined-aluminum body,” the agent uses SolidCraft to model, check dimensions, inspect the result, and save an editable `.sc` file if an authorized destination is provided. It does **not** open CADCraft, generate a website, export an OBJ web package, or modify FigCraft unless asked.
 
-AWSM's routing is **skill-guided**, not a hidden semantic classifier or DXF-to-BIM engine. The coding agent interprets intent and selects native MCP tools. The gateway only discovers providers until they are called; detection does **not** open CADCraft or SolidCraft.
+**2D → 3D architecture is a separate task.** The agent reads the actual CADCraft plan (entities, layers, geometry, annotations and dimensions), interprets architectural elements, then builds and checks the corresponding SolidCraft features. This is a guided, reviewable reconstruction—not automatic DXF/DWG-to-BIM conversion or guaranteed bidirectional synchronization.
+
+**Publishing and handoff are opt-in.** A rendered product image is not automatically a web deployment, and a model preview placed in FigCraft is still just a 2D image layer. Use further tools only when the requested output needs them.
 
 ## Quick start
 
@@ -93,15 +77,15 @@ Use `--client all` only if you really need multiple clients. For Zed, `--global`
 
 ### Try your first task
 
-Give the agent a real interface request instead of asking it to test every AWSM tool:
+Give the agent the actual task rather than asking it to test every AWSM tool:
 
 > Design and implement a construction-project dashboard in this existing app. Reuse its components and styles, use AWSM for missing icons or assets, and check the mobile and desktop render. Build working UI rather than stopping at a plan.
 
-The default installation provides **one skill**, `awsm-design`, to guide that workflow. AWSM's individual tools remain available when the agent needs them.
+The default installation provides **one skill**, `awsm-design`, for choosing relevant tools and validating results. AWSM's individual tools remain available when the agent needs them.
 
 A **3D-only** task can be as simple as:
 
-> Create an editable 3D desk speaker in SolidCraft. Follow this reference's proportions and materials, verify the geometry and show an isometric preview. Do not use CADCraft, build a website, or publish to FigCraft.
+> Create an editable 3D desk speaker in SolidCraft. Follow the requested proportions and materials, validate the geometry and show an isometric preview. No CADCraft, website or FigCraft work.
 
 It requires `solidcraft-cli` installed or an explicit `solidcraft` bridge. AWSM does not install SolidCraft for you; `bridge_list({server:"solidcraft"})` checks discovery without starting it.
 
@@ -119,21 +103,23 @@ It requires `solidcraft-cli` installed or an explicit `solidcraft` bridge. AWSM 
 
 Additional utilities include `draw_icon`, `make_asset`, and `serve`. In total, AWSM currently exposes **24 MCP tools** through one server.
 
-### FigCraft → working UI
+### FigCraft: editable design or optional design-to-code
 
-When a FigCraft document is available:
+**To design in FigCraft only:** connect the actual FigCraft MCP (configured separately), inspect the current document, and create/edit frames, text, layers and layout using its supported native tools. Revisions can remain in the **same document** (for example, a new V2 page) without building a website. AWSM's built-in tools do not directly change the FigCraft canvas; a configured native FigCraft MCP is responsible for canvas edits.
 
-1. Use the **actual FigCraft MCP** to inspect the document and export artwork. AWSM does not edit the FigCraft canvas.
-2. Pass the inspected layer data to `prepare_web_handoff` to classify text, layout, components, and exportable assets.
-3. Run `sync_figcraft_assets` after the native exports exist.
-4. Let the coding agent implement semantic HTML/components with editable text and functioning interactions.
-5. Compare a running page to a same-size reference image using `review_ui`, if local Playwright is available.
+**Only when the user also requests website implementation:**
 
-This workflow is deliberately **design-to-code**, not a one-click pixel-perfect export.
+1. Inspect the FigCraft document and export the artwork using FigCraft's native MCP.
+2. Use `prepare_web_handoff` for layer classification, layout/text information and exportable assets.
+3. Use `sync_figcraft_assets` after the native exports exist.
+4. Have the coding agent implement functioning UI in the actual web project.
+5. Use `review_ui` against a comparable reference, if local Playwright is available.
+
+This is an **optional design-to-code workflow**, not a one-click pixel-perfect export. A FigCraft design request alone must not trigger web implementation.
 
 ## Connect other MCPs
 
-The gateway is **optional**. Without additional configuration, AWSM's built-in tools still work. Installed CADCraft and SolidCraft CLIs are discovered on demand; other providers require explicit configuration.
+The gateway is **optional**. AWSM's built-in UI/design tools work without any downstream applications. Installed `cadcraft-cli` and `solidcraft-cli` are discovered on demand from `PATH`, but other providers (including FigCraft) require explicit configuration. Discovery does not start a provider.
 
 If you want the coding agent to connect **only to AWSM**, you can let AWSM start trusted downstream **stdio MCP servers**, then discover and call their tools through `bridge_list` and `bridge_call`.
 
@@ -167,21 +153,23 @@ If AWSM starts from another directory, set `AWSM_BRIDGE_CONFIG` to an **absolute
 Ask the coding agent to:
 
 ```text
-Use AWSM bridge_list with connect=true.
-List the available tools for the configured "figcraft" server.
-Then use bridge_call with the exact tool name and required arguments.
-Do not invent tool names or modify the FigCraft document unless requested.
+Use bridge_list with connect=false to see which MCP providers are configured.
+Connect only to the "figcraft" server when I request FigCraft edits.
+Inspect its actual available tools and their input schemas.
+Call only the tools needed for the requested design changes.
+Do not connect CADCraft or SolidCraft unless the task needs them.
 ```
 
 At the MCP level the workflow looks like:
 
 ```js
-bridge_list({ connect: true })
+bridge_list({ connect: false }) // Discover without launching providers
+bridge_list({ server: "figcraft", connect: true }) // Connect only when needed
 
 bridge_call({
   server: "figcraft",
   tool: "exact_tool_name_from_figcraft",
-  arguments: { /* use the discovered tool schema */ }
+  arguments: { /* follow the returned input schema */ }
 })
 ```
 
@@ -189,7 +177,7 @@ The bridge returns downstream MCP content, including text or images when support
 
 **Security and limits**
 
-- Only **explicitly configured local stdio MCP servers** are supported. Direct HTTP/SSE proxying is not implemented.
+- The gateway supports local **stdio MCP servers**. CADCraft and SolidCraft are exceptions to manual configuration because AWSM can discover their installed CLIs. Direct HTTP/SSE proxying is not implemented.
 - `allowedTools` restricts what AWSM can call. Avoid `["*"]` unless you trust every action exposed by that server.
 - Child servers execute with your local account's permissions and may inherit your process environment. Review commands, environment variables, and provider trust.
 - Third-party tools can perform writes or destructive actions. Use the coding agent's normal approval process.
@@ -407,8 +395,8 @@ For development issues or feature requests, [open an issue](https://github.com/r
 
 AWSM is an open-source local developer tool under the [MIT License](LICENSE). There is no required paid hosting, but third-party image/font providers can have their own usage terms and rate limits. Verify licensing before using assets commercially.
 
-The local FigCraft MCP, remote HTTP MCP servers, and application-specific code generation are **not bundled** into AWSM. The gateway connects only to downstream MCP processes that you explicitly configure.
+FigCraft, CADCraft, SolidCraft, remote HTTP MCP servers, and application-specific code generation are **not bundled** into AWSM. The gateway connects to explicitly configured stdio MCP processes or discovered installed CADCraft/SolidCraft CLIs; it does not install those tools or support HTTP/SSE proxying.
 
 ---
 
-<sub>Built for coding-agent workflows, from early UI design to evidence-based implementation review.</sub>
+<sub>Built for intent-driven design workflows: UI, drafting, parametric 3D, and optional handoff.</sub>
