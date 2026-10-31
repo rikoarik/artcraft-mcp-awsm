@@ -2,7 +2,7 @@
 
 **One MCP connection. A practical toolkit for building better interfaces.**
 
-AWSM is a local [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for coding agents. It brings UI design utilities, asset discovery, FigCraft-to-code handoff, and browser-based visual QA into **one MCP entry**. An optional gateway can forward calls to other trusted, locally installed MCP servers.
+AWSM is a local [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for coding agents. It brings UI design utilities, asset discovery, FigCraft-to-code handoff, and browser-based visual QA into **one MCP entry**. An optional gateway can forward calls to other trusted, locally installed MCP servers, with on-demand SolidCraft discovery for 3D CAD work.
 
 No hosted service or VPS is required. AWSM runs on your computer over stdio.
 
@@ -171,6 +171,48 @@ The bridge returns downstream MCP content, including text or images when support
 - Third-party tools can perform writes or destructive actions. Use the coding agent's normal approval process.
 - Missing or failed downstream MCPs do not disable AWSM's built-in utilities.
 
+### SolidCraft: installed-only 3D CAD integration
+
+AWSM can automatically **discover an installed SolidCraft CLI** in your system `PATH`. You do **not** need to configure another MCP entry in OpenCode, copy SolidCraft's skills, or add a new AWSM tool. SolidCraft's own MCP remains responsible for its parametric CAD engine.
+
+1. Install SolidCraft from [its official website](https://solidcraft.io/download) and ensure `solidcraft-cli` is available on `PATH` (or specify the full executable through the optional config below).
+2. Restart AWSM after installation. Call `bridge_list({server:"solidcraft"})` to see the detected integration **without starting SolidCraft**.
+3. When you request 3D modeling, the coding agent can run `bridge_list({server:"solidcraft",connect:true})`. AWSM lazily launches `solidcraft-cli mcp --param-check strict` and forwards tool calls through `bridge_call`. This works headlessly or connects to the running SolidCraft desktop app according to SolidCraft's own behavior.
+
+Auto-discovery does **not** auto-install SolidCraft, read app files, change a design, or start a CAD engine at AWSM startup. It discovers an installed executable only. To disable automatic detection, set `AWSM_AUTO_SOLIDCRAFT=0` in the AWSM process environment.
+
+For a custom path or a tighter tool allowlist, add the following server to `.awsm/bridges.json`. An explicitly configured `solidcraft` entry takes precedence over auto-discovery:
+
+```json
+{
+  "version": 1,
+  "servers": {
+    "solidcraft": {
+      "command": "/absolute/path/to/solidcraft-cli",
+      "args": ["mcp", "--param-check", "strict"],
+      "allowedTools": [
+        "list_commands",
+        "describe_command",
+        "skill_reference",
+        "inspect_design",
+        "measure",
+        "screenshot",
+        "execute",
+        "batch",
+        "save",
+        "export"
+      ]
+    }
+  }
+}
+```
+
+The `awsm-design` core skill now guides the agent through **SolidCraft's native modeling and checking skills** (accessible through `skill_reference`), including dimensioned sketches, constrained parameters, named features, staged batches and geometric measurement. For presentation-quality results, it guides deliberate camera framing, coherent material/opaque PBR appearances, and native screenshot/product-render workflows. This is **not** a photorealistic renderer and does not add 3D modeling algorithms to AWSM.
+
+Official technical references: [SolidCraft MCP](https://github.com/tangency-labs/solidcraft/blob/main/docs/mcp.md), [modeling skill](https://github.com/tangency-labs/solidcraft/tree/main/skills/solidcraft-modeling), [checking skill](https://github.com/tangency-labs/solidcraft/tree/main/skills/solidcraft-checking), and [product renders](https://github.com/tangency-labs/solidcraft/blob/main/docs/render-jobs.md).
+
+**Safety:** AWSM uses a constrained built-in allowlist, but `execute` and `batch` can modify the open design and `save`/`export` can write files. Configure the user's normal tool approval process and use SolidCraft's file-access protections. The default integration intentionally does not expose `new_design` or `open`; add them explicitly only when necessary and authorized.
+
 ## Browser visual QA
 
 `review_ui` combines a read-only DOM audit, responsive screenshots, and optional comparison against reference PNGs in a single local browser pass.
@@ -251,7 +293,7 @@ For development issues or feature requests, [open an issue](https://github.com/r
 ### Troubleshooting
 
 - **AWSM not listed in the agent:** confirm setup ran in the same project, inspect the client config, restart the MCP session and check the client's MCP status. For OpenCode V2, run `opencode mcp list`.
-- **`bridge_list` returns no servers:** add `.awsm/bridges.json` in the MCP process working directory or set `AWSM_BRIDGE_CONFIG` to its absolute path, then restart.
+- **`bridge_list` returns no servers:** install `solidcraft-cli` on `PATH` for auto-detection, or add a custom server in `.awsm/bridges.json` (or `AWSM_BRIDGE_CONFIG`), then restart.
 - **Downstream connection error:** use the provider's launch command directly to verify it works, and check the `allowedTools` names. A provider requiring remote HTTP transport cannot be bridged with this stdio-only gateway.
 - **Visual review cannot run:** install Playwright/Chromium in the target project, start the local web server, and use an explicit localhost HTTP URL with a port of at least 1024.
 
