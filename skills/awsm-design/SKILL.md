@@ -1,6 +1,6 @@
 ---
 name: awsm-design
-description: One practical design-to-code skill for AWSM. Use for designing websites, admin dashboards, mobile UI, FigCraft handoff, responsive implementation, fonts, icons, assets and visual quality checks.
+description: One practical design-to-code skill for AWSM. Use for designing websites, admin dashboards, mobile UI, FigCraft handoff, responsive implementation, fonts, icons, assets, SolidCraft parametric 3D modeling and visual quality checks.
 ---
 
 # AWSM — design, implement, verify
@@ -18,6 +18,20 @@ Implement the first useful screen or section using the existing stack, including
 AWSM can be the **only configured MCP entry in the coding agent** while forwarding to explicitly configured downstream MCP servers. Discover available integrations with `bridge_list({connect:true})` and call a named tool using `bridge_call({server,tool,arguments})`. Read each tool's input schema before invoking it.
 
 A project owner configures downstream stdio servers in `.awsm/bridges.json` with command, args and an explicit `allowedTools` list. Never invent credentials, command paths or tool names; a missing bridge is not an available integration. Do not assume the AWSM bridge automatically discovers or installs third-party servers. Use native FigCraft through this bridge if configured; otherwise the project must connect FigCraft separately. Calls to downstream tools can modify documents or files, so respect the user's permissions and avoid destructive actions without authorization.
+
+## SolidCraft: high-quality parametric 3D (only when relevant)
+
+For CAD, product modeling, enclosures, mechanical parts or 3D asset requests, check `bridge_list({server:"solidcraft"})`. AWSM automatically discovers an **already installed** `solidcraft-cli` on PATH, but does not download software or launch it at startup. Connect only when the user requests SolidCraft work: `bridge_list({server:"solidcraft",connect:true})`, then use `bridge_call` with discovered tool schemas. If not found, state that SolidCraft must be installed or explicitly configured; do not fake a result. User config `.awsm/bridges.json` overrides autodiscovery. Never invoke SolidCraft for ordinary UI designs.
+
+**Use the official SolidCraft skills rather than replicating its CAD engine.** Start with `skill_reference({skill:"solidcraft-modeling"})` and `inspect_design({measure:false,sketches:false})` through `bridge_call`. Also read `solidcraft-checking` for validation and `solidcraft-editing` when modifying existing models. The official source of truth is https://github.com/tangency-labs/solidcraft/tree/main/skills. Call `list_commands` with a filter or `describe_command` for any unknown API shape; never invent CAD commands or copy an exhaustive command catalog into context.
+
+**Modeling standard:** interpret real functional intent and dimensions before choosing geometry. Establish millimeter units, parameters, origin, symmetry, constraints and named features. Prefer editable sketches and a meaningful feature timeline to disconnected primitives. Build in a few purposeful `batch` calls with rollback enabled, stage risky boolean operations separately, and use `verbose:false` for large results. Respect existing unsaved designs: never reset or open another file without user approval. Changing a model is not approval to overwrite an existing file.
+
+**Geometric verification:** after meaningful features, use `measure` and compare bounding box, volume, centers and body count with independently expected dimensions. Check `inspect_design` for feature errors and sketch constraints; never equate a successful command response with a correct solid. Test at least one meaningful parameter change when parametric behavior matters, then re-measure to verify dependent geometry updates. Use `body_topology` selectively, not as default context. Check clearance, wall thickness, fillets, intersections, symmetry and intended manufacturability when relevant.
+
+**Visual presentation matters as much as engineering correctness.** Give each body a coherent material/color purpose. For opaque finished product surfaces, SolidCraft supports `appearance.assign` with PBR values (metallic, roughness, dielectric IOR), which are separate from physical material density. Use the documented appearance presets or valid values and verify support with `describe_command`. Compose an uncluttered isometric `screenshot` (`source:"model"`, grid/axes false) plus orthographic/detail views where the shape requires them; review actual proportions, silhouette and surface quality. If a polished product image is requested, use the native `render.preflight`, `render.start`, `render.status`, and `render.export` commands through `execute` using the complete returned job ID, with a deliberate camera and supported render settings. Consult https://github.com/tangency-labs/solidcraft/blob/main/docs/render-jobs.md and docs/render-opaque-pbr.md. Don't promise unsupported glass/refraction, HDRI or photorealism.
+
+**Deliverable:** save the editable `.sc` model when requested, export STEP or 3MF/STL for the actual downstream need, and provide representative image previews. Clearly separate verified geometry from visual-only polish. Calls to `execute`, `batch`, `save`, `export` and rendering can mutate state or write files; apply user approvals and file-scoping rules. Avoid `--allow-any-path` unless explicitly approved. If SolidCraft reports a running operation or a timeout, inspect state before repeating a mutation.
 
 ## When a FigCraft source exists
 
