@@ -295,7 +295,7 @@ if (process.platform !== 'win32') {
   const autoBin = path.join(autoCwd,'bin');
   fsSync.mkdirSync(autoBin);
   const shim=path.join(autoBin,'solidcraft-cli');
-  writeFileSync(shim,'#!/bin/sh\\nexec '+JSON.stringify(process.execPath)+' '+JSON.stringify(path.join(root,'test/bridge-child.mjs'))+' "$@"\\n');
+  writeFileSync(shim,'#!/bin/sh\nexec '+JSON.stringify(process.execPath)+' '+JSON.stringify(path.join(root,'test/bridge-child.mjs'))+' "$@"\n');
   fsSync.chmodSync(shim,0o755);
   const autoTransport=new StdioClientTransport({
     command:process.execPath,
