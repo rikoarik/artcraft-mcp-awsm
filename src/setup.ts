@@ -37,6 +37,8 @@ const cwd = process.cwd();
 let command = ["npx", "-y", source];
 const errors: string[] = [];
 const messages: string[] = [];
+// Allow migration only from the previous AWSM GitHub repository or current source.
+const isOwnedSource = (value: string) => [source, pkg.name, "github:rikoarik/figcraft-mcp-awsm", "github:rikoarik/artcraft-mcp-awsm"].some(id => value.includes(id));
 
 function jsonConfig(file: string, keys: string[], entry: object, schema = false): void {
   const original = existsSync(file) ? readFileSync(file, "utf8") : "{}\n";
@@ -59,7 +61,7 @@ function jsonConfig(file: string, keys: string[], entry: object, schema = false)
   if (previous !== undefined) {
     if (JSON.stringify(previous) !== JSON.stringify(entry)) {
       const existing = JSON.stringify(previous);
-      if (!upgradeConfig || (!existing.includes(source) && !existing.includes(pkg.name)) || existing.includes('"type":"remote"')) {
+      if (!upgradeConfig || !isOwnedSource(existing) || existing.includes('"type":"remote"')) {
         errors.push(`${file}: awsm already has a different configuration; left unchanged (use --upgrade-config for owned entries)`);
         return;
       }
@@ -86,7 +88,7 @@ function tomlConfig(file: string): void {
     const section = original.split(/^\s*\[mcp_servers\.(?:awsm|"awsm")\]\s*$/m)[1]?.split(/^\s*\[/m)[0] ?? "";
     if (section.includes(`command = ${JSON.stringify(command[0])}`) && section.includes(`args = ${JSON.stringify(command.slice(1))}`))
       messages.push(`= MCP ${file} already configured`);
-    else if (upgradeConfig && (section.includes(source) || section.includes(pkg.name))) {
+    else if (upgradeConfig && isOwnedSource(section)) {
       const table = `[mcp_servers.awsm]\ncommand = ${JSON.stringify(command[0])}\nargs = ${JSON.stringify(command.slice(1))}\n`;
       const heading = "[mcp_servers.awsm]";
       const start = original.indexOf(heading);
