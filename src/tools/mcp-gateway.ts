@@ -1,3 +1,6 @@
+import { designGuidance } from "./design-guidance.js";
+import { confirmedBrief, authorizeCraft } from "./design-brief.js";
+import { activeEndpoint, attachedArgs, type Craft } from "./craft-session.js";
 import fs from "node:fs/promises";
 import { constants as fsConstants } from "node:fs";
 import path from "node:path";
@@ -101,6 +104,10 @@ async function config():Promise<ConfigFile> {
       };
     }
   }
+  if(!configured.servers.figcraft && process.env.AWSM_AUTO_FIGCRAFT!=="0" && Object.keys(configured.servers).length<MAX_SERVERS){
+    const executable=await discoverExecutable("figcraft-cli",process.env.PATH??"",process.platform);
+    if(executable)configured.servers.figcraft={command:executable,args:["mcp"],allowedTools:FIGCRAFT_TOOLS};
+  }
   return configured;
 }
 /**
@@ -130,6 +137,7 @@ export async function discoverCADCraft(pathValue=process.env.PATH??"",platform=p
   if(process.env.AWSM_AUTO_CADCRAFT==="0")return undefined;
   return discoverExecutable("cadcraft-cli",pathValue,platform);
 }
+const FIGCRAFT_TOOLS=["inspect_document","get_node","create_node","set_properties","batch","run_command","list_commands","screenshot","export","save_file"];
 const SOLIDCRAFT_TOOLS=[
   "list_commands","describe_command","skill_reference","inspect_design",
   "measure","body_topology","screenshot","running","pending",
@@ -147,6 +155,7 @@ export class McpGateway {
   private readonly connections=new Map<string,Connection>();
   private readonly pending=new Map<string,Promise<Connection>>();
   private configuration:Promise<ConfigFile>|undefined;
+  private readonly guidance=new Map<string,unknown>();
 
   private getConfig():Promise<ConfigFile> {
     return this.configuration??=config();
@@ -192,6 +201,58 @@ export class McpGateway {
     try{return await promise;}
     finally{this.pending.delete(name);}
   }
+  async prepare(input:{craft:Craft;task:"create"|"edit"|"inspect";briefId?:string;headless?:boolean}) {
+    const choices=input.task==="inspect"?undefined:confirmedBrief(input.briefId);
+    if(choices && !choices.route.crafts.includes(input.craft))throw new Error("This Craft is not part of the user's confirmed choices.");
+    if(choices && Boolean(input.headless)!==(choices.session==="separate"))throw new Error("Session mode does not match the user's confirmed choice.");
+    const cfg=await this.getConfig();
+    const original=cfg.servers[input.craft];
+    if(!original)throw new Error("Craft CLI or explicit bridge is missing: "+input.craft);
+    const args=original.args??[];
+    const attached=args.includes("--attach")||args.includes("--connect");
+    let mode=attached?"attached":"headless";
+    if(!attached && !input.headless){
+      const port=await activeEndpoint(input.craft);
+      if(!port)throw new Error("No verified active endpoint for "+input.craft+". Enable its control channel and set AWSM_"+input.craft.toUpperCase()+"_ENDPOINT. No headless fallback was started.");
+      // Do not silently replace custom wrapper commands or discard configured access roots.
+      if(path.basename(original.command).toLowerCase().replace(/\.exe$/,"")!==input.craft+"-cli" || args.join(" ")!== (input.craft==="solidcraft"?"mcp --param-check strict":"mcp"))
+        throw new Error("Configure --attach/--connect explicitly for this custom bridge.");
+      if(this.connections.has(input.craft)||this.pending.has(input.craft))throw new Error("Bridge already connected in another mode; restart AWSM with explicit attached configuration.");
+      cfg.servers[input.craft]={...original,args:attachedArgs(input.craft,port)};
+      mode="attached";
+    }
+    if(input.headless && input.craft==="solidcraft" && !args.includes("--headless")) {
+      if(this.connections.has(input.craft)||this.pending.has(input.craft))throw new Error("Restart with explicit --headless configuration.");
+      cfg.servers[input.craft]={...original,args:[...args,"--headless"]};
+    }
+    if(input.headless && mode==="attached")throw new Error("Configured bridge is attached; refusing to substitute another document.");
+    const current=await this.connect(input.craft,cfg.servers[input.craft]);
+    const inspect=input.craft==="figcraft"?"inspect_document":input.craft==="solidcraft"?"inspect_design":"inspect_drawing";
+    const snapshot=await this.call({server:input.craft,tool:inspect,arguments:input.craft==="figcraft"?{depth:2}:{}});
+    if(snapshot.isError)throw new Error("Active document inspection failed: "+JSON.stringify(snapshot.content));
+    const names=input.craft==="figcraft"?[inspect,"get_node","create_node","set_properties","batch","screenshot"]:
+      input.craft==="solidcraft"?[inspect,"execute","batch","set_parameter","measure","screenshot"]:[inspect,"query_entities","execute","render"];
+    const uiSkill=input.task==="inspect"?"awsm-visual-qa":choices!.route.uiSkill;
+    const guideKey=input.craft+":"+input.task+":"+uiSkill;
+    if(!this.guidance.has(guideKey)) {
+      if(input.craft==="solidcraft" && current.tools.has("skill_reference")) {
+        const skill=input.task==="edit"?"solidcraft-editing":input.task==="inspect"?"solidcraft-checking":"solidcraft-modeling";
+        const result=await this.call({server:input.craft,tool:"skill_reference",arguments:{skill}});
+        if(!result.isError)this.guidance.set(guideKey,result.content);
+      } else if(input.craft==="figcraft") {
+        const file=fileURLToPath(new URL("../../skills/"+uiSkill+"/SKILL.md",import.meta.url));
+        this.guidance.set(guideKey,await fs.readFile(file,"utf8"));
+      }
+    }
+    return {craft:input.craft,mode,task:input.task,choices,executionGuide:choices?await designGuidance({phase:input.craft==="solidcraft"?"modeling":"screens",briefId:input.briefId}):undefined,document:snapshot.content,skillGuidance:this.guidance.get(guideKey),
+      instructions:current.client.getInstructions(),
+      tools:names.flatMap(name=>current.tools.has(name)?[current.tools.get(name)!]:[]),
+      guidance:input.craft==="figcraft"?
+        "Reuse the inspected active document and its components/styles. Use native editable text and auto layout. Inspect only target nodes; batch related edits using the returned schema, then screenshot and correct. Do not open or replace a document. Reinspect before writes if the user switched tabs.":
+        input.craft==="solidcraft"?"Preserve the active design. Use named parametric features and staged batches; inspect, measure and screenshot after edits. Do not open or replace a design.":
+        "Preserve the active drawing. Read units, layers and measured geometry before editing; inspect and render after changes.",
+      note:"Only relevant schemas are returned; use bridge_call for these operations. Preparation is read-only. A lost mutation reply must be inspected before retrying."};
+  }
   async list(input:{server?:string;connect?:boolean}={}){
     const cfg=await this.getConfig();
     if(input.server && !cfg.servers[input.server])throw new Error("Unknown MCP bridge: "+input.server);
@@ -217,7 +278,10 @@ export class McpGateway {
     return {connectedThrough:"awsm",configuredServers:selected.length,servers:results,
       note:"Installed SolidCraft and CADCraft can be discovered but only started on request; explicit bridges.json entries override discovery. CADCraft defaults to a headless drawing; configure --connect to edit the visible app. Other MCPs require explicit configuration. Set AWSM_AUTO_SOLIDCRAFT=0 or AWSM_AUTO_CADCRAFT=0 to opt out. All calls run with local permissions."};
   }
-  async call(input:{server:string;tool:string;arguments?:Record<string,unknown>}){
+  async call(input:{server:string;tool:string;arguments?:Record<string,unknown>;briefId?:string}){
+    const readTools=["inspect_document","get_node","inspect_design","inspect_drawing","query_entities","find_text","list_commands","describe_command","skill_reference","measure","body_topology","screenshot","render","running","pending"];
+    const cadAnalysis=input.server==="cadcraft" && input.tool==="execute" && ["loops","shapes"].includes(String(input.arguments?.command));
+    if(["figcraft","solidcraft","cadcraft"].includes(input.server) && !readTools.includes(input.tool) && !cadAnalysis)authorizeCraft(input.server,input.briefId);
     const cfg=await this.getConfig();
     const server=cfg.servers[input.server];
     if(!server)throw new Error("Bridge is not configured: "+input.server);

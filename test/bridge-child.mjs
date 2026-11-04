@@ -72,4 +72,5 @@ server.registerTool("execute",{
 },async({command})=>({content:[{type:"text",text:JSON.stringify({
   command,closedLoops:command==="loops"?1:undefined,
 })}]}));
+server.registerTool("inspect_document",{description:"Inspect fixture active document.",inputSchema:{depth:z.number().optional()}},async()=>({content:[{type:"text",text:JSON.stringify({id:"active-fixture",name:"Active fixture",dirty:true})}]}));
 await server.connect(new StdioServerTransport());

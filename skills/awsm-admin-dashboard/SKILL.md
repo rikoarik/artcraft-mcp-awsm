@@ -17,10 +17,23 @@ Metrics must have units, periods and data provenance. Tables need purposeful col
 
 Reuse the repo's component system, route conventions, auth state and query patterns. Define a consistent design system with semantic tokens for information, success, warning, danger, selection and focus. Primary/destructive actions must be visibly distinct. Model confirmation dialogs, mutation feedback, optimistic updates, refreshes, invalid states, and unsaved forms. UI role gating is for usability only: security must be enforced by the backend.
 
-For FigCraft sources, inspect the entire layer tree and use prepare_web_handoff followed by native asset export and sync_figcraft_assets. Build text and controls as DOM; do not export table screenshots or whole sidebars as images. Use awsm-iconography for coherent navigation and toolbar icons and awsm-prototype-qa for actual validation.
+For FigCraft sources, inspect the requested frames and their relevant nested layers and use prepare_web_handoff followed by native asset export and sync_figcraft_assets. Build text and controls as DOM; do not export table screenshots or whole sidebars as images. Use awsm-iconography for coherent navigation and toolbar icons and awsm-prototype-qa for actual validation.
 
 ## Quality bar
 
 Test with sparse and large datasets, extreme labels, long numbers, unknown values, constrained screens, keyboard-only users, dark and light modes if supported, and high zoom. Ensure destructive changes display consequences. Compare list-to-detail journeys and permission transitions, not merely the home page.
 
 Deliver implemented pages and working interactions with the actual project stack. Explain what is simulated, missing or blocked. A dashboard full of polished cards is not complete if the operator cannot finish a real task.
+
+## Worked flow and bounded research
+
+Load admin-worked-example.md through design_guidance screens. It specifies an
+invoice queue/detail/edit flow, columns, context preservation, component contracts
+and failed-save recovery. Use its method for the real entity lifecycle rather than
+copying invoice fields into HR or inventory. An overview is optional; each metric
+must support an actionable task.
+
+Inspect one relevant domain reference plus the installed table/form primitives.
+For small edits inspect only the affected frame/component and dependencies. Reuse
+identity, tokens and accessible controls. Test the selected flow with sparse/long
+data; do not build unrelated reporting or settings pages to imitate a full suite.

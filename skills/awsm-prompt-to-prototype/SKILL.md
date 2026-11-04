@@ -1,11 +1,19 @@
 ---
 name: awsm-prompt-to-prototype
-description: Turn a written brief into an end-to-end web prototype: plan screens and states, source relevant assets, implement interactions, add purposeful motion, preview, and run QA. Use for “build a prototype from this prompt,” complete UIs, or interactive landing pages.
+description: "Turn a written brief into an end-to-end web prototype: plan screens and states, source relevant assets, implement interactions, add purposeful motion, preview, and run QA. Use for “build a prototype from this prompt,” complete UIs, or interactive landing pages."
 ---
 
 # Prompt to web prototype
 
 This skill coordinates a coding agent's work. It is **not** an automatic UI generator or a FigCraft canvas controller. Preserve the existing project's stack and brand; do not replace its scaffolding or break working features.
+
+## Ownership and stopping condition
+
+This is an end-to-end coordinator for a new scoped prototype. Resolve the brief once,
+load research/screens and pass execution to auto-prototype (ordinary web), fast-design
+(speed priority), app-ui (native) or native FigCraft. Do not invoke all coordinators
+or start another interview after a phase handoff. Stop coordinating when the scoped
+artifact and relevant acceptance checks are delivered; do not grow a product roadmap.
 
 ## Brief to blueprint
 
@@ -27,3 +35,10 @@ Provide the file paths, run instructions, working pages and interactions, a prev
 **Example:** “Build a studio-booking prototype from this brief, make navigation and the form work, use licensed photos and minimal motion, then show a mobile screenshot.”
 
 If the deliverable belongs on a FigCraft or Figma canvas, stop assuming a web output: use the corresponding design-app integration, inspect its document, and verify its rendered result. `awsm-figcraft-handoff` prepares specifications; it does not replace canvas tools.
+
+
+## From ordinary prompt to a complete small flow
+
+Treat the user's product request as the brief. Own typography, palette, icons and asset sourcing through research-direction.md in awsm-design. Ask only for missing domain facts or ambiguous write targets. When the user delegates choices, recommend them with reference-based reasons rather than inventing unsupported product capabilities.
+
+Use screen-blueprints.md to propose the smallest useful set, then implement it. A café landing page and an invoice console require different hierarchy, controls and evidence. Keep a short screen/state map and asset plan; do not delay the first meaningful screen with a long speculative document. Finish the actual scoped flow and inspect it in runtime, not only the design plan.

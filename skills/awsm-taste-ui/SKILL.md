@@ -7,7 +7,7 @@ description: Define a distinctive visual direction before choosing layout, color
 
 ## Read the context, not a generic moodboard
 
-Identify the product, audience, primary task, brand language, real content, platform, and accessibility constraints. For a redesign, capture the current UI and mark what should be preserved: brand elements, flows, and familiar components. Do not discard a recognizable identity merely to make it look new. If the brief is vague, propose one specific interpretation and name your assumptions.
+Identify the product, audience, primary task, brand language, real content, platform, and accessibility constraints. For a redesign, capture the current UI and mark what should be preserved: brand elements, flows, and familiar components. Do not discard a recognizable identity merely to make it look new. Own routine visual decisions through inspected references; ask only about missing product facts or ambiguous targets.
 
 ## Form a concept before writing markup
 
@@ -35,3 +35,16 @@ These instructions are original. If learning from another repository or template
 When supplied with an actual website, FigCraft document or screenshots, inspect the reference instead of guessing its visual style from a URL. Describe observable hierarchy, rhythm, typography, image treatment, grid and interaction intent, then interpret those decisions for the current product rather than copying a reference wholesale. Identify which source elements are actual assets and which should remain editable text, functional components and CSS/native primitives.
 
 Distinguish admin, SaaS marketing and mobile application contexts. Admin interfaces favor operational clarity and accurate states; native apps must honor platform ergonomics; editorial websites can use stronger motion and composition when it serves the story. In each case verify the output with a rendered page or device capture, not only a proposed direction. If no visual inspection tool is available, explicitly mark conclusions as provisional.
+
+## Worked decision and repair
+
+Load visual-decisions.md through design_guidance research. Record an actual
+reference observation, the product task, chosen principle, rejected alternative
+and rendered evidence. Its console and product-story examples show why a good
+background/type choice differs by task. Do not copy example palettes or claim the
+reference was inspected when it was unavailable.
+
+This skill owns concept direction; anti-slop owns diagnosis of an existing design.
+Stop exploration after a defensible direction and move to screens/implementation.
+Offer optional alternatives when useful, but do not make the user choose fonts,
+icons or individual colors before work can begin.

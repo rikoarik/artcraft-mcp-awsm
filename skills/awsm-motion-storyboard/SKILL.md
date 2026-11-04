@@ -21,3 +21,16 @@ List interaction events, not merely elements that could move. Describe each anim
 Capture before/after states or a recording. Test on slower mobile hardware where possible and with reduced motion. Inspect clipping, layout shifts, and input latency. Shorten or remove motion if it makes content harder to read. Hand off the storyboard and list of working animations; if the deliverable is only a static mockup, state that no actual animation exists.
 
 **Example:** “Add a slide-in menu and submission feedback to the booking prototype without distracting form users or people who prefer reduced motion.”
+
+## Worked choreography and technique choice
+
+Load motion-direction.md and motion-worked-example.md through design_guidance
+motion. The worked speaker story specifies entrance/hold/exit, object/camera changes,
+copy, background, mobile and reduced-motion alternatives for every segment. Adapt
+the intervals to the actual content; do not copy a global scroll fraction blindly.
+
+Inspect a chosen React Bits demo/source only when it fits the story, use the repo's
+matching variant and lifecycle, and fetch current library docs before API use.
+Implement in actual app components; .mjs preview/QA helpers are not the website.
+Report implemented versus proposed motion separately. Native app motion uses its
+platform playbook, not a browser scroll library.

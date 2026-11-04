@@ -3,90 +3,72 @@ name: awsm-design
 description: One practical design-to-code skill for AWSM. Use for designing websites, admin dashboards, mobile UI, FigCraft handoff, responsive implementation, fonts, icons, assets, CADCraft architectural drafting, CADCraft-to-SolidCraft building modeling and visual quality checks.
 ---
 
-# AWSM — design, implement, verify
+# AWSM: route, execute, verify
 
-Use **one** workflow rather than loading overlapping design skills. First understand the product, its user, the actual task and target stack. Prioritize a useful rendered result, not an elaborate planning document. Reuse the project's established UI components, assets, tokens, fonts, icons and dependencies.
+## One intake, appropriate execution
 
-## Intent-driven tool selection
+Use design_brief automatic mode for ordinary product prompts. The agent researches
+and owns routine color, typography, icon, imagery and motion decisions. Ask only
+for missing domain facts or an ambiguous target; reuse answers already supplied.
+Use guided mode only when the user wants to choose. It requires a displayed summary
+and separate confirmation. Automatic mode resolves researched recommendations
+without a visual-choice approval ceremony. Respect explicit constraints in both.
 
-Choose only the applications needed for the actual requested deliverable. For a 2D architectural plan or edits to an existing CADCraft drawing, use **CADCraft alone**. For new direct 3D modeling, edits or render-only requests, use **SolidCraft alone**. For architectural 2D-to-3D, use **CADCraft to inspect the authoritative floor plan** and **SolidCraft to construct the 3D building**. For an existing 3D model, use SolidCraft without reopening CADCraft unless the user wants source-plan reconciliation. Website publishing (`publish_3d_asset`) and FigCraft image placement are **strictly optional**; never run them just because an asset exists. Do not load browser/UI tools, add web dependencies or export unrelated files unless required by the user's request.
+A resolved briefId connects the work; do not restart intake when loading another
+phase. Load design_guidance for only the current phase and observed task intent.
+The MCP returns instructions, not hidden reasoning or autonomous research. Use the
+client's actual browsing, file editing and visual tools. Never claim a source was
+inspected or a render verified merely because a guide was returned.
 
-## First usable UI (web and mobile only)
+## Select the destination before tools
 
-This section does not apply to CAD, architectural drafting or standalone 3D work. For a **web/mobile UI** brief or existing UI project, call `design_quickstart` once with the actual brief and project root. Respect its context, but do not treat its inferred visual direction as proof of design quality. Choose a layout and hierarchy appropriate to the product: administrative systems need operable tables, filters and states; mobile apps need native navigation, safe areas and accessible controls; landing pages need meaningful copy, product proof and deliberate composition.
-
-Implement the first useful screen or section using the existing stack, including real content and the primary interaction. Render and review it early. Avoid generic gradient hero templates, arbitrary icon sets, excessive decorative cards, dead controls and long speculative planning.
-
-## One connection to other MCP servers
-
-AWSM can be the **only configured MCP entry in the coding agent** while forwarding to explicitly configured downstream MCP servers. List available integrations without launching them using `bridge_list({connect:false})`. Connect only to the provider(s) the task needs with `bridge_list({server:"cadcraft",connect:true})` or the matching server name, then call the discovered tool using `bridge_call({server,tool,arguments})`. Read each tool's input schema before invoking it.
-
-Installed CADCraft and SolidCraft CLIs are automatically discovered on PATH, **not launched until called**. Explicit entries in `.awsm/bridges.json` take precedence, and all other integrations require explicit configuration with command, args and an `allowedTools` list. Never invent credentials, command paths or tool names; a missing bridge is not an available integration. Never assume detection means the visible app is connected: `cadcraft-cli mcp` starts a separate headless drawing; to edit the visible CADCraft drawing, the user must configure the documented `mcp --connect HOST:PORT` bridge. AWSM never installs external applications. Use native FigCraft through this bridge if configured; otherwise the project must connect FigCraft separately. Calls to downstream tools can modify documents or files, so respect the user's permissions and avoid destructive actions without authorization.
+- Website or native app implementation: design_quickstart with briefId, then the
+  relevant implementation phase. App output includes its actual platform. A mobile
+  breakpoint does not make a website a native app.
+- FigCraft-only design/edit: craft_prepare with craft figcraft and briefId. Use
+  native editable frames/text/layout/components; do not generate a website.
+- CAD drawing: craft_prepare with craft cadcraft, inspect real units/entities/layers.
+- Requested CAD-to-3D: inspect authoritative CAD geometry, then model in SolidCraft;
+  dimensions absent from the plan remain unknown or explicitly estimated.
+- Handoff: set intent to-figcraft or from-figcraft only for the requested direction.
+  Never let an optional preview imply editable 3D or a new website.
 
 ## Direct 3D: SolidCraft only
 
-Treat standalone 3D as a **first-class end-to-end task**: e.g. "make a 3D chair", "model a house directly", "refine this 3D enclosure", "render my existing model", or "create an editable product model". When the request does **not** depend on a CADCraft plan, use only `bridge_list({server:"solidcraft",connect:true})` and the necessary `bridge_call` tools. **Do not connect CADCraft**, create a CADCraft drawing, run `design_quickstart` / browser review, call `publish_3d_asset`, prepare website code, or place anything into FigCraft. A CADCraft bridge shown as `configured` is not a reason to connect it.
+For standalone models, edits and renders, use SolidCraft and the resolved brief.
+Do not connect CADCraft without a source-plan task; do not create a website or
+FigCraft preview just because a model exists. A native model-only deliverable is
+complete when the requested editable source and verification are provided.
 
-Inspect the active SolidCraft design and choose the correct operation: for new models, use its official `solidcraft-modeling` skill, parameterized geometry and shape/reference-driven modeling; for edits, read `solidcraft-editing` and preserve existing work; for validation, read `solidcraft-checking`. Build the **requested object only**, with coherent dimensions, editable features and intended materials, then verify through `measure`, `inspect_design` and relevant `screenshot` views. A clean preview is for verification; launch native image rendering **only when the request calls for a polished render or image deliverable**.
+Style-first 3D direction: inspect actual references and establish units, dimensions,
+silhouette, feature hierarchy and material zones before detailed construction.
+Use native skill_reference for modeling/editing/checking and actual command schemas.
+Build staged, named parametric features. Inspect images and compare silhouette, ratio, edge treatment
+against the reference. Re-measure after geometry edits. Keep unsaved work and the
+original design safe; inspect after uncertain mutations instead of replaying them.
+Load modeling-direction and modeling-worked-example through design_guidance.
+They are workflows, not invented executable CAD commands or a fabrication guarantee.
 
-Deliver the artifact that was requested: an editable native `.sc` model for a project/model request (save to an authorized destination where available), a render for a render request, or the modified existing session for an edit-only request. Do not substitute an OBJ/PNG web package for a native SolidCraft model. Never overwrite an unsaved or existing design without authorization. Report when the active model could not be saved or visually verified rather than claiming completion. Use no additional integrations unless the user subsequently asks for them.
+## Focused guidance, not the whole library
 
-## Architecture: CADCraft floor plan to SolidCraft building
+Use routing for orchestration; research for sources/direction (audit or template
+intent where relevant); screens for the smallest complete flow; components for
+reusable state contracts; assets for sourcing or original simple SVG; implementation
+for actual code/canvas changes; handoff for explicit direction; motion/modeling
+only when relevant; validation for proportionate acceptance. Specialist content is
+available through MCP even with a core-only client installation. Do not ask users
+to name skills or explicitly enable the expanded library.
 
-Use this workflow **only for architectural drafting or requested 2D-to-3D conversion**, not for generic UI/website design. CADCraft is the drafting/source-of-truth application; SolidCraft is the parametric modeling and presentation application. Their MCPs do not supply an automatic DXF-to-BIM semantic converter. Keep the handoff tool-driven and lightweight: use existing AWSM `bridge_list` / `bridge_call`, not a second CAD engine, forced file converter, or unsolicited web publishing.
+## Target and evidence boundaries
 
-**Read the actual drawing.** For a CADCraft source, first connect the intended CADCraft session and call `inspect_drawing({})`. Use `query_entities({layer, type, limit, offset})` to page real entities, `find_text` for room labels and dimensions, and `render` for the visual plan. Call `execute({command:"shapes",params:{...}})` for explicitly closed profiles, or `execute({command:"loops",params:{...}})` for potential closed loops formed by loose lines and arcs. Inspect detected gaps and intersections; a loop is **not** necessarily a wall, and a layer label is a clue, not proof. Ignore drafting dimensions, hatch patterns, furniture symbols and text as geometry unless the actual brief calls for modeling them. Use world coordinates and layer/block information; do not infer room or wall dimensions from screenshot pixels.
+Inspect the actual document/project. Prefer its visible session for edits; never
+silently replace it with headless work. Pass briefId with Craft mutation calls.
+A brief target is intent, not a lock: reinspect after tab changes. Do not weaken
+file-access policy or overwrite customized user files to make a task appear done.
+Use native exports for independent artwork; retain functional text and controls.
 
-**Build an architectural interpretation.** Identify wall outlines versus centerlines, room boundaries, slab contours, door openings/swing arcs, windows, structural elements, levels and roof cues. Validate units and scale against dimensions, and decide consistent world axes with Z vertical; convert CADCraft drawing units to SolidCraft millimeters explicitly. Preserve original coordinates (or apply one documented origin offset) and map each 2D architectural element to a named 3D feature. Treat wall heights, slab thickness, sill/lintel heights, number of floors, façade and roof as unknown unless shown or specified. When missing values block a correct building, ask for the genuinely required architectural constraints or use clearly labeled, reversible design assumptions; never pass imagined building dimensions off as CAD evidence.
-
-**Construct only what's requested.** On the **SolidCraft MCP**, read `skill_reference({skill:"solidcraft-modeling"})`, inspect the existing design, then construct parametric slabs, wall segments/profiles, openings and optional stairs/roof/furniture using verified real commands from the SolidCraft command catalog. Use parameters for wall thickness, levels, heights and openings; meaningful names and staged rollback-enabled batches. Avoid automatically replacing a live open CAD design; `open` and `new_design` are intentionally not in AWSM's default SolidCraft allowlist. For a small schematic model, a clear massing model can be sufficient; do not invent full interiors or architecture styles that weren't requested.
-
-**Validate fidelity and visual quality.** Check the 3D footprints, outer dimensions, wall continuity, room partition alignment, openings and elevations against CADCraft entities and annotations, not just an attractive render. Measure SolidCraft's bounding boxes and volumes, inspect feature errors, compare top-view model screenshot to the 2D drawing, and review a clean isometric preview. Respect the architectural style/reference for massing, roof, façade, material and details when supplied; do not let styling silently change measured plan geometry. Report gaps, ambiguous symbols and any assumed heights/roof geometry. A successful SolidCraft command isn't evidence that the floor plan was reproduced accurately.
-
-**Scope and persistence.** If user asks only for drafting, leave SolidCraft untouched. If they ask only for 3D, do not involve CADCraft. If they ask for a rendered house, create the 3D and appropriate render; do not build a website or place an image in FigCraft. Save native CAD files or export presentation images only when requested, and respect both applications' file-access restrictions. Retain SolidCraft's editable `.sc` project for revisions when saving is requested. 2D-to-3D here is guided reconstruction using MCP and architectural meaning, **not** a guaranteed automatic DXF/DWG import or bidirectional BIM sync.
-
-## SolidCraft: high-quality parametric 3D (only when relevant)
-
-For CAD, product modeling, enclosures, mechanical parts or 3D asset requests, check `bridge_list({server:"solidcraft"})`. AWSM automatically discovers an **already installed** `solidcraft-cli` on PATH, but does not download software or launch it at startup. Connect only when the user requests SolidCraft work: `bridge_list({server:"solidcraft",connect:true})`, then use `bridge_call` with discovered tool schemas. If not found, state that SolidCraft must be installed or explicitly configured; do not fake a result. User config `.awsm/bridges.json` overrides autodiscovery. Never invoke SolidCraft for ordinary UI designs.
-
-**Use the official SolidCraft skills rather than replicating its CAD engine.** Start with `skill_reference({skill:"solidcraft-modeling"})` and `inspect_design({measure:false,sketches:false})` through `bridge_call`. Also read `solidcraft-checking` for validation and `solidcraft-editing` when modifying existing models. The official source of truth is https://github.com/tangency-labs/solidcraft/tree/main/skills. Call `list_commands` with a filter or `describe_command` for any unknown API shape; never invent CAD commands or copy an exhaustive command catalog into context.
-
-**Style-first 3D direction (before building geometry):** The user's requested style or supplied reference image is the source of truth for the *look*, not an excuse to apply a default "premium" appearance. If a reference image is available to the coding agent, inspect it before CAD calls. Translate it into a short internal style specification with: (1) silhouette and recognizable proportions, (2) surface language—flat/faceted vs rounded, edge radii and detail density, (3) primary/secondary color placement, (4) opaque material character and roughness, (5) desired composition, camera angle, framing and background, and (6) non-negotiable functional dimensions. Prioritize silhouette/proportions before color and lighting. For text-only briefs, infer a coherent direction from the requested style and intended use instead of falling back to generic gray CAD. Do not claim an image/reference was analyzed if it was not accessible.
-
-Treat visual direction as constraints on the **actual model**, not only post-processing: create a matching parametric shape vocabulary (bevels/fillets, repeated motifs, negative space, body segmentation and thickness), with purposeful named features. Use a small number of coherent opaque materials. "Soft toy", "low-poly", "hard-surface industrial", and "minimal product" imply different geometry and finish; they are not interchangeable presets. Do not add ornamental details that depart from the reference. Keep real dimensions and manufacturability authoritative for engineering tasks; visually interpret stylistic briefs when no fabrication accuracy is requested. SolidCraft is a parametric CAD system, **not** a freeform sculptor or full cinematic renderer: explain limitations for organic characters, true soft deformation, transparent glass, textured fabrics or other unsupported effects instead of inventing capabilities.
-
-**Modeling standard:** interpret real functional intent and dimensions before choosing geometry. Establish millimeter units, parameters, origin, symmetry, constraints and named features. Prefer editable sketches and a meaningful feature timeline to disconnected primitives. Build in a few purposeful `batch` calls with rollback enabled, stage risky boolean operations separately, and use `verbose:false` for large results. Respect existing unsaved designs: never reset or open another file without user approval. Changing a model is not approval to overwrite an existing file.
-
-**Geometric verification:** after meaningful features, use `measure` and compare bounding box, volume, centers and body count with independently expected dimensions. Check `inspect_design` for feature errors and sketch constraints; never equate a successful command response with a correct solid. Test at least one meaningful parameter change when parametric behavior matters, then re-measure to verify dependent geometry updates. Use `body_topology` selectively, not as default context. Check clearance, wall thickness, fillets, intersections, symmetry and intended manufacturability when relevant.
-
-**Visual presentation and style fidelity:** Once geometry is valid, assign a small set of intentional body/face appearances based on the style specification. For opaque product finishes SolidCraft supports `appearance.assign` with PBR values (metallic, roughness, dielectric IOR), independent from the physical material/density. Check command schema with `describe_command`; don't guess material names or renderer settings. Test the *actual* model using `screenshot({source:"model",view:"iso",width:960,height:720,grid:false,axes:false})` or a camera matched to the reference, plus a top/front/detail view when needed. The MCP screenshot returns image content: the coding agent should **inspect that image**, compare silhouette, ratio, edge treatment, component hierarchy, palette and angle against the user's reference, identify the 2–3 biggest visible mismatches, and make targeted edits. Re-measure after geometry edits. Repeat only as needed (typically up to 2–3 visual iterations); do not stop solely because `batch` returned success. Pixel-diff alone is not a semantic style comparison; don't claim exact style matching without visual examination.
-
-For an intentionally polished product image, use native `render.preflight`, `render.start`, `render.status` and `render.export` through `execute` with the full returned job ID, preserving the model's finish and a deliberate composition. Consult https://github.com/tangency-labs/solidcraft/blob/main/docs/render-jobs.md and docs/render-opaque-pbr.md. Match supported camera, material and framing choices to the brief. A clean model preview is valid when native product rendering is unavailable; never fabricate a "final render" or claim unsupported glass/refraction, HDRI, texture mapping or photorealism.
-
-**Deliverable:** save the editable `.sc` model when requested, export STEP or 3MF/STL for the actual downstream need, and provide representative image previews. Clearly separate verified geometry from visual-only polish. Calls to `execute`, `batch`, `save`, `export` and rendering can mutate state or write files; apply user approvals and file-scoping rules. Avoid `--allow-any-path` unless explicitly approved. If SolidCraft reports a running operation or a timeout, inspect state before repeating a mutation.
-
-## Publish SolidCraft models into websites and FigCraft
-
-For requests to create 3D assets for a website and/or FigCraft, first model in SolidCraft through its existing MCP as above. Check the actual rendered preview for style fidelity and `measure` for geometry. Save an editable `.sc` source model to a permitted project path when persistence is requested, especially before leaving a headless session. Only after the model meets the brief, use **AWSM `publish_3d_asset`** with the existing website project root and a unique kebab-case name. It exports the active SolidCraft model to `public/assets/3d/<name>/model.obj` and writes an isometric PNG preview at `preview.png`. This tool prepares assets; the coding agent must still integrate the web component in the project's actual framework, respecting its architecture.
-
-For an **interactive 3D website**, use the project's existing 3D renderer or Three.js OBJLoader, set correct scale/framing/lights, handle loading and errors, respect reduced motion, provide an accessible PNG fallback, lazy-load below-the-fold scenes, and test desktop/mobile performance. OBJ is geometry interchange, **not** an optimized or style-complete web format: model colors, material properties and PBR often need explicit recreation. For shipping, prefer a locally converted and verified GLB when the existing project has Blender/other supported conversion tools, and avoid auto-installing a converter or inventing SolidCraft GLB export. Keep geometric source in SolidCraft and optimize geometry/textures rather than blindly embedding huge files.
-
-For **FigCraft**, first inspect the document through its *configured native MCP* and confirm the target frame/layer. Its `file.placeImage` can place the PNG render into the active document, but FigCraft is a 2D interface design tool: this **does not insert an editable 3D model**. Supply the optional `figcraft` positioning option to `publish_3d_asset` only when the FigCraft bridge is configured and points at the intended document. FigCraft placed layers remain editable as image layers; use them as design mockups / assets, not native mesh objects. If FigCraft isn't connected, publish the website assets and report `not-placed` rather than claiming success. User must configure an attached FigCraft MCP when expecting the **visible desktop app** to change; headless FigCraft is a separate, invisible document.
-
-SolidCraft `export` obeys its own file access boundaries, and FigCraft `file.placeImage` obeys its read roots. Do not automatically disable those protections, overwrite existing assets, or repeat a potentially completed mutation after a lost reply. Verify returned paths and the actual rendered web page and FigCraft layer. Do not present a PNG asset as interactive 3D.
-
-## When a FigCraft source exists
-
-Inspect the source document through **FigCraft's own MCP**, either directly when already connected or through the AWSM gateway when configured. Call AWSM `prepare_web_handoff` with a complete layer tree and optional asset inventory; review ambiguous layers. Use FigCraft's native export for individual artwork, then `sync_figcraft_assets` for file paths and a verified asset manifest. Keep text, buttons, tables, layouts and application components as editable HTML or native widgets. Never flatten a full functional screen to a single image.
-
-## Visual assets and typography
-
-Use local assets first. For missing images or icons, call `find_design_assets` with a small batch of purposeful queries. Prefer a single icon family; use `save_icon_set` or `draw_icon` only for genuine missing icon assets. Inspect licensing and attribution. Use `extract_design_tokens` when FigCraft layer data exists. For fonts, reuse project fonts or `google_font` and integrate via the target framework. Check glyph coverage, font weights and license before release.
-
-## Review and fix
-
-Run the actual app. When project-local Playwright is available, prefer `review_ui` for a single-pass browser audit, screenshots and optional matching-size FigCraft comparison. Fix major hierarchy, typography, overflow, broken images, inaccessible controls and bad responsive layout before decorative polish. The coding agent makes code changes; AWSM only provides evidence and utilities. Verify working navigation, interactions and relevant loading, empty and error states separately. Do not claim browser/device verification when none occurred.
-
-## Boundaries
-
-AWSM is a **local, free stdio MCP**, not a second autonomous coding agent. Do not automatically install browser binaries, change frameworks, replace user-customized files, or create a VPS. Load additional specialized skills only when the user explicitly wants the expanded library. Keep the implementation maintainable and report unverified areas clearly.
+Deliver the scoped working artifact with relevant source paths, inspected output,
+working/simulated/blocked behaviors and material limits. For web use the real dev
+server and review_ui when available; verify actions separately. For apps inspect
+the actual runtime; for models check dimensions/features and views. A build, static
+mockup, guide response or screenshot alone cannot prove every kind of completion.

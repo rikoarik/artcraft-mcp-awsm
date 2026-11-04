@@ -22,3 +22,16 @@ Check 16px, 20px, 24px and high-density rendering. Confirm that disabled, active
 ## Acceptance
 
 Return the icon naming and file mapping, chosen family and license, implementation references, any genuinely custom SVGs, and states that were visually inspected. Report missing icons explicitly; never silently substitute an unrelated shape. The goal is a consistent, functional icon language across the whole product, not an impressive-looking collection of disconnected symbols.
+
+## Worked use and delivery
+
+For the invoice example, map search/filter/add/edit/more to one existing family;
+keep Save visibly labeled and do not use a currency symbol as an ambiguous Pay
+button. Follow component-worked-example.md for the props/state contract and
+visual-decisions.md for source versus original-vector decisions. Load these through
+design_guidance components/assets; do not ask users to pick individual glyphs.
+
+Reuse a suitable installed icon package before downloading duplicate files. If a
+concept is absent, draw an original vector with the same optical language and
+verify the actual production size. Do not treat a toolbar icon as a brand identity.
+Acceptance is semantic clarity and correct rendered states, not the number of icons.

@@ -1,22 +1,23 @@
+import { designGuidance } from "./design-guidance.js";
+import { confirmedBrief } from "./design-brief.js";
 import { inspectUiProject } from "./project-scan.js";
 import { analyzeFigcraft } from "./handoff.js";
 import { extractDesignTokens } from "./design-tokens.js";
 
 type Kind="auto"|"marketing"|"admin"|"mobile"|"web-app";
 type Speed="fast"|"balanced"|"thorough";
-const includes=(s:string,words:string[])=>words.some(x=>s.includes(x));
 export async function designQuickstart(input:{
-  brief:string;kind?:Kind;speed?:Speed;root?:string;document?:unknown;inspectAssets?:unknown;
+  brief:string;briefId?:string;kind?:Kind;speed?:Speed;root?:string;document?:unknown;inspectAssets?:unknown;
 }) {
   const brief=input.brief.trim();
   if(brief.length<8 || brief.length>8000)throw new Error("Brief must be 8..8000 characters.");
   const speed=input.speed??"fast";
-  const project=input.root ? await inspectUiProject({root:input.root}) : undefined;
-  const words=brief.toLowerCase();
-  const kind:Exclude<Kind,"auto">=input.kind && input.kind!=="auto"?input.kind:
-    includes(words,["dashboard","admin","backoffice","hris","crm","operator","operasional","reporting"])? "admin":
-    includes(words,["flutter","android","ios","expo","react native","mobile app"])? "mobile":
-    includes(words,["landing","marketing","company profile","website promosi","portfolio"])? "marketing":"web-app";
+  const choices=confirmedBrief(input.briefId);
+  if(!["website","app"].includes(choices.outcome!))throw new Error("Website or app implementation was not selected.");
+  const kind=choices.outcome==="app"?"mobile":choices.category!;
+  if(input.kind && input.kind!=="auto" && input.kind!==kind)throw new Error("UI kind conflicts with the confirmed brief.");
+  if(input.root && input.root!==choices.target)throw new Error("Project root conflicts with the confirmed target.");
+  const project=choices.projectMode==="existing"?await inspectUiProject({root:choices.target}):undefined;
   const figcraft=input.document===undefined ? undefined : analyzeFigcraft({document:input.document,inspectAssets:input.inspectAssets});
   const tokens=input.document===undefined ? undefined : extractDesignTokens({document:input.document});
   const workflowByKind:{
@@ -40,15 +41,19 @@ export async function designQuickstart(input:{
   const blockers=figcraft?.issues.filter(i=>i.severity==="warning")??[];
   const actions=[
     "Inspect only the relevant app entry point, design tokens, and existing reusable components; avoid a full-repository inventory before first render.",
-    figcraft?"Use prepared FigCraft node roles: DOM for text/controls, export plan for independent photo/vector assets; resolve ambiguous critical layers.":"Choose one specific design direction from product context and produce a first functional screen, not several generic mockups.",
+    figcraft?"Use prepared FigCraft node roles: DOM for text/controls, export plan for independent photo/vector assets; resolve ambiguous critical layers.":"Follow the user-selected visual direction: "+choices.style,
     "Reuse available framework, icons and font files before fetching new assets; batch any missing icon/photo/font lookups.",
     "Implement first priority screen with real text and data shapes. Do not write a large speculative design document first.",
-    "Render and inspect one desktop and one mobile viewport; correct the three most consequential visual/usability defects.",
+    choices.outcome==="app"?"Run the target app and inspect its primary device journey, keyboard and system back. A browser image is not native-device validation.":"Render and inspect one desktop and one mobile viewport; correct the three most consequential visual/usability defects.",
   ];
   if(speed!=="fast")actions.push("Expand to the remaining required screens and validate navigation and component variants.");
   if(speed==="thorough")actions.push("Run accessibility, performance, functional journey and viewport regressions before handoff.");
   return {
-    schemaVersion:"awsm.design-quickstart/v1", kind,speed,brief,framework:project?.framework??"unspecified",
+    schemaVersion:"awsm.design-quickstart/v2", choices,kind,platform:choices.platform,
+    guidance:await designGuidance({phase:"screens",briefId:input.briefId}),
+    implementationIntent:figcraft?"from-figcraft":"create",
+    implementationGuide:figcraft?await designGuidance({phase:"handoff",intent:"from-figcraft",briefId:input.briefId}):undefined,
+    nextPhases:["components",...(choices.motion && choices.motion!=="none"?["motion"]:[]),...(choices.route.crafts.includes("solidcraft")?["modeling"]:[]),"validation"],speed,brief,framework:project?.framework??"unspecified",
     project:project && {root:project.root,existingDirs:existing,uiPackages:project.uiPackages, scripts:project.scripts},
     firstDeliverable:plan.firstScreen,
     inspectBudget:{maxInitialFiles:6,initialViewports:[375,1440],noMandatoryMoodboard:true},

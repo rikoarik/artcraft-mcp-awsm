@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {syncSkills} from '../build/skill-sync.js';
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'awsm-resource-sync-'));
+const source=path.join(temp,'source');const target=path.join(temp,'target');
+const ref='awsm-design/references/research-direction.md';
+fs.mkdirSync(path.join(source,'awsm-design/references'),{recursive:true});
+fs.writeFileSync(path.join(source,'awsm-design/SKILL.md'),'core');
+fs.writeFileSync(path.join(source,ref),'research v1');
+assert.equal(syncSkills(source,target,false,'core').added,2);
+assert.equal(fs.readFileSync(path.join(target,ref),'utf8'),'research v1');
+fs.writeFileSync(path.join(target,ref),'user-custom research');
+fs.writeFileSync(path.join(source,ref),'research v2');
+assert.equal(syncSkills(source,target,false,'core').preserved,1);
+assert.equal(fs.readFileSync(path.join(target,ref),'utf8'),'user-custom research');
+console.log('Managed skill reference preservation tests passed');

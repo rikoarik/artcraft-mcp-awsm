@@ -5,6 +5,14 @@ description: Test a new or updated web prototype for interactions, responsivenes
 
 # Evidence-based prototype QA
 
+## Scale checks to the change
+
+Load validation-matrix.md through design_guidance validation. A one-icon change
+needs actual-size/contrast/host checks, not a full checkout test suite. A complete
+flow needs its action and failure recovery. Native app validation belongs to the
+platform runtime; the browser-only audit cannot certify it. Reuse an existing
+report when unaffected checks already passed and no new concern justifies reruns.
+
 ## Prepare the test matrix
 
 Get the URL or local run command and the developer's primary journeys. Record 360px, 768px, and 1200px viewports, adding widths where a layout breaks; note the available browser and relevant `default / loading / empty / error / success` states. Do not claim browser or screenshot testing if those tools were unavailable.
@@ -31,3 +39,10 @@ Conclude with pass/fail status per journey, build and test commands, screenshot 
 ## Optional automated browser audit
 
 If Playwright is already installed for the actual project, run `audit_ui_page` at mobile and desktop widths before claiming a production-quality UI. Review overflow, broken image URLs, placeholder navigation, unnamed controls, unlabeled form fields and browser runtime errors. Use `capture_ui_screenshots` and `compare_ui_screenshots` for visual regression against original FigCraft frames, but never treat pixel matching as a functional test. If Playwright is unavailable, report that these checks were skipped instead of inventing results.
+
+
+## Acceptance scenarios from the flow
+
+Derive tests from the user's job: locate an item, inspect its detail, perform the primary action and recover from a failed operation. Use the real route/state architecture, deterministic fixture data and non-destructive test actions. Separate simulated persistence from API-backed behavior.
+
+Exercise focus entry/return in dialogs, Escape, invalid form preservation, disabled/loading controls and navigation context. Verify there are no dead placeholder links in the requested flow. For motion, follow the section-state acceptance in awsm-design/references/motion-direction.md. Report which scenarios ran, evidence locations, remaining defects and limits. Do not call an untested route complete because its sidebar item exists.

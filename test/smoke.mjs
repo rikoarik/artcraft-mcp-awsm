@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdtempSync, readFileSync, writeFileSync, existsSync, readdirSync, realpathSync } from 'node:fs';
+import { tmpdir as systemTmpdir } from 'node:os';
+const tmpdir = () => realpathSync(systemTmpdir());
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
+process.env.AWSM_AUTO_FIGCRAFT='0';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const cwd = mkdtempSync(path.join(tmpdir(), 'awsm-test-'));
 const run = (...args) => spawnSync(process.execPath, [path.join(root, 'build/index.js'), ...args], { cwd, encoding: 'utf8' });
@@ -15,6 +17,7 @@ assert.equal(result.status, 0, result.stderr);
 let config = JSON.parse(readFileSync(path.join(cwd, '.opencode/opencode.json'), 'utf8'));
 assert.deepEqual(config.mcp.servers.awsm.command, ['npx', '-y', 'my-awsm-mcp']);
 assert(existsSync(path.join(cwd, '.opencode/skills/awsm-design/SKILL.md')));
+assert(existsSync(path.join(cwd,'.opencode/skills/awsm-design/references/motion-direction.md')));
 assert(!existsSync(path.join(cwd, '.opencode/skills/awsm-assets/SKILL.md')),
   'Default installation should not include 21 overlapping specialist skills');
 result = run('setup');
@@ -135,7 +138,7 @@ const client = new Client({ name: 'awsm-smoke', version: '1.0.0' });
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 24);
+  assert.equal(tools.tools.length, 27);
   for (const tool of tools.tools) {
     assert(!/\b(?:untuk|dengan|jangan|pakai|sebelum|gambar|ikon|lisensi|warna|tidak|bukan|hasil|buat|simpan)\b/i.test(JSON.stringify(tool)), `${tool.name}: untranslated tool description`);
   }
@@ -153,8 +156,10 @@ try {
   const noServer=await client.callTool({name:'bridge_call',arguments:{server:'missing',tool:'echo'}});
   assert.equal(noServer.isError,true);
   const webProject=mkdtempSync(path.join(tmpdir(),'awsm-3d-web-'));
+  const publishDraft=JSON.parse((await client.callTool({name:'design_brief',arguments:{mode:'guided',answers:{outcome:'website',category:'marketing',projectMode:'existing',target:webProject,style:'Keep current',threeD:'interactive',scope:'Product model',session:'separate',preview:'figcraft'}}})).content[0].text);
+  const publishBrief=JSON.parse((await client.callTool({name:'design_brief',arguments:{briefId:publishDraft.briefId,confirm:true}})).content[0].text);
   const published=await client.callTool({name:'publish_3d_asset',arguments:{
-    projectRoot:webProject,name:'sample-camera',figcraft:{x:100,y:150,width:560,height:420},
+    briefId:publishBrief.briefId,projectRoot:webProject,name:'sample-camera',figcraft:{x:100,y:150,width:560,height:420},
   }});
   assert.equal(published.isError,undefined,published.content[0].text);
   const result3d=JSON.parse(published.content[0].text);
@@ -164,12 +169,12 @@ try {
   assert(existsSync(result3d.asset.preview));
   assert(readFileSync(result3d.asset.model,'utf8').includes('f 1 2 3'));
   const duplicate3d=await client.callTool({name:'publish_3d_asset',arguments:{
-    projectRoot:webProject,name:'sample-camera',
+    briefId:publishBrief.briefId,projectRoot:webProject,name:'sample-camera',
   }});
   assert.equal(duplicate3d.isError,true);
   assert(existsSync(result3d.asset.model));
   const badAssetName=await client.callTool({name:'publish_3d_asset',arguments:{
-    projectRoot:webProject,name:'../unsafe',
+    briefId:publishBrief.briefId,projectRoot:webProject,name:'../unsafe',
   }});
   assert.equal(badAssetName.isError,true);
   const customIcon = await client.callTool({name:'draw_icon',arguments:{
@@ -215,7 +220,9 @@ try {
   assert.equal(contrast.isError,undefined,contrast.content[0].text);
   assert.equal(JSON.parse(contrast.content[0].text).results[0].ratio,21);
   assert.equal(JSON.parse(contrast.content[0].text).failedAA,1);
-  const fast = await client.callTool({name:'design_quickstart',arguments:{brief:'Create an operational admin dashboard for managing invoices and customers',kind:'admin',speed:'fast',document:tokensDoc}});
+  const briefDraft=JSON.parse((await client.callTool({name:'design_brief',arguments:{mode:'guided',answers:{outcome:'website',category:'admin',projectMode:'new',target:'./invoice-demo',style:'Keep existing',threeD:'none',scope:'Invoices and customers'}}})).content[0].text);
+  const approvedBrief=JSON.parse((await client.callTool({name:'design_brief',arguments:{briefId:briefDraft.briefId,confirm:true}})).content[0].text);
+  const fast = await client.callTool({name:'design_quickstart',arguments:{briefId:approvedBrief.briefId,brief:'Create an operational admin dashboard for managing invoices and customers',kind:'admin',speed:'fast',document:tokensDoc}});
   assert.equal(fast.isError,undefined,fast.content[0].text);
   const fastResult = JSON.parse(fast.content[0].text);
   assert.equal(fastResult.kind,'admin');
@@ -438,7 +445,7 @@ if (process.platform !== 'win32') {
 const skillTarget = mkdtempSync(path.join(tmpdir(),'awsm-runtime-skills-'));
 const secondTransport = new StdioClientTransport({command:process.execPath,args:[path.join(root,'build/index.js'),'--managed-skills',skillTarget],cwd});
 const secondClient = new Client({name:'runtime-sync-check',version:'1.0.0'});
-try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,24); }
+try { await secondClient.connect(secondTransport); assert.equal((await secondClient.listTools()).tools.length,27); }
 finally { await secondClient.close(); }
 assert(existsSync(path.join(skillTarget,'awsm-design','SKILL.md')));
 assert(!existsSync(path.join(skillTarget,'awsm-admin-dashboard','SKILL.md')));

@@ -25,7 +25,7 @@ Do not ignore false differences caused by antialiasing, non-deterministic data, 
 
 ## DOM and behavior diagnostics
 
-Run `audit_ui_page` against the same localhost URL before relying on visual judgement. It opens controlled browser contexts and returns viewport-specific issues with suggested fixes: page overflow, offscreen elements, broken images, missing labels, placeholder links, unusually small buttons and console errors. It does not click links, submit forms or inspect authenticated routes unless a local session already provides access.
+Run `audit_ui_page` against the same localhost URL before relying on visual judgement. It opens controlled browser contexts and returns viewport-specific issues with suggested fixes: page overflow, offscreen elements, broken images, missing labels, placeholder links, unusually small buttons and console errors. It does not click links or submit forms. Its fresh browser context does not inherit the user's authenticated browser session; use authorized client session tooling or a scoped fixture for protected routes, and do not claim coverage from a login-page capture.
 
 Prioritize high-severity issues, then medium. Review reported CSS selectors in the real code rather than blindly applying fixes. The audit is heuristic: false positives are possible, and a clean report does not prove WCAG compliance or functional correctness. Browser resources outside the local origin are intentionally blocked and reported; missing remote fonts can change screenshot fidelity.
 
@@ -40,3 +40,10 @@ Re-render both major viewports, recompare and confirm that new changes did not b
 Provide screenshot paths, comparison thresholds, changed percentage, unresolved regions, and any blocked resources or missing tools. Clearly distinguish measured pixel difference from visual judgement. A QA pass requires both adequate design fidelity and successful functional checks relevant to the product.
 
 This skill orchestrates existing tools; it does not automatically create or modify the FigCraft canvas, interpret images inside the MCP tool itself, or guarantee perfect fidelity.
+
+
+## Critique the actual design decisions
+
+Separate factual defects (overflow, absent font, wrong asset, unreadable contrast) from composition concerns (weak hierarchy, irrelevant background, repetitive sections). Tie each concern to the approved or delegated direction and a specific screen region. Do not substitute an arbitrary aesthetic score for evidence.
+
+For immersive pages, inspect representative scroll states and transitions in addition to static screenshots. For admin, inspect list/detail/form and at least one failure state. For mobile, inspect keyboard and back navigation. Repair the most consequential defects and recapture the same states. A build, screenshot diff or rendered 3D preview alone cannot prove a complete interaction or an accessible application.

@@ -30,3 +30,12 @@ Specify type roles (display/title/body/label), density and spacing, and breakpoi
 For a data-heavy admin system, include navigation chrome, filter bars, high-density tables, column settings, forms, approval dialogs, alerts and record activity trails. For native apps, include platform-specific safe-area handling, bottom navigation, screen transitions, input states, sheet behavior and scaling with the system text size. In both cases define icon dimensions, optical alignment and semantic meanings. Keep action icons stable across screens through awsm-iconography rather than mixing arbitrary libraries.
 
 Connect source-design layers and their code counterparts when FigCraft is involved. Name exportable artwork separately from reusable functional components; do not describe rasterized controls as design-system components. Validate each semantic token in actual states and in representative layouts, not only in a token table. Preserve existing code names and migrations unless the requested work explicitly authorizes a breaking rename.
+
+## Worked contract and scope
+
+Load component-worked-example.md through design_guidance components. It traces an
+invoice field and save action from semantic tokens to props, invalid/loading/failure
+states and one real usage. Adopt its reasoning, not arbitrary values or invented
+framework APIs. Build only components needed by the selected flow. A foundations
+sheet plus relevant state variants is enough for a small design; a token inventory
+without a working usage does not pass.

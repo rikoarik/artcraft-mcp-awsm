@@ -5,6 +5,14 @@ description: Implement interactive web prototypes and motion using the project's
 
 # A working prototype, not a clickable-looking screenshot
 
+## Execution boundary
+
+Implement the already scoped web flow. Core/prompt-to-prototype supplies the brief;
+do not restart discovery or invoke another coordinator. Use fast-design instead
+when the task explicitly prioritizes the first render. For native code, route to
+app-ui; for canvas-only work, use craft_prepare and native FigCraft. Hand the finished
+flow to relevant validation checks, not to a second prototype generator.
+
 ## Interaction contract
 
 Before coding, make a table: `control | action | state change | feedback | keyboard behavior | fallback`. For a reservation form, cover required fields → validation → loading → confirmation. Without a backend, never imply that data has been saved remotely. Links must point to real destinations. An external CTA may lead to a working URL or be clearly labeled unavailable; do not ship dead buttons.
@@ -26,3 +34,10 @@ Before coding, make a table: `control | action | state change | feedback | keybo
 Use `serve` only for a safe static HTML directory; it is not deployment. For framework applications, use the project's development server. In a browser, test the primary journey on mobile and desktop, check JS and network errors, exercise Tab/Enter/Escape, and test reduced motion. Follow `awsm-prototype-qa`. Hand off an interaction list marked `working / simulated / blocked` with screenshot evidence, not a vague completion claim.
 
 **Example:** “Turn these three wireframes into real navigation and a booking form with state changes, a short menu animation, and a 360px screenshot.”
+
+
+## Framework-native delivery
+
+Read screen-blueprints.md and motion-direction.md in awsm-design for the requested flow. Implement real routes, state transitions and component boundaries in the existing stack. Shared controls should have meaningful props; avoid one huge page that duplicates every button and field.
+
+Adapt a researched animation component such as a chosen React Bits example only when it fits the flow; inspect source, dependencies and current APIs. Integrate it with routing, theme, loading and cleanup. A separate script that generates an animated preview is not a functioning site. Run the app and test a complete user action with keyboard and touch-sized layout. Keep mock data labeled and backend integration boundaries explicit.

@@ -24,3 +24,15 @@ Describe the user in practical terms—what they are trying to accomplish, not d
 Report `journey | friction | evidence | severity | recommendation | validation method`. Use browser tests and screenshots before declaring a problem solved. For implementation, see `awsm-auto-prototype`; for final QA, see `awsm-prototype-qa`.
 
 **Example:** “Review this checkout form: users struggle with shipping costs. Improve field order, error handling, and the mobile keyboard flow, then explain how to test each change.”
+
+
+## Decide the pages before polishing
+
+Use awsm-design/references/screen-blueprints.md to select a small complete journey. For operations, prefer list -> detail -> edit/action; for mobile, home/list -> detail -> confirmation; for marketing, one clear conversion page can suffice. Do not add login/settings/billing simply because typical apps contain them.
+
+Create a screen contract: purpose, primary action, input/data, transition, loading/empty/error/denied state and recovery. Derive component variants from those contracts rather than building a large arbitrary library. Inspect current platform guidelines and actual product references. Validate the smallest complete journey in real output, including back navigation and preserved form data after failure. The deliverable is usable screens and evidence, not only heuristic advice.
+
+
+## Focused execution reference
+
+Use admin-worked-example.md or mobile-worked-example.md when the job matches. Each shows pages that exist for a reason and states within those pages; do not add routes merely to display an empty/error state. Use component-worked-example.md for the actual control contract.

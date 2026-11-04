@@ -27,3 +27,15 @@ Report `viewport | issue | evidence | change | retest status`. Include screensho
 Use audit_ui_page against the real local dev server when Playwright is available. Inspect reported horizontal page overflow and offscreen elements by CSS selector at the relevant viewport rather than blindly reducing global font size. Compare 375px and 1440px screenshots with capture_ui_screenshots, and use compare_ui_screenshots with equal-size FigCraft PNGs when an original design is available.
 
 For wide admin tables, prefer controlled container scrolling, column priority or a dedicated responsive data view over collapsing entire tables into unreadable cards. Distinguish intended horizontal scrolling inside a data grid from accidental page-level overflow. After repairing the actual layout, rerun checks at the problem viewport and a neighboring viewport. Report tests not run when Playwright or a running local server is unavailable.
+
+
+## Composition and motion states
+
+Audit layout at content breakpoints, not only named device sizes. Capture a long title, expanded navigation, validation error, open dialog and a dense table. Distinguish intentional table scrolling from page overflow. Keep label/action relationships clear when columns change.
+
+For scroll scenes, inspect each pinned segment entrance/hold/release on mobile as well as desktop. A smaller screen may require a different subject crop, text placement or a static scene instead of scaled-down parallax. Verify viewport-height changes, orientation, font loading and restored scroll position. Use motion-direction.md in awsm-design for the scroll-state matrix; do not claim responsive success from a single hero image.
+
+
+## Focused execution reference
+
+Use design_guidance validation for automatic availability and validation-matrix.md to bound the audit. An icon change needs representative host widths; a scroll experience needs the full entrance/hold/release matrix. Do not repeat all functional tests when only an unrelated crop changed.

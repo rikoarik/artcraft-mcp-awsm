@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "build": "tsc && chmod 755 build/index.js build/setup.js",
-    "test": "npm run build && node test/smoke.mjs",
+    "test": "npm run build && node test/smoke.mjs && node test/craft-session.mjs && node test/design-brief.mjs && node test/design-guidance.mjs && node test/skill-resources.mjs",
     "demo": "npm run build && node demo/make-demo.mjs",
     "setup": "node build/setup.js",
     "prepare": "npm run build",

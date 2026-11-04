@@ -5,13 +5,13 @@ description: Convert messy FigCraft layers into a structured, asset-aware web im
 
 # FigCraft to web implementation
 
-Use FigCraft's native MCP to inspect, export and render designs; AWSM cannot edit the canvas.
+Use this skill only for from-figcraft work into the requested website/app. Native FigCraft tools inspect/export/render the source, directly or through AWSM bridge calls. The reverse code-to-canvas direction belongs to awsm-figcraft-handoff.
 
 ## Inspect and classify
 1. Inspect all relevant pages, nested layers, assets and IDs using FigCraft MCP. Ensure nested layer trees are complete.
 2. Invoke AWSM prepare_web_handoff with raw inspect_document JSON as document, optional inspect.assets JSON as inspectAssets, exportDir and outputPath. Screenshot images are not layer trees.
 3. Review layers, assets and issues. Fix ambiguous or truncated layers. Explicit pluginData awsm.kind can be asset, image, photo, illustration, icon, layout, component, text or decoration.
-4. Keep page hierarchy semantic: Header, Hero/Copy, Hero/Media, Features, Footer. Name layers by purpose, not Frame 23 or Rectangle 9. Preserve reusable components and text layers.
+4. Keep hierarchy semantic for the actual source: marketing may use Header/Hero/Features/Footer; an app may use Shell/Toolbar/List/Detail/Form. Name layers by purpose, not Frame 23 or Rectangle 9. Preserve reusable components and text layers.
 
 ## Export actual assets
 - Treat text, buttons, cards, grids and backgrounds as DOM/CSS, not images.
@@ -38,10 +38,17 @@ Do not equate a FigCraft node type with an implementation technology. Use an exp
 
 When image fills are mixed with text in a group, separate the background-image layer and the live content. Use a naming convention: Page / Region / Component / Role. Typical roles include HeroPhoto, BrandIllustration, NavIcon, DecorativeTexture, DataVisualization, Copy and PrimaryAction. Export visual assets only when they cannot be recreated safely using primitives or native widgets. Retain source layer ID, meaningful alt text, crop intent, file type and licensing data.
 
-Before code implementation, inventory every screen and every asset with unresolved role. Validate that the handoff does not contain duplicate filenames, missing page roots or fully rasterized functional sections. Reusable FigCraft components are not automatically reusable code components; decide variants, props and state transitions using the application's actual data model. Confirm whether a chart is decorative or driven by data; data-driven charts belong in code, not an exported bitmap.
+Before implementation, inventory the requested source frames and their assets with unresolved roles; do not scan unrelated pages for a small edit. Validate that the handoff does not contain duplicate filenames, missing page roots or fully rasterized functional sections. Reusable FigCraft components are not automatically reusable code components; decide variants, props and state transitions using the application's actual data model. Confirm whether a chart is decorative or driven by data; data-driven charts belong in code, not an exported bitmap.
 
 After the UI is implemented, use browser or device screenshots for a design-to-code comparison. Review primary navigation, text accessibility, all real controls, image cropping and empty/loading/error states before accepting the handoff. A correct screenshot with dead interactions is not a completed application.
 
 ## Verify the exported design as a working UI
 
 Once source layers and assets are mapped, capture the local app at the source FigCraft frame's physical pixel dimensions. Use compare_ui_screenshots to find the largest changed regions, then let the coding agent interpret them against the source design and fix real components. Run audit_ui_page to check overflow, broken assets, link destinations, control names and runtime errors. This separates visual parity from functional and accessibility requirements; a pixel-perfect rasterized screen is never an acceptable substitute for a working application.
+
+
+## Translate structure and behavior
+
+Inspect the selected source frame's hierarchy, text, constraints, layout and reusable components. Translate those relationships into semantic HTML/native controls and responsive layout; avoid absolute-positioning the entire page from screenshot coordinates.
+
+Create an implementation map: frame -> route, component -> reusable source, state -> interaction, independent art -> export. Use the motion-direction reference in awsm-design to author scroll and transitions in the actual framework. Do not claim static FigCraft art contains an implemented animation. Verify fonts, image crops, component states, mobile reflow and the primary task against runtime evidence.

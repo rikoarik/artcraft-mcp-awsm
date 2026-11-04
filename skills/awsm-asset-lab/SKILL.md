@@ -22,3 +22,15 @@ Identify its purpose, platform and dimensions, short title and subtitle, brand c
 Do not describe a badge as a finished brand identity or a template graphic as an “AI-generated photo.” This package contains no image model. Hand off the path, type, dimensions, colors, preview, and target-format notes. If the user needs relevant photography, use `awsm-assets`.
 
 **Example:** “Create a short-title Open Graph card for Kopi Pagi in dark green, inspect the preview, and provide the SVG and colors used.”
+
+
+## Original artwork with honest tool boundaries
+
+Design the asset around a placement: dimensions, reading distance, dominant shape, text-safe area and brand role. For a simple graphic, create a deliberate vector composition with consistent type and optical balance rather than a random monogram in a rounded tile. For a photo, complex illustration or realistic 3D request, use a suitable available tool; make_asset alone cannot produce it.
+
+Render at final scale and thumbnail scale. Test alpha edges on light/dark backgrounds, long labels and font availability. Keep editable source plus the format the destination actually accepts. For a motion scene provide separated layers only when they improve depth and can be aligned reliably. Inspect them in the actual composition before calling the asset complete.
+
+
+## Focused execution reference
+
+Load design_guidance assets with assetKind svg only for an original simple vector/template task. For a real photo/complex illustration, use an available appropriate generator or licensed source through awsm-assets; otherwise identify the exact missing capability and adapt the composition honestly.

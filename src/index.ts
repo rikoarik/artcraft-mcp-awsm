@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { designGuidance, phases, intents } from "./tools/design-guidance.js";
+import { designBrief, answersSchema } from "./tools/design-brief.js";
 // AWSM MCP server using stdio transport.
 // Tools: find_icons, get_icon, find_images, download_asset, make_asset, palette, serve, prepare_web_handoff, sync_figcraft_assets
 
@@ -27,7 +29,7 @@ import { McpGateway } from "./tools/mcp-gateway.js";
 import { publish3dAsset } from "./tools/publish-3d.js";
 import { captureUiScreenshots } from "./tools/browser-capture.js";
 
-const server = new McpServer({ name: "awsm", version: "1.0.0" });
+const server = new McpServer({ name: "awsm", version: "1.0.0" }, {instructions:"For design/build/edit requests, start with design_brief. Use automatic mode for ordinary prompts: research and recommend fonts, colors, icons, assets, composition and motion. Ask only about missing product facts or ambiguous targets. Guided mode is optional. Load design_guidance for the current phase. Read-only inspection may use craft_prepare directly. It returns the active document, relevant guidance and compact tool schemas. Users do not need to invoke a skill. Use bridge_call for the returned operations; inspect before retrying any mutation after a timeout."});
 const gateway=new McpGateway();
 
 const json = (result: unknown) => ({
@@ -318,8 +320,9 @@ server.registerTool(
     title: "Fast First UI Pass",
     description: "Single-call brief-to-first-render plan: lightweight project detection, optional FigCraft layer classification and typography, first screen scope, relevant skills and viewport checks. Fast mode postpones exhaustive audits until after a usable preview.",
     inputSchema: {
+      briefId:z.string().describe("Confirmed design_brief ID; user choices determine the workflow."),
       brief: z.string().min(8).max(8000).describe("Product and UI request, with actual tasks/content if available."),
-      kind: z.enum(["auto","marketing","admin","mobile","web-app"]).optional().describe("UI context; auto if omitted."),
+      kind: z.enum(["auto","marketing","admin","mobile","web-app"]).optional().describe("Optional consistency check; category comes from the confirmed user brief."),
       speed: z.enum(["fast","balanced","thorough"]).optional().describe("Fast first pass by default, balanced or thorough for wider checks."),
       root: z.string().optional().describe("Project directory if an existing codebase is available."),
       document: z.unknown().optional().describe("Optional FigCraft inspect_document JSON."),
@@ -458,6 +461,24 @@ server.registerTool(
   async args=>{try{return json(await reviewUi(args));}catch(e){return fail(e);}},
 );
 
+server.registerTool("design_guidance", {
+ title:"Load Focused Design Playbook",
+ description:"Load detailed, bundled research, screen architecture, components, motion, modeling or validation instructions. Use research/screens before creative recommendations; execution phases use the resolved brief. Includes reference sourcing, typography/assets, compact page sets, React Bits/scroll choreography and deliberate 3D checks.",
+ inputSchema:{phase:z.enum(phases),intent:z.enum(intents).optional().describe("Observed task context, not a new user questionnaire."),speed:z.enum(["fast","balanced"]).optional(),assetKind:z.enum(["source","svg"]).optional(),briefId:z.string().optional()},
+},async args=>{try{return json(await designGuidance(args));}catch(e){return fail(e);}});
+
+server.registerTool("design_brief", {
+  title:"Collect User Design Choices",
+  description:"Start design, website, CAD and 3D build/edit work here. Automatic mode recommends creative decisions without requiring the user to choose them; optional guided mode asks staged questions and requires summary confirmation. Own routine aesthetic choices through research; never fabricate product facts or choose an ambiguous document target. This tool does not display questions itself: present them through the client's question UI or chat and wait for the user.",
+  inputSchema:{briefId:z.string().optional(),mode:z.enum(["automatic","guided"]).optional().describe("Automatic by default: own researched creative decisions; guided only if the user wants to choose."),recommendations:answersSchema.optional().describe("Researched creative recommendations in automatic mode; cannot choose output or target."),answers:answersSchema.optional(),confirm:z.boolean().optional().describe("Only after the user approves the previously displayed summary, in a separate call.")},
+},async args=>{try{return json(designBrief(args));}catch(e){return fail(e);}});
+
+server.registerTool("craft_prepare", {
+  title:"Prepare Active Craft Session",
+  description:"After user confirmation through design_brief, prepare FigCraft UI design, SolidCraft modeling or CADCraft drafting. Connect to the open app, inspect its current document and return relevant guidance and a compact tool schema set in one call. Never silently falls back to headless.",
+  inputSchema:{craft:z.enum(["figcraft","solidcraft","cadcraft"]),task:z.enum(["create","edit","inspect"]),briefId:z.string().optional().describe("Confirmed design_brief ID, required for create/edit. Inspection does not require a brief."),headless:z.boolean().optional().describe("Explicitly allow a separate headless session, rather than editing the visible app.")},
+},async args=>{try{return json(await gateway.prepare(args));}catch(e){return fail(e);}});
+
 server.registerTool(
   "bridge_list",
   {
@@ -477,6 +498,7 @@ server.registerTool(
     title:"Call a Connected MCP Tool",
     description:"Forward a tool call to an explicitly allowed downstream MCP, returning original text/image/tool output. Use bridge_list with connect:true for available tool names and schemas. Calls may change files or other state; only configure trusted commands and allowlist necessary tools.",
     inputSchema:{
+      briefId:z.string().optional().describe("Confirmed design_brief ID required for Craft mutations."),
       server:z.string().min(1).describe("Configured downstream MCP name."),
       tool:z.string().min(1).describe("Exact downstream tool name returned by bridge_list."),
       arguments:z.record(z.string(),z.unknown()).optional().describe("JSON object of arguments matching the downstream tool input schema."),
@@ -491,6 +513,7 @@ server.registerTool(
     title:"Publish SolidCraft 3D to Website and FigCraft",
     description:"Export the current SolidCraft model to a website-ready OBJ asset and PNG preview. Optionally place the preview as a real FigCraft image layer through its configured native MCP. Does not claim native 3D support in FigCraft. Never overwrites existing packages.",
     inputSchema:{
+      briefId:z.string().describe("Confirmed user brief selecting website 3D publishing."),
       projectRoot:z.string().min(1).describe("Existing local web project root; asset files go to public/assets/3d/<name>/."),
       name:z.string().regex(/^[a-z][a-z0-9-]{0,49}$/).describe("Unique kebab-case asset identifier; existing asset package is never overwritten."),
       figcraft:z.object({

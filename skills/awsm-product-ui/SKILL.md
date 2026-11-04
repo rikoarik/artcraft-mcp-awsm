@@ -3,22 +3,44 @@ name: awsm-product-ui
 description: Design complete SaaS product experiences across marketing websites, onboarding and authenticated application screens, with consistent brand and implementation-ready components.
 ---
 
-# One product identity from landing page to working app
+# Marketing and product identity within the requested scope
 
-Understand the product, audience, conversion objectives, actual features and usage context. A SaaS marketing page is not the product itself, and an admin product should not use the same visual density as a sales page. Identify how the brand system survives both contexts without forcing every view to look identical.
+Use this skill for a marketing/product-story surface and brand continuity. It does
+not automatically add onboarding, authentication, settings or an operational app.
+If those surfaces are requested, hand their screen design to the matching app/admin
+playbook while retaining the shared identity. The core owns task intake and routing.
 
-## Architecture and storytelling
+## Build a grounded story
 
-Map the public journey, meaningful proof, pricing or inquiry action, product entry, onboarding and daily in-app job. Organize a landing page around grounded product capabilities, authentic interface visuals and clear calls to action. Never invent clients, testimonials, performance results or screenshots. Show relevant diagrams, photography or real UI when they explain the product, not decorative assets that obscure it.
+Read the actual product, audience, content, evidence and next action. Inspect the
+existing UI/brand and relevant references. Use research-direction.md and
+visual-decisions.md through design_guidance to turn observations into typography,
+palette, imagery and composition decisions without interrogating the user about
+individual font or icon choices.
 
-Within the app, use task-based navigation, reusable components, a practical information hierarchy and honest application states. Develop shared typography, brand colors, semantic interaction tokens, icon conventions and responsive rules. Allow marketing sections to be expressive while preserving high readability and usable controls inside the application.
+Map each section to a different visitor question: what the product does, proof,
+how it works or benefits, objections and a concrete next action. One complete page
+may suffice; separate pages only for the requested content/journey. Never invent
+customers, testimonials, prices, screenshots or performance claims to fill a layout.
 
-## Real implementation
+## Compose and implement
 
-Inspect the existing project stack before introducing dependencies. Reuse established layout, routing, state and component patterns, and create consistent assets through awsm-assets, awsm-iconography and the FigCraft-to-web workflow when applicable. Implement operational controls, not visual buttons that lead nowhere. Use deliberate motion only where it clarifies the story or the state change; honor reduced-motion preferences.
+Give important content meaningful hierarchy rather than repeating identical cards.
+Use real product UI, authorized imagery or clearly labeled illustration. Choose
+background treatment that supports subject placement and contrast; a product story
+may need layered atmosphere, while a practical service page may benefit from calm
+surfaces. Preserve useful brand elements and implementation conventions.
 
-When the source is a FigCraft document, inspect every relevant frame, disambiguate nested groups, export only genuine art assets, and retain DOM text and components. Use the handoff manifest to connect design to source code. Align desktop and mobile content priorities; do not simply shrink a large desktop hero.
+Implement the story in the actual project stack with semantic text, working links,
+responsive image crops and an honest form/action result. If motion strengthens the
+story, load its section score and worked example; do not add React Bits effects
+indiscriminately or make an animation clip the website deliverable.
 
-## Quality
+## Acceptance and handoff
 
-Review the public-to-private transition, responsive behavior, loading and error states, data realism and accessibility. Compare rendered UI against source frames and reference constraints. Provide a completed implementation or a precise list of blocked portions, with browser evidence. Avoid claiming commercial production readiness without testing actual integrations, performance and security boundaries.
+Inspect the first viewport, a proof/detail section and the final action on mobile
+and desktop. Check typography after fonts load, navigation, CTA destination,
+background contrast and reduced motion. For a FigCraft-only output, verify editable
+native frames instead of claiming live web behavior. Provide real source paths,
+rendered evidence and a clear list of simulated or blocked integrations. A polished
+hero alone does not finish the requested page.

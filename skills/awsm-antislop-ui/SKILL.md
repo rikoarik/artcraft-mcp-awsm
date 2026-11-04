@@ -23,3 +23,16 @@ Write a compact `problem → impact on user task → specific remedy → change 
 Compare before and after screenshots at the same sizes. Re-test existing navigation and functionality to catch regressions and inspect the console. Hand off changes and reasons, preserved brand features, and unresolved issues. If you cannot render the UI, label the visual audit provisional.
 
 **Example:** “Audit this SaaS landing page, remove generic card and gradient patterns, retain our brand colors and checkout flow, and show before/after screenshots at 360px and 1200px.”
+
+## Worked diagnosis, not another coordinator
+
+Load visual-decisions.md with design_guidance research and intent audit. Its repair
+record separates an absent hierarchy/evidence problem from fashionable colors or
+radii. Produce location -> task impact -> reference principle -> targeted change ->
+retest evidence. Then implement the accepted scope; do not restart the whole brief
+or regenerate a working brand identity.
+
+A component-only audit stops at that component and representative host usage.
+A page audit needs the actual page and responsive states. This skill owns diagnosis
+and targeted revision; taste-ui owns a new concept direction, and validation skills
+own repeatable runtime checks. Do not load every coordinator for one redesign.

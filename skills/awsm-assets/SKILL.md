@@ -35,3 +35,15 @@ For FigCraft designs, use the document layer manifest to distinguish photos, dec
 ## Faster asset discovery
 
 When a brief needs several icons and images, call find_design_assets with a small set of specific iconQueries and imageQueries. Use the results to shortlist actual visual slots; then download or implement only the selected candidates. A batch search minimizes agent/tool round trips and caches metadata briefly, but does not prove a candidate is correctly licensed or relevant. Do not fetch random placeholders just to fill a grid.
+
+
+## Art direction before download
+
+Read research-direction.md in awsm-design. Decide whether a slot needs product evidence, a photograph, original vector, a textured plate, an alpha subject or a 3D render. Specify focal point, negative space for text, light direction, palette relation, crop variants and desired resolution. Select/create assets without asking the user to manage individual icon/font choices.
+
+For layered motion, plan background, subject and foreground independently with consistent anchors and edges. A rectangular stock image does not become a convincing cutout by masking it carelessly. Inspect the actual selected/generated file before integration. Keep a source/license ledger and distinguish original vectors, licensed downloads and AI-generated images. When suitable image-generation tools are absent, adapt real local assets or report the specific missing visual; do not mislabel an SVG template as generated photography.
+
+
+## Focused execution reference
+
+Use design_guidance assets to load this skill even in a core-only installation. visual-decisions.md supplies the source/original/generation matrix. Inspect an actual selected file and integrate it; a result list is not an asset deliverable.

@@ -18,3 +18,15 @@ For Next.js, prefer next/font/local or next/font/google as appropriate for the e
 Define semantic roles (display, title, body, label, numerical/tabular data) before assigning raw sizes. Keep consistent weight mappings and line heights, consider compact admin density separately from expressive marketing typography, and support font scaling and responsive wrapping. For tables, invoices and financial dashboards, verify number alignment and locale formatting.
 
 Compare actual browser/device text against FigCraft render at equivalent size. Check fallback jumps, clipping, truncation, variable-weight behavior, contrast, long Indonesian words and all required scripts. Report licensing, unsupported glyphs and incomplete font mapping. Do not claim visual parity from a CSS declaration alone.
+
+
+## Choose and test without outsourcing the decision
+
+Read research-direction.md in awsm-design. Recommend the type system from audience, language, content density and brand references. Establish display/title/body/label/numeric roles and the actual weights needed. For admin interfaces, compare ambiguous characters, tabular alignment and compact labels; for expressive marketing, test headline shape and section rhythm.
+
+Use the actual headline, a long name, money/date strings and a dense paragraph in the real renderer before committing. Verify wrapping at intermediate widths, fallback shifts during font loading, italic/weight availability and locale glyphs. Document licensing and local integration. Do not ask the user to pick from a giant font list or load many families in the final page just to show possibilities.
+
+
+## Focused execution reference
+
+Use visual-decisions.md for contrasting console/product-story type decisions and component-worked-example.md for roles in a real form. Test one candidate against actual content before adding another font. The worked examples specify evaluation criteria, not a universal prescribed font pair.

@@ -25,3 +25,15 @@ Build a table: `template slot → brief requirement → keep/adapt/remove → ri
 Provide the source link and version, licenses and attribution, reused sections, visual and functional changes, QA results, and any remaining template artifacts. Do not claim a design is wholly original if it builds on someone else's work.
 
 **Example:** “Use the landing-page template already in this repository for a dental clinic without breaking the booking form, and check the photo licenses.”
+
+
+## Preserve useful engineering, replace irrelevant design
+
+Inspect the template running before choosing it. Record which interaction and accessibility behavior is reusable, and which page grammar conflicts with the product. Replace demo content and imagery with real evidence, not another stock dashboard.
+
+Map template sections/components to the compact journey in awsm-design/references/screen-blueprints.md. Verify licenses separately for code, fonts and imagery. Adapt motion to actual section meaning and remove effects that obscure controls. Run both the changed and neighboring flows after adaptation; a successful theme/color change is not complete product integration.
+
+
+## Focused execution reference
+
+Load with design_guidance research/implementation and intent adapt-template. Reuse the existing brief; do not turn template selection into a separate product-design interview. Record the chosen version/license and only adapt the selected page/flow.

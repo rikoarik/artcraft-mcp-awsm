@@ -101,7 +101,7 @@ It requires `solidcraft-cli` installed or an explicit `solidcraft` bridge. AWSM 
 | MCP connections | Discover and invoke configured third-party tools | `bridge_list`, `bridge_call` |
 | 3D asset publishing | Prepare SolidCraft OBJ/PNG for a website; optionally place the PNG into FigCraft | `publish_3d_asset` |
 
-Additional utilities include `draw_icon`, `make_asset`, and `serve`. In total, AWSM currently exposes **24 MCP tools** through one server.
+Additional utilities include `draw_icon`, `make_asset`, and `serve`. In total, AWSM currently exposes **27 MCP tools** through one server.
 
 ### FigCraft: editable design or optional design-to-code
 
@@ -116,6 +116,84 @@ Additional utilities include `draw_icon`, `make_asset`, and `serve`. In total, A
 5. Use `review_ui` against a comparable reference, if local Playwright is available.
 
 This is an **optional design-to-code workflow**, not a one-click pixel-perfect export. A FigCraft design request alone must not trigger web implementation.
+
+## User-directed brief and fast Craft sessions
+
+Start build/edit tasks with `design_brief`. **Automatic mode is the default**:
+the user's ordinary product prompt is enough creative authorization to research
+and recommend typography, colors, icons, assets, background treatment, page
+composition and motion. Ask only about missing domain facts or ambiguous targets.
+The server returns `needs-recommendations` for unresolved creative fields rather
+than making the user choose design tokens. Supply researched `recommendations`;
+these cannot choose output/project/target or overwrite an existing choice. Once
+required fields are complete, automatic mode returns `ready` without a separate
+user approval ceremony. Explicit constraints always take precedence.
+
+Optional `mode:"guided"` retains staged user questions (at most three per call),
+summary and separate confirmation for users who want to make the choices. Changes
+invalidate confirmation. Brief state expires after one hour or process restart.
+
+`design_guidance` loads detailed bundled playbooks by phase: routing, research, screens,
+components, assets, implementation, directional handoff, motion, modeling and validation. Research/screens may load before the
+brief is ready; execution phases use its resolved ID. Only relevant phases load,
+including full skill text and the matching reference, so a core-only installation
+still has access to specialist guidance through MCP. All 22 skills are retrievable through the phase/context router and include
+specific screen/state patterns and implementation recipes. Core references cover source-led direction, compact screen sets, scroll choreography/React Bits and
+reference-led 3D construction/validation. Worked examples cover invoice operations,
+mobile booking, component states, visual decisions, section-by-section motion and
+parametric modeling. Native platform, canvas-only and CAD-only guides keep the
+requested output bounded. Installer synchronization includes these
+reference files and preserves user-customized versions using per-file hashes.
+
+Use the resolved ID in `craft_prepare({craft,task,briefId})`, website
+`design_quickstart({briefId,brief})`, Craft mutations and `publish_3d_asset`.
+No-3D routes exclude SolidCraft; explicit no-motion excludes motion guidance.
+Native modeling remains separate from optional website/preview publishing.
+
+Research requires the coding client's actual browsing/search and visual tools;
+AWSM returns instructions, it does not autonomously research or guarantee good
+design. React Bits components are selected and adapted after checking current
+source/dependencies. Scroll work must be implemented in the real app; an .mjs QA
+helper is not the delivered website. Corn Revolution is a cited inspiration, not
+a copied asset library or a universal design template.
+
+Output scope is explicit: FigCraft-only stays editable design, model-only stays native
+3D, and CAD-only stays a drawing. None automatically creates a website. Website
+implementation from FigCraft requires a website brief plus actual source design;
+`design_quickstart` then returns the `from-figcraft` implementation guide. Native
+app output uses `outcome:"app"` and its Flutter / React Native / Compose platform,
+not an implied website. Context `intent` selects audit, template adaptation or
+handoff direction without asking the user to name skills. Handoff rejects output
+mismatches. Only relevant phases load; loading all specialists is a test, not the
+recommended runtime behavior.
+
+Read-only inspection may discover targets before a brief. The returned target is
+intent, not a lock on the active app tab. Clients must honor the questions, answers
+and constraints; AWSM cannot authenticate that a model did not fabricate them.
+Independent shell/file tools are outside these MCP guards. Cross-harness runtime
+acceptance is still limited as documented in docs/HARNESS-QA.md.
+
+AWSM discovers installed `figcraft-cli` too. Active endpoints come from an explicit
+attached bridge, `AWSM_FIGCRAFT_ENDPOINT`, `AWSM_SOLIDCRAFT_ENDPOINT`, or
+`AWSM_CADCRAFT_ENDPOINT` (a port or localhost:port). On macOS/Linux, a running
+Craft process with `--control PORT` is also discoverable; SolidCraft additionally
+uses its native `control/current.port` file. Multiple discovered endpoints require
+an explicit selection. No broad network port scan is used.
+
+FigCraft must already expose its control channel (`figcraft --control PORT`).
+AWSM does not restart an open app or discard unsaved work to enable that channel.
+Custom bridge launchers or access-root arguments require explicit `--attach` /
+`--connect` configuration. Preparation refuses an unverifiable edit target rather
+than silently making a headless document. `headless:true` explicitly selects a
+separate session; existing attached bridges cannot be repurposed this way.
+Set `AWSM_AUTO_FIGCRAFT=0` to disable FigCraft CLI discovery.
+
+Use `bridge_call` with the returned schemas. Native FigCraft batches reduce
+round trips. Reinspect after a user changes tabs and before retrying an uncertain
+mutation: preparation is a snapshot, not a lock on the active document. Existing
+`bridge_list` discovery remains compatible; Craft writes through `bridge_call` now require `briefId`. Restart AWSM after
+configuration or endpoint changes. Automatic skill use still depends on the
+coding client following the returned instructions.
 
 ## Connect other MCPs
 

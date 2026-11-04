@@ -1,9 +1,11 @@
+import { confirmedBrief } from "./design-brief.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { McpGateway } from "./mcp-gateway.js";
 
 type ToolResult = { isError?: boolean; content?: Array<Record<string,unknown>> };
 type PublishArgs = {
+  briefId?: string;
   projectRoot: string;
   name: string;
   figcraft?: {
@@ -69,6 +71,10 @@ function validateObj(obj:Buffer){
   if(/^\s*(?:mtllib|call|csh)\s+/mi.test(s))throw new Error("OBJ references external material or script files; use an isolated geometry export.");
 }
 export async function publish3dAsset(gateway:McpGateway,args:PublishArgs){
+  const choices=confirmedBrief(args.briefId);
+  if(choices.outcome!=="website" || choices.threeD==="none" || !choices.threeD)throw new Error("Website 3D publishing was not selected by the user.");
+  if(path.resolve(args.projectRoot)!==path.resolve(choices.target!))throw new Error("Publish root conflicts with the user-selected project.");
+  if(args.figcraft && choices.preview!=="figcraft")throw new Error("FigCraft preview placement was not selected by the user.");
   const name=args.name;
   if(!/^[a-z][a-z0-9-]{0,49}$/.test(name))throw new Error("name must be a lower-case kebab-case asset name (max 50 chars).");
   const {root,out}=await verifyOutputRoot(args.projectRoot);
@@ -82,14 +88,14 @@ export async function publish3dAsset(gateway:McpGateway,args:PublishArgs){
   try {
     // Export to a new local package path. Requires SolidCraft's own file-access policy
     // to grant access; never weaken the downstream policy automatically.
-    checkResponse(await gateway.call({server:"solidcraft",tool:"export",
+    checkResponse(await gateway.call({briefId:args.briefId,server:"solidcraft",tool:"export",
       arguments:{path:objPath,format:"obj"}}),"SolidCraft OBJ export");
     const exported=await fs.stat(objPath);
     if(exported.size>MAX_OBJ_BYTES)throw new Error("Exported OBJ exceeds 50 MiB.");
     const model=await fs.readFile(objPath);
     validateObj(model);
     // Keep the camera framing previously chosen by the agent; avoid moving the user's viewport.
-    const screenshot=checkResponse(await gateway.call({server:"solidcraft",tool:"screenshot",
+    const screenshot=checkResponse(await gateway.call({briefId:args.briefId,server:"solidcraft",tool:"screenshot",
       arguments:{source:"model",width:1024,height:768,grid:false,axes:false}}),"SolidCraft screenshot");
     const png=pngFromResult(screenshot);
     await fs.writeFile(pngPath,png,{flag:"wx"});
@@ -108,7 +114,7 @@ export async function publish3dAsset(gateway:McpGateway,args:PublishArgs){
         const value=args.figcraft[k];
         if(value!==undefined)params[k]=value;
       }
-      checkResponse(await gateway.call({server:"figcraft",tool:"run_command",
+      checkResponse(await gateway.call({briefId:args.briefId,server:"figcraft",tool:"run_command",
         arguments:{command:"file.placeImage",params}}),"FigCraft image placement");
       figcraft={status:"placed",message:"PNG preview placed as an image layer in the connected FigCraft document.",tool:"file.placeImage"};
     }catch(e){

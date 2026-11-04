@@ -23,11 +23,19 @@ export function syncSkills(sourceDir: string, targetDir: string, force = false, 
   for (const entry of entries) {
     if (!entry.isDirectory() || !/^awsm-[a-z0-9-]+$/.test(entry.name)) continue;
     if (mode === "core" && entry.name !== "awsm-design") continue;
-    const key = entry.name + "/SKILL.md";
+    const managedFiles=["SKILL.md"];
+    const refs=path.join(sourceDir,entry.name,"references");
+    if(fs.existsSync(refs)) {
+      for(const file of fs.readdirSync(refs,{withFileTypes:true})) {
+        if(file.isFile() && /^[a-z0-9-]+\.md$/.test(file.name))managedFiles.push("references/"+file.name);
+      }
+    }
+    for(const relativeFile of managedFiles) {
+    const key = entry.name + "/" + relativeFile;
     const upstreamFile = path.join(sourceDir, key);
     if (!fs.existsSync(upstreamFile)) continue;
-    const targetFolder = path.join(targetDir, entry.name);
-    const target = path.join(targetFolder, "SKILL.md");
+    const target = path.join(targetDir, key);
+    const targetFolder = path.dirname(target);
     const contents = fs.readFileSync(upstreamFile, "utf8");
     const upstreamHash = sha(contents);
     let current: string | undefined;
@@ -52,6 +60,7 @@ export function syncSkills(sourceDir: string, targetDir: string, force = false, 
     }
     state.files[key] = upstreamHash;
     if (current === undefined) added++; else updated++;
+    }
   }
   const tmpState = statePath + "." + process.pid + ".tmp";
   try {

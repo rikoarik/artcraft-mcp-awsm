@@ -3,31 +3,45 @@ name: awsm-fast-design
 description: Rapidly turn a product request or FigCraft design into a useful first UI render without wasteful research, repetitive tool calls, or long preliminary documents. Use when user says fast, quickly, immediately, prototype, or design a screen.
 ---
 
-# Fast design loop: visible work before long analysis
+# Fast execution of an already scoped task
 
-Do not mistake speed for generic design. First infer the actual product, main user task, available content and expected output. Call AWSM design_quickstart once using the real brief, kind and project root (if there is an existing repo). When FigCraft JSON is already available, pass it to the same call; do not repeatedly inspect the same document without a reason.
+This is the short implementation loop, not another intake or a replacement for
+product reasoning. Use it after a brief is resolved when speed matters. The core
+owns routing; prompt-to-prototype owns the end-to-end coordination; auto-prototype
+owns ordinary web interaction implementation. Do not run all three coordinators.
 
-## Fast first pass
+## Route correctly
 
-Inspect only existing entry points, the current design tokens, and the relevant reusable component directory. Prefer using already-installed packages, existing branding, local fonts and local assets before network searches. Do not install new frameworks to do a simple redesign. Do not spend the first pass generating exhaustive moodboards, lengthy planning files, generic feature lists or unnecessary ASCII wireframes.
+For website/app code use design_quickstart with the existing briefId. For a
+FigCraft-only request use craft_prepare for FigCraft, not design_quickstart.
+For native app code use its platform playbook and runtime. Never create web code
+because the reference happens to be a design canvas.
 
-Choose one distinctive direction based on the product and references actually available. A restaurant, construction management system, financial admin and native attendance application should not default to the same three-card layout. Build the first priority section or screen, ideally with its major content and one real interaction. When details are ambiguous, make the smallest reversible interpretation and clearly identify it.
+## One useful first render
 
-For marketing sites, first render the product value proposition and one strong supporting visual. For an admin interface, first render meaningful navigation, a data-rich screen and an actionable control. For mobile UI, first render a coherent navigation and screen state using native conventions. Source only the necessary images, icons and fonts for that pass. When several icons or images are missing, call find_design_assets once with specific search queries rather than making many sequential MCP calls. If the font, icon, or product screenshot is already in the repository, reuse it.
+Inspect the relevant entry point, tokens, data shape and reusable components.
+Read a matching domain/visual reference when the decision needs one. Own routine
+font/color/icon choices; reuse licensed local assets before fetching replacements.
+Do not produce a long speculative design document or arbitrary KPI-card layout.
 
-## Check quickly
+Implement one meaningful screen and its primary interaction using the existing
+stack. For a queue request, expose actionable records; for marketing, show the
+actual offer and proof; for native mobile, preserve platform navigation and insets.
+Use real content where available and label demo data. Batch purposeful missing
+asset lookups rather than testing every tool.
 
-Render one desktop and one mobile viewport. Look for the highest-impact problems: hierarchy, spacing, typography, content relevance, cropping, inaccessible controls and fake buttons. Fix these before adding extra decoration or advanced motion. When FigCraft is involved, preserve live text and components; export only necessary art assets and do not flatten the screen.
+## One review, then finish the scope
 
-## Second pass
+Prefer review_ui for a real local web page when Playwright is available; it captures
+and audits in one browser pass. Use separate tools only to investigate a failed
+step. Inspect the images and exercise the primary action; the audit does not click
+through the journey. If unavailable, use the client's existing browser tools and
+report what could not be checked. A FigCraft render needs native design inspection,
+not a browser-only audit.
 
-Only after a usable preview exists, expand the number of screens, refine motion and fill remaining UI states. Run comprehensive QA before production claims. Fast mode is not permission to ignore security, licensing, lost data, or destructive changes. Report real working UI and any missing areas, not generic promises.
-
-## Fast feedback without skipping quality
-
-After the first useful render, if Playwright is available, run audit_ui_page on mobile and desktop to detect broken image paths, page overflow, placeholder links, missing control names and errors before any broad redesign. Use screenshot capture only when an actual page is running, and avoid regenerating reference assets that already exist. Defer exhaustive full-page visual diff to the second pass when the user explicitly prioritizes speed. Never claim browser verification without a real capture.
-
-
-## Single-pass QA for speed
-
-Once the first meaningful UI is rendered and Playwright is installed, prefer `review_ui` over separate `audit_ui_page` and `capture_ui_screenshots` calls. It captures and inspects each viewport in one browser pass; attach a matching FigCraft reference when available. Fix high-severity breakages before adding more screens. If Playwright is missing, do not install it automatically or claim a screenshot test occurred.
+Fix the highest-impact hierarchy, font, crop, overflow or state defect first. Then
+complete the requested small flow, its failure recovery and relevant mobile states.
+Do not stop permanently at the first screen when the user requested a whole flow.
+Use validation-matrix.md through design_guidance to scale checks to the change.
+Hand off actual artifacts, inspected evidence and remaining boundaries. Speed means
+less redundant discovery, not skipped correctness or fabricated verification.

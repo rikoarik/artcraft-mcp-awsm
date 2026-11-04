@@ -22,3 +22,17 @@ Use awsm-iconography for one consistent icon language and produce platform-compa
 Build working transitions, validation, loading skeletons, empty/error/offline states and accessible feedback using the app's real state mechanism. Connect to provided repositories and APIs when authorized; otherwise mark fake data and simulated calls clearly. Verify scroll and keyboard interactions, long translated strings, font scaling, focus order, system back, landscape or tablet when relevant, and permission denials.
 
 Deliver working source files with routes, reusable widgets, assets and screenshots or previews when tools permit. Never claim emulator validation without launching an emulator or real device. Quality is measured by usable task completion and reliable behavior, not by the number of screens produced.
+
+## Choose a platform branch, then implement
+
+Load platform-patterns.md and mobile-worked-example.md through design_guidance
+screens/implementation. Determine Flutter, React Native or Compose from the actual
+repository and requested destination; ask only if it is unresolved. A FigCraft
+concept stays editable canvas work and is not a native runtime. A responsive website
+stays website output rather than being relabeled a mobile app.
+
+Use the worked appointment flow to map list/detail/form and invalid/submitting/
+retry/success states, then adapt it to the product. Reuse the actual navigator,
+state and theme APIs after checking current official docs. Do not add onboarding,
+login or permissions unless the selected task needs them. Platform motion and
+system back belong to this skill; React Bits/DOM scroll effects do not.
