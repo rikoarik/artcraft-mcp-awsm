@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
 export const answersSchema = z.object({
-  outcome: z.enum(["website", "app", "figcraft", "model-3d", "cad"]).optional(),
+  outcome: z.enum(["website", "app", "figcraft", "model-3d", "cad", "material", "texture"]).optional(),
   platform:z.enum(["flutter","react-native","compose"]).optional(),
   category: z.enum(["marketing", "admin", "mobile", "web-app"]).optional(),
   projectMode: z.enum(["existing", "new"]).optional(),
@@ -10,6 +10,7 @@ export const answersSchema = z.object({
   style: z.string().trim().min(1).max(2000).optional(),
   threeD: z.enum(["none", "render", "interactive"]).optional(),
   scope: z.string().trim().min(1).max(4000).optional(),
+  surfaceTools:z.array(z.enum(["materialcraft","texturecraft"])).max(2).optional(),
   source: z.enum(["direct", "cadcraft"]).optional(),
   preview: z.enum(["none", "figcraft"]).optional(),
   motion: z.enum(["none", "feedback", "scroll", "immersive-3d"]).optional(),
@@ -59,13 +60,14 @@ export function designBrief(input: { briefId?: string; answers?: Answers; confir
   draft.updated = Date.now();
   drafts.set(briefId, draft);
   const a = draft.answers;
+  if(draft.mode==="automatic" && a.outcome && !["website","app"].includes(a.outcome) && !a.session)a.session="visible";
   const recommend: Array<keyof Answers>=[];
   const questions: Array<{ field: keyof Answers; question: string; options?: string[] }> = [];
   const ask = (field: keyof Answers, question: string, options?: string[]) => {
     if(!a[field] && draft.mode==="automatic" && creative.includes(field)){recommend.push(field);return;}
     if (!a[field]) questions.push({ field, question, ...(options ? { options } : {}) });
   };
-  ask("outcome", "Mau menghasilkan apa?", ["website", "app", "figcraft", "model-3d", "cad"]);
+  ask("outcome", "Mau menghasilkan apa?", ["website", "app", "figcraft", "model-3d", "cad", "material", "texture"]);
   if (a.outcome) {
     if(a.outcome==="app") {ask("platform", "Platform aplikasi", ["flutter","react-native","compose"]);if(draft.mode==="automatic")ask("motion", "Arah motion", ["none","feedback"]);}
     if(a.outcome==="model-3d")ask("source", "Model 3D dibuat langsung atau berdasarkan gambar CADCraft?", ["direct", "cadcraft"]);
@@ -104,11 +106,12 @@ export function designBrief(input: { briefId?: string; answers?: Answers; confir
     ...(draft.confirmed ? { route: route(a) } : { question: "Pilihan ini sudah sesuai dan boleh mulai dikerjakan?", instruction: "Show the summary to the user. Call confirm:true only after their approval; do not supply new answers in that call." }) };
 }
 function route(a: Answers) {
-  const crafts = a.outcome === "model-3d" ? [...(a.source==="cadcraft"?["cadcraft"]:[]),"solidcraft"] : a.outcome === "cad" ? ["cadcraft"] : a.outcome==="app"?[]:
+  const crafts = a.outcome === "model-3d" ? [...(a.source==="cadcraft"?["cadcraft"]:[]),"solidcraft"] : a.outcome === "material"?["materialcraft"]:a.outcome === "texture"?["texturecraft"]:a.outcome === "cad" ? ["cadcraft"] : a.outcome==="app"?[]:
     [...(a.outcome === "figcraft" || (a.threeD!=="none" && a.preview === "figcraft") ? ["figcraft"] : []), ...(a.threeD && a.threeD !== "none" ? ["solidcraft"] : [])];
+  const selected=[...new Set([...crafts,...(a.surfaceTools??[])])];
   const uiSkill = a.outcome==="app"?"awsm-app-ui":a.category === "marketing" ? "awsm-product-ui" : a.category === "admin" ? "awsm-admin-dashboard" :
     a.category === "mobile" ? "awsm-app-ui" : "awsm-ui-ux-best-practices";
-  return { crafts, uiSkill, website: a.outcome === "website", threeD: a.outcome === "model-3d" ? "native-model" : a.threeD ?? "none" };
+  return { crafts:selected, uiSkill, website: a.outcome === "website", threeD: a.outcome === "model-3d" ? "native-model" : a.threeD ?? "none" };
 }
 export function confirmedBrief(id?: string) {
   const draft = get(id);

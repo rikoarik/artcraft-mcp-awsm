@@ -4,6 +4,7 @@
 
 AWSM menghubungkan coding agent dengan **FigCraft** untuk desain editable,
 **SolidCraft** untuk model 3D, dan **CADCraft** untuk gambar teknik 2D.
+**MaterialCraft** untuk material prosedural dan **TextureCraft** untuk texture painting.
 Tersedia juga panduan desain, pencarian aset, font, ikon, dan pemeriksaan UI.
 Berjalan lokal, tanpa VPS.
 
@@ -26,7 +27,8 @@ npx -y github:rikoarik/artcraft-mcp-awsm setup \
 ```
 
 Restart atau reconnect MCP di agent, lalu periksa koneksi **awsm**.
-Installer memasang skill inti; panduan spesialis dimuat sesuai kebutuhan.
+Installer menyiapkan penghubung untuk Craft yang sudah terpasang dan memasang
+skill inti; panduan spesialis dimuat otomatis sesuai pekerjaan.
 Paket dipasang dari GitHub, bukan paket npm bernama `my-awsm-mcp`.
 
 ### Prompt pemasangan per harness
@@ -119,10 +121,15 @@ di SolidCraft. Ekspor OBJ/PNG perlu integrasi web dan pemeriksaan material/perfo
 
 ## Menggunakan dokumen yang terbuka
 
-CLI Craft harus tersedia di `PATH`, dan aplikasi harus menyediakan koneksi kontrol.
-AWSM memprioritaskan sesi yang bisa diverifikasi; koneksi aplikasi gagal tidak
-boleh diam-diam diganti dokumen headless. Jangan menutup pekerjaan yang belum disimpan.
-Lihat [panduan koneksi](docs/CRAFT-CONNECTIONS.md) jika sesi belum ditemukan.
+Cukup minta hasilnya. AWSM menemukan Craft dan penghubungnya, memakai dokumen yang
+sudah terhubung, atau membuka aplikasi yang diperlukan jika masih tertutup.
+Penghubung yang belum tersedia disiapkan dari rilis resmi; pengguna tidak perlu
+memilih port atau memanggil skills. Mode headless hanya jika diminta.
+
+Aplikasi yang telanjur dibuka tanpa dukungan koneksi mungkin perlu disambungkan
+ulang sekali. AWSM mempertahankan pekerjaan terbuka dan menangani peluncuran
+berikutnya; pengguna cukup menyimpan/menutup dokumen tersebut bila diperlukan.
+[Detail dan batas dukungan native](docs/CRAFT-CONNECTIONS.md).
 
 Untuk memperbarui instalasi, ulangi perintah pemasangan dengan `--upgrade-config`,
 lalu restart MCP. Pembaruan tidak masuk ke sesi yang masih berjalan.

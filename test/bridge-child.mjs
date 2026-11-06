@@ -73,4 +73,7 @@ server.registerTool("execute",{
   command,closedLoops:command==="loops"?1:undefined,
 })}]}));
 server.registerTool("inspect_document",{description:"Inspect fixture active document.",inputSchema:{depth:z.number().optional()}},async()=>({content:[{type:"text",text:JSON.stringify({id:"active-fixture",name:"Active fixture",dirty:true})}]}));
+server.registerTool("session_inspect",{description:"Inspect native surface fixture",inputSchema:{}},async()=>({content:[{type:"text",text:JSON.stringify({name:"Surface fixture",argv:process.argv.slice(2),layers:[],graphs:[]})}]}));
+server.registerTool("command_run",{description:"Fixture surface command",inputSchema:{id:z.string(),params:z.record(z.string(),z.unknown()).optional()}},async({id})=>['fail','uncertain'].includes(id)?{isError:true,content:[{type:"text",text:id==='uncertain'?'native operation timed out; still running':'native failure'}]}:{content:[{type:"text",text:"native:"+id}]} );
+server.registerTool("viewport_screenshot",{description:"Fixture viewport image",inputSchema:{}},async()=>({content:[{type:"image",mimeType:"image/png",data:"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=="}]}));
 await server.connect(new StdioServerTransport());

@@ -52,6 +52,10 @@ for(const options of [
  {phase:'validation',briefId:site.briefId},
 ])await collect(options);
 const fs=await import('node:fs/promises');
+for(const outcome of ['material','texture']){
+ const surface=designBrief({answers:{outcome,projectMode:'existing',target:'Open surface',style:'Metal',scope:'Edit finish',session:'visible'}});
+ await collect({phase:outcome==='material'?'materials':'texturing',briefId:surface.briefId});
+}
 const dirs=await fs.readdir(new URL('../skills/',import.meta.url));
 assert.deepEqual([...loaded].sort(),dirs.sort());
 
@@ -76,4 +80,9 @@ const doc={pages:[{id:1,type:'PAGE',name:'Source',children:[{id:2,type:'FRAME',n
 const webFromFig=await designQuickstart({briefId:site.briefId,brief:'Implement this FigCraft queue as a website',document:doc});
 assert.equal(webFromFig.implementationIntent,'from-figcraft');
 assert(webFromFig.implementationGuide.guides.some(g=>g.file.includes('awsm-figcraft-to-web')));
-console.log('All 22 skills reachable; native/canvas/model/web handoff scope tests passed');
+console.log('All 24 skills reachable; native/canvas/model/web handoff scope tests passed');
+
+const combinedSurface=designBrief({answers:{outcome:'material',surfaceTools:['texturecraft'],projectMode:'existing',target:'Surface',style:'Coated metal',scope:'Material and texture'}});
+const textureStage=await designGuidance({phase:'texturing',briefId:combinedSurface.briefId});
+assert(textureStage.guides.some(g=>g.file==='awsm-texturing/SKILL.md'));
+assert(!textureStage.guides.some(g=>g.file==='awsm-materials/SKILL.md'));

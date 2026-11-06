@@ -6,6 +6,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {endpoint,processEndpoints,attachedArgs} from '../build/tools/craft-session.js';
 import {McpGateway} from '../build/tools/mcp-gateway.js';
+process.env.AWSM_NATIVE_SETUP='0';
 assert.equal(endpoint('7979'),'127.0.0.1:7979');
 for(const port of ['0','65536','evil:7979','7979oops'])assert.throws(()=>endpoint(port));
 assert.deepEqual(processEndpoints('figcraft','/Applications/FigCraft.app/Contents/MacOS/FigCraft --control 7979'),['127.0.0.1:7979']);

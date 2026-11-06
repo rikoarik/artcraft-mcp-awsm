@@ -9,6 +9,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
 process.env.AWSM_AUTO_FIGCRAFT='0';
+process.env.AWSM_NATIVE_SETUP='0';
+process.env.AWSM_AUTO_MATERIALCRAFT='0';process.env.AWSM_AUTO_TEXTURECRAFT='0';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const cwd = mkdtempSync(path.join(tmpdir(), 'awsm-test-'));
 const run = (...args) => spawnSync(process.execPath, [path.join(root, 'build/index.js'), ...args], { cwd, encoding: 'utf8' });
@@ -71,7 +73,7 @@ assert.match(direct3dSkill,/## Direct 3D: SolidCraft only/);
 assert.match(direct3dSkill,/Do not connect CADCraft/);
 assert.match(direct3dSkill,/do not.*website/i);
 const skillNames = readdirSync(path.join(root, 'skills'));
-assert.equal(skillNames.length, 22);
+assert.equal(skillNames.length, 24);
 for (const name of skillNames) {
   const text = readFileSync(path.join(root, 'skills', name, 'SKILL.md'), 'utf8');
   assert(text.startsWith('---\n') && text.includes(`\nname: ${name}\n`) && /\ndescription: .+\n/.test(text), `${name}: invalid frontmatter`);
@@ -129,8 +131,8 @@ fsSync.mkdirSync(path.join(cwd,'.awsm'),{recursive:true});
 writeFileSync(path.join(cwd,'.awsm/bridges.json'),JSON.stringify({
   version:1,servers:{
     demo:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['echo']},
-    solidcraft:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['export','screenshot']},
-    figcraft:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],allowedTools:['run_command']}
+    solidcraft:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],sessionMode:'headless',allowedTools:['export','screenshot']},
+    figcraft:{command:process.execPath,args:[path.join(root,'test/bridge-child.mjs')],sessionMode:'headless',allowedTools:['run_command']}
   }
 }));
 const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(root, 'build/index.js')], cwd, env: {...process.env, AWSM_AUTO_SOLIDCRAFT:'0',AWSM_AUTO_CADCRAFT:'0'} });
@@ -345,7 +347,7 @@ if (process.platform !== 'win32') {
     args:[path.join(root,'build/index.js')],
     cwd:autoCwd,
     env:{...process.env,PATH:autoBin+path.delimiter+(process.env.PATH??''),
-      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_AUTO_CADCRAFT:'1',AWSM_BRIDGE_CONFIG:path.join(autoCwd,'not-created.json')},
+      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_AUTO_CADCRAFT:'1',AWSM_SOLIDCRAFT_ENDPOINT:'7878',AWSM_CADCRAFT_ENDPOINT:'7979',AWSM_BRIDGE_CONFIG:path.join(autoCwd,'not-created.json')},
   });
   const autoClient=new Client({name:'awsm-solidcraft-auto',version:'1.0.0'});
   try {
@@ -400,7 +402,7 @@ if (process.platform !== 'win32') {
   const solidOnlyTransport=new StdioClientTransport({
     command:process.execPath,args:[path.join(root,'build/index.js')],cwd:autoCwd,
     env:{...process.env,PATH:autoBin+path.delimiter+(process.env.PATH??''),
-      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_AUTO_CADCRAFT:'1',
+      AWSM_AUTO_SOLIDCRAFT:'1',AWSM_AUTO_CADCRAFT:'1',AWSM_SOLIDCRAFT_ENDPOINT:'7878',AWSM_CADCRAFT_ENDPOINT:'7979',
       AWSM_BRIDGE_CONFIG:path.join(autoCwd,'not-created.json')},
   });
   const solidOnlyClient=new Client({name:'awsm-solidcraft-only',version:'1.0.0'});

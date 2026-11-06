@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { confirmedBrief, briefContext } from "./design-brief.js";
 
-export const phases = ["routing", "research", "screens", "components", "assets", "implementation", "handoff", "motion", "modeling", "validation"] as const;
+export const phases = ["routing", "research", "screens", "components", "assets", "implementation", "handoff", "motion", "modeling", "materials", "texturing", "validation"] as const;
 export type Phase = typeof phases[number];
 export const intents = ["create", "edit", "audit", "adapt-template", "to-figcraft", "from-figcraft"] as const;
 export type Intent = typeof intents[number];
@@ -33,9 +33,17 @@ export async function designGuidance(input: {
   const outcome=choice?.outcome??context?.answers.outcome;
   const native = outcome === "app";
   const canvas=outcome==="figcraft";
+  const surface=outcome==="material"||outcome==="texture";
   const geometry=outcome==="model-3d"||outcome==="cad";
   if(geometry && phase==="components")throw new Error("Geometry-only work uses the native modeling/drafting guide, not UI components.");
   if(geometry && phase==="motion")throw new Error("A model/drawing request does not select web motion. Use its native workflow.");
+  if(phase==="materials" && !choice?.route.crafts.includes("materialcraft"))throw new Error("MaterialCraft is not part of this task.");
+  if(phase==="texturing" && !choice?.route.crafts.includes("texturecraft"))throw new Error("TextureCraft is not part of this task.");
+  if(surface && ["motion","components"].includes(phase))throw new Error("Surface work does not select web motion or UI components.");
+  if(surface){
+    const name=phase==="materials"?"awsm-materials":phase==="texturing"?"awsm-texturing":outcome==="material"?"awsm-materials":"awsm-texturing";
+    return {phase,intent,choices:choice,draft:context?.answers,guides:[{file:name+"/SKILL.md",content:await read(name+"/SKILL.md")}],instruction:"Use only the native surface workflow requested; do not create geometry or a website automatically."};
+  }
   let names: string[] = [];
   let references: string[] = [];
   switch (phase) {
@@ -83,6 +91,12 @@ export async function designGuidance(input: {
       if(canvas){references=["canvas-workflow"];break;}
       names = [native ? "awsm-app-ui" : "awsm-motion-storyboard"];
       references = native ? ["platform-patterns", "mobile-worked-example"] : ["motion-direction", "motion-worked-example"];
+      break;
+    case "materials":
+      names=["awsm-materials"];
+      break;
+    case "texturing":
+      names=["awsm-texturing"];
       break;
     case "modeling":
       references = ["modeling-direction", "modeling-worked-example"];

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { syncSkills } from "./skill-sync.js";
+import {setupInstalledCrafts, nativeSetupEnabled} from "./tools/craft-runtime.js";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -135,6 +136,9 @@ for (const client of selected) {
   }
   if (args.includes("--skip-skills")) continue;
   if (!sharedSkills.has(skillsDir)) { copySkills(skillsDir); sharedSkills.add(skillsDir); }
+}
+if(!args.includes("--skip-native")&&nativeSetupEnabled()){
+  for(const item of await setupInstalledCrafts())messages.push(item.status==="ready"?"+ "+item.craft+" ready; AWSM manages its connection automatically":"! "+item.craft+": "+item.error);
 }
 messages.push("= Skill installation mode: " + skillMode + " (use --all-skills to install specialist workflows)");
 messages.push(autoUpdate ? "= Automatic updates enabled on MCP start (network revalidation; local skill edits preserved)" : "= Automatic updates disabled");

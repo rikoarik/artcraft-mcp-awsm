@@ -72,3 +72,28 @@ working/simulated/blocked behaviors and material limits. For web use the real de
 server and review_ui when available; verify actions separately. For apps inspect
 the actual runtime; for models check dimensions/features and views. A build, static
 mockup, guide response or screenshot alone cannot prove every kind of completion.
+
+
+## Visible native surface work
+
+MaterialCraft material-only and TextureCraft texture-only requests end in those
+native sessions; they do not imply a new mesh, website or another application.
+Use craft_prepare for the selected provider. All Craft bridge entry points default
+to visible attached operation, including direct bridge_call/list discovery with
+connect enabled. No endpoint means a connection requirement, not silent headless
+work. An explicitly requested separate session uses headless preparation or an
+explicit sessionMode configuration. Do not restart unsaved apps automatically.
+
+AWSM prepares missing official connectors and starts the selected installed app
+visibly when it is closed. Call craft_prepare first; do not turn internal port,
+CLI or bridge setup into homework for the user. Reuse open work. If a native app
+was opened without automation and cannot enable it live, explain the single
+reconnect needed, preserve unsaved changes, and let AWSM handle the next launch.
+Do not promise that an unexposed native session can be attached without reconnecting.
+
+Preparation returns matching materials/texturing guidance. Bridge results append
+guidance once per brief/provider while retaining original native text/images/error
+fields. Native SolidCraft skill_reference remains authoritative for its commands.
+Use native selection and UI/viewport inspection to expose relevant work when
+supported. FigCraft can display agent presence and changed-layer outlines; this is
+not a promise of a moving mouse in every Craft. Never fake pointer activity.

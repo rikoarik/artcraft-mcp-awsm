@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { craftNames } from "./tools/craft-adapters.js";
 import { designGuidance, phases, intents } from "./tools/design-guidance.js";
 import { designBrief, answersSchema } from "./tools/design-brief.js";
 // AWSM MCP server using stdio transport.
@@ -475,8 +476,8 @@ server.registerTool("design_brief", {
 
 server.registerTool("craft_prepare", {
   title:"Prepare Active Craft Session",
-  description:"After user confirmation through design_brief, prepare FigCraft UI design, SolidCraft modeling or CADCraft drafting. Connect to the open app, inspect its current document and return relevant guidance and a compact tool schema set in one call. Never silently falls back to headless.",
-  inputSchema:{craft:z.enum(["figcraft","solidcraft","cadcraft"]),task:z.enum(["create","edit","inspect"]),briefId:z.string().optional().describe("Confirmed design_brief ID, required for create/edit. Inspection does not require a brief."),headless:z.boolean().optional().describe("Explicitly allow a separate headless session, rather than editing the visible app.")},
+  description:"Prepare the requested native Craft and load matching skills automatically. AWSM finds installed apps/CLIs, prepares a missing official connector, reuses the open document, or opens the selected app visibly if closed. Users do not configure ports or invoke skills. Inspect its document and return focused guidance/tool schemas in one call. Create/edit require a resolved design_brief. Never silently falls back to headless or restarts open work.",
+  inputSchema:{craft:z.enum(craftNames),task:z.enum(["create","edit","inspect"]),briefId:z.string().optional().describe("Confirmed design_brief ID, required for create/edit. Inspection does not require a brief."),headless:z.boolean().optional().describe("Explicitly allow a separate headless session, rather than editing the visible app.")},
 },async args=>{try{return json(await gateway.prepare(args));}catch(e){return fail(e);}});
 
 server.registerTool(
@@ -553,7 +554,7 @@ if (process.argv[2] === "setup") {
   console.error(`Unknown subcommand: ${process.argv[2]}. Use 'setup' or run without arguments for MCP stdio.`);
   process.exitCode = 1;
 } else if (process.argv[2] === "--help") {
-  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--force-skills]' to install client configurations and skills. Use --auto-update or --no-auto-update, --upgrade-config for existing clients, or --all-skills for specialist skill installation.");
+  console.error("my-awsm-mcp: run without arguments for MCP stdio, or use 'setup [--client opencode|claude|codex|antigravity|zed|copilot|all] [--global] [--source github:OWNER/REPO] [--skip-mcp] [--skip-skills] [--skip-native] [--force-skills]' to install client configurations, skills and matching connectors for installed Craft apps. Use --auto-update or --no-auto-update, --upgrade-config for existing clients, or --all-skills for specialist skill installation.");
 } else {
   main().catch((error) => {
     console.error("Failed to start AWSM MCP server:", error);
